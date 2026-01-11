@@ -1,0 +1,56 @@
+version: '3.8'
+
+# Docker Compose configuration for running tests
+# Usage: docker-compose -f docker-compose.test.yml run --rm test
+
+services:
+  postgres_test:
+    image: postgres:15
+    container_name: postgres_test
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: test_itsm
+    tmpfs:
+      - /var/lib/postgresql/data
+    networks:
+      - test_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  test:
+    build:
+      context: ./apps/itsm
+      dockerfile: Dockerfile
+    container_name: itsm_test
+    environment:
+      - DJANGO_SETTINGS_MODULE=itsm_config.settings_test
+      - DB_HOST=postgres_test
+      - DB_PORT=5432
+      - POSTGRES_DATABASE=test_itsm
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - DJANGO_SECRET_KEY=test-secret-key-for-testing-only
+    volumes:
+      - ./apps/itsm:/app
+    depends_on:
+      postgres_test:
+        condition: service_healthy
+    networks:
+      - test_network
+    command: >
+      sh -c "
+        echo 'Waiting for database...' &&
+        python manage.py check &&
+        echo 'Running migrations...' &&
+        python manage.py migrate --noinput &&
+        echo 'Running tests...' &&
+        python manage.py test ServiceCatalogue --verbosity=2
+      "
+
+networks:
+  test_network:
+    driver: bridge

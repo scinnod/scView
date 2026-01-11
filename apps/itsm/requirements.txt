@@ -1,0 +1,12 @@
+Django==5.2.8
+django-modeltranslation==0.19.14
+django-simple-history==3.8.0
+django-tex==1.1.10
+gunicorn==23.0.0
+openpyxl
+pandas
+psycopg2-binary==2.9.10
+python-dateutil
+pytz
+requests
+XlsxWriter

@@ -1,0 +1,361 @@
+{% extends "ServiceCatalogue/services_base.html" %}
+
+{% load i18n %}
+{% load html_links %}
+
+{% block title %} {{ title }}{% if kwargs.clientele_id %} {% translate "for" %} {% for clientele in clienteles %}{% if clientele.id == kwargs.clientele_id %}{{ clientele.name }}{% endif %}{% endfor %}{% endif %}{% endblock %}
+{% block description %}
+{% if description %}
+<div class="alert alert-light border rounded-3 mb-3">
+  <p class="mb-0">{{ description|safe|linebreaks }}</p>
+</div>
+{% endif %}
+<div class="alert alert-warning border-warning rounded-3 d-flex align-items-center gap-2 mb-4 py-2" role="alert">
+  <div class="bg-warning bg-opacity-25 rounded-circle p-2">
+    <i class="bi bi-shield-lock fs-5 text-warning"></i>
+  </div>
+  <div class="flex-grow-1">
+    <strong class="d-block mb-0">
+      <i class="bi bi-eye-slash me-1"></i>{% translate "Internal View" %}
+    </strong>
+    <small class="text-muted">{% translate "Internal view, some of the information on the services might be intended for internal purposes only!" %}</small>
+  </div>
+</div>
+{% endblock %}
+
+{% block element %}
+<div class="row g-3">
+  <!-- Internal Service Details Card -->
+  <div class="col-12">
+    <div class="card border-0 shadow-sm h-100">
+      <!-- Card Header with Service Key -->
+      <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center checkmark">
+        <div>
+          <span class="badge bg-primary me-2 fs-6">{{ sr.key}}</span>
+          <span class="fw-semibold fs-5">{{ sr.service.name }}</span>
+        </div>
+        <div>
+          <a href="{% url 'service_detail' sr.id %}?from=internal" class="btn btn-sm btn-outline-primary me-2" title="{% translate 'View details' %}">
+            <i class="bi bi-box-arrow-up-right me-1"></i>{% translate "Details" %}
+          </a>
+          {% if user_can_edit_servicerevisions %}
+          <a class="btn btn-sm btn-outline-secondary" href="{% url 'admin:ServiceCatalogue_servicerevision_change' sr.id %}" target="_blank" title="{% translate 'Edit in admin' %}">
+            <i class="bi bi-pencil-square"></i>
+          </a>
+          {% endif %}
+        </div>
+      </div>
+      
+      <div class="card-body p-4">
+        <!-- Search Keywords (Internal Only) -->
+        {% if show_keywords and sr.keywords %}
+        <div class="mb-4 checkmark">
+          <h6 class="text-secondary fw-semibold mb-2 d-flex align-items-center gap-2">
+            <i class="bi bi-search"></i>
+            {% translate "Search keywords" %}
+          </h6>
+          <div class="ms-4 p-3 bg-secondary bg-opacity-10 border border-secondary rounded-3">
+            <small class="text-muted">{{ sr.keywords|linebreaks }}</small>
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Main Purpose -->
+        <div class="mb-4 checkmark">
+          <h6 class="text-primary fw-semibold mb-2 d-flex align-items-center gap-2">
+            <i class="bi bi-bullseye"></i>
+            {% translate "Main purpose" %}
+            {% if user_can_edit_services %}
+            <a class="text-decoration-none text-secondary small" href="{% url 'admin:ServiceCatalogue_service_change' sr.service.id %}" target="_blank" title="{% translate 'Edit' %}">
+              <i class="bi bi-pencil"></i>
+            </a>
+            {% endif %}
+          </h6>
+          <div class="ms-4 p-3 bg-light rounded-3">{{ sr.service.purpose|linebreaks|parse_internal_links}}</div>
+        </div>
+
+        <!-- Internal Description (Staff Only) -->
+        {% if sr.description_internal %}
+        <div class="mb-4 checkmark">
+          <h6 class="text-warning fw-semibold mb-2 d-flex align-items-center gap-2">
+            <i class="bi bi-lock-fill"></i>
+            {% translate "Internal description / configuration" %}
+          </h6>
+          <div class="ms-4 p-3 bg-warning bg-opacity-10 border border-warning rounded-3">
+            {{ sr.description_internal|linebreaks|urlize|parse_internal_links}}
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Public Description -->
+        <div class="mb-4 checkmark">
+          <h6 class="text-primary fw-semibold mb-2 d-flex align-items-center gap-2">
+            <i class="bi bi-info-circle"></i>
+            {% translate "Description" %}
+          </h6>
+          <div class="ms-4 p-3 bg-light rounded-3">{{ sr.description|linebreaks|parse_internal_links}}</div>
+        </div>
+
+        <!-- Usage Information / Please Note -->
+        {% if show_usage_information and sr.usage_information %}
+        <div class="mb-4 checkmark">
+          <div class="ms-4 p-3 bg-danger bg-opacity-10 border border-danger border-opacity-75 rounded-3 d-flex gap-3">
+            <div class="flex-shrink-0 text-danger" style="line-height: 1.5;">
+              <i class="bi bi-exclamation-circle"></i>
+            </div>
+            <div class="flex-grow-1">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <p class="fw-bold mb-0">{% translate "Please Note" %}:</p>
+              </div>
+              <div>{{ sr.usage_information|linebreaks|urlize|parse_internal_links}}</div>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Requirements -->
+        {% if show_requirements and sr.requirements %}
+        <div class="mb-4 checkmark">
+          <h6 class="text-primary fw-semibold mb-2 d-flex align-items-center gap-2">
+            <i class="bi bi-check2-square"></i>
+            {% translate "Requirements" %}
+          </h6>
+          <div class="ms-4 p-3 bg-light rounded-3">{{ sr.requirements|linebreaks|parse_internal_links}}</div>
+        </div>
+        {% endif %}
+
+        <!-- Details -->
+        {% if show_details and sr.details %}
+        <div class="mb-4 checkmark">
+          <h6 class="text-primary fw-semibold mb-2 d-flex align-items-center gap-2">
+            <i class="bi bi-list-check"></i>
+            {% translate "Details" %}
+          </h6>
+          <div class="ms-4 p-3 bg-light rounded-3">{{ sr.details|linebreaks|urlize|parse_internal_links}}</div>
+        </div>
+        {% endif %}
+
+        <!-- Options -->
+        {% if show_options and sr.options %}
+        <div class="mb-4 checkmark">
+          <h6 class="text-primary fw-semibold mb-2 d-flex align-items-center gap-2">
+            <i class="bi bi-sliders"></i>
+            {% translate "Options" %}
+          </h6>
+          <div class="ms-4 p-3 bg-light rounded-3">{{ sr.options|linebreaks|parse_internal_links}}</div>
+        </div>
+        {% endif %}
+
+        <!-- Service Level -->
+        {% if show_service_level and sr.service_level %}
+        <div class="mb-4 checkmark">
+          <h6 class="text-primary fw-semibold mb-2 d-flex align-items-center gap-2">
+            <i class="bi bi-graph-up-arrow"></i>
+            {% translate "Service Level" %}
+          </h6>
+          <div class="ms-4 p-3 bg-light rounded-3">{{ sr.service_level|linebreaks|parse_internal_links}}</div>
+        </div>
+        {% endif %}
+
+        <!-- Service URL -->
+        {% if sr.url %}
+        <div class="mb-4">
+          <h6 class="text-primary fw-semibold mb-2 d-flex align-items-center gap-2">
+            <i class="bi bi-link-45deg"></i>
+            {% translate "Link to service" %}
+          </h6>
+          <div class="ms-4">
+            <a href="{{ sr.url }}" class="btn btn-sm btn-outline-primary rounded-3" target="_blank">
+              <i class="bi bi-box-arrow-up-right me-1"></i>{{ sr.url | truncatechars:60 }}
+            </a>
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Service Contact -->
+        {% if sr.contact %}
+        <div class="mb-4">
+          <h6 class="text-primary fw-semibold mb-2 d-flex align-items-center gap-2">
+            <i class="bi bi-envelope"></i>
+            {% translate "Service contact" %}
+          </h6>
+          <div class="ms-4">
+            {% if user.is_authenticated %}
+            <a href="mailto:{{ sr.contact }}?subject=[Service Request {{ sr.key }}] {{sr.service.name }}" class="btn btn-sm btn-outline-secondary rounded-3">
+              <i class="bi bi-envelope me-1"></i>{{ sr.contact }}
+            </a>
+            {% else %}
+            <span class="text-muted">{% translate "(visible only for authenticated users after login)" %}</span>
+            {% endif %}
+          </div>
+        </div>
+        {% endif %}
+
+        <hr class="my-4">
+
+        <!-- Organizational Information -->
+        <h5 class="text-primary mb-4 fw-semibold">
+          <i class="bi bi-diagram-3 me-2"></i>{% translate "Organizational Information" %}
+        </h5>
+
+        <div class="row g-3 mb-4">
+          <div class="col-md-6">
+            <div class="p-3 bg-light rounded-3">
+              <div class="d-flex align-items-start gap-2">
+                <i class="bi bi-building text-muted"></i>
+                <div class="flex-grow-1">
+                  <small class="text-muted d-block mb-1">{% translate "Involved unit(s)" %}</small>
+                  <div class="fw-semibold">
+                    {% for sp in sr.service.service_providers.all %}
+                      {{sp.name}}{% if sp.acronym %} ({{sp.acronym}}){% endif %}{% if not forloop.last %}, {% endif %}
+                    {% empty %}
+                      <span class="text-muted">{% translate "not yet specified" %}</span>
+                    {% endfor %}
+                  </div>
+                </div>
+                {% if user_can_edit_services %}
+                <a class="text-decoration-none text-secondary small" href="{% url 'admin:ServiceCatalogue_service_change' sr.service.id %}" target="_blank" title="{% translate 'Edit' %}">
+                  <i class="bi bi-pencil"></i>
+                </a>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="p-3 bg-light rounded-3">
+              <div class="d-flex align-items-start gap-2">
+                <i class="bi bi-person-badge text-muted"></i>
+                <div class="flex-grow-1">
+                  <small class="text-muted d-block mb-1">{% translate "Service owner(s)" %}</small>
+                  <div class="fw-semibold">
+                    {{ sr.service.responsible |default:"?"}} // {{ sr.service.category.responsible |default:"?" }}
+                  </div>
+                </div>
+                {% if user_can_edit_services %}
+                <a class="text-decoration-none text-secondary small" href="{% url 'admin:ServiceCatalogue_service_change' sr.service.id %}" target="_blank" title="{% translate 'Edit' %}">
+                  <i class="bi bi-pencil"></i>
+                </a>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Timeline Information -->
+        <h5 class="text-primary mb-4 fw-semibold">
+          <i class="bi bi-calendar-range me-2"></i>{% translate "Timeline & Availability" %}
+        </h5>
+
+        <div class="row g-3 mb-4">
+          <div class="col-md-6">
+            <div class="p-3 bg-light rounded-3">
+              <div class="d-flex align-items-start gap-2">
+                <i class="bi bi-eye text-muted"></i>
+                <div class="flex-grow-1">
+                  <small class="text-muted d-block mb-1">{% translate "Listing" %}</small>
+                  <div class="fw-semibold">
+                    {% if sr.listed_from %}
+                      {{ sr.listed_from }} - {{ sr.listed_until|default:"∞" }}
+                      {% if sr.listed_from > today %}
+                        <span class="badge bg-warning text-dark ms-2">{% translate "not yet listed" %}</span>
+                      {% elif sr.listed_until < today %}
+                        <span class="badge bg-secondary ms-2">{% translate "unlisted" %}</span>
+                      {% else %}
+                        <span class="badge bg-success ms-2">{% translate "listed" %}</span>
+                      {% endif %}
+                    {% else %}
+                      <span class="text-muted">{% translate "not yet scheduled" %}</span>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="p-3 bg-light rounded-3">
+              <div class="d-flex align-items-start gap-2">
+                <i class="bi bi-check-circle text-muted"></i>
+                <div class="flex-grow-1">
+                  <small class="text-muted d-block mb-1">{% translate "Availablity" %}</small>
+                  <div class="fw-semibold">
+                    {% if sr.available_from %}
+                      {{ sr.available_from }} - {{ sr.available_until|default:"∞" }}
+                      {% if sr.available_from > today %}
+                        <span class="badge bg-info ms-2">{% translate "upcoming" %}</span>
+                      {% elif sr.available_until and sr.available_until < today %}
+                        <span class="badge bg-secondary ms-2">{% translate "retired" %}</span>
+                      {% else %}
+                        <span class="badge bg-success ms-2">{% translate "available" %}</span>
+                      {% endif %}
+                    {% else %}
+                      <span class="text-muted">{% translate "not yet scheduled" %}</span>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- EOL Action -->
+        {% if sr.eol %}
+        <div class="mb-4 checkmark">
+          <h6 class="text-primary fw-semibold mb-2 d-flex align-items-center gap-2">
+            <i class="bi bi-archive"></i>
+            {% translate "EOL action" %}
+          </h6>
+          <div class="ms-4 p-3 bg-light rounded-3">{{ sr.eol|linebreaks|parse_internal_links}}</div>
+        </div>
+        {% endif %}
+
+        <!-- Clientele & Costs -->
+        <h5 class="text-primary mb-4 fw-semibold">
+          <i class="bi bi-people me-2"></i>{% translate "Target Groups & Costs" %}
+        </h5>
+
+        {% if not kwargs.clientele_id %}
+        <div class="mb-0">
+          <h6 class="text-primary fw-semibold mb-2 d-flex align-items-center gap-2">
+            <i class="bi bi-person-check"></i>
+            {% translate "Available for" %}
+          </h6>
+          <div class="ms-4">
+            {% for avail in sr.availability_set.all %}
+              <span class="badge bg-light text-dark border me-1 mb-1">{{ avail.clientele_name_with_costs }}</span>
+            {% empty %}
+              <span class="text-muted"><em>{% translate "unfortunately nobody yet" %}</em></span>
+            {% endfor %}
+          </div>
+        </div>
+        {% else %}
+        <!-- Costs for specific clientele -->
+        {% for avail in sr.availability_set.all %}
+          {% if avail.clientele.id == kwargs.clientele_id %}
+          <div class="mb-0">
+            <h6 class="text-primary fw-semibold mb-2 d-flex align-items-center gap-2">
+              <i class="bi bi-currency-dollar"></i>
+              {% translate "Costs" %}
+            </h6>
+            <div class="ms-4">
+              {% if avail.charged %}
+                <span class="badge bg-success fs-6">
+                  {% if avail.fee > 0 %}{{avail.fee}}{% endif %} {{avail.fee_unit}}
+                  {% if avail.comment %}<small class="ms-1">({{avail.comment}})</small>{% endif %}
+                </span>
+              {% else %}
+                <span class="badge bg-info bg-opacity-10 text-info border border-info">{% translate "none" %}</span>
+              {% endif %}
+            </div>
+          </div>
+          {% endif %}
+        {% endfor %}
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+

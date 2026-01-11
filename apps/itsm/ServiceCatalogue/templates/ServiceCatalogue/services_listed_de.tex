@@ -1,0 +1,131 @@
+\documentclass[a4paper,10pt]{article}
+\renewcommand{\rmdefault}{phv} % Arial-like
+\renewcommand{\sfdefault}{phv} % Arial-like
+\usepackage[top=2cm,bottom=2cm,left=2.5cm,right=2cm]{geometry}
+\setlength{\parindent}{0cm}
+\usepackage[hidelinks]{hyperref}
+\usepackage[utf8]{inputenc}
+\usepackage[table]{xcolor}
+\usepackage[ngerman]{babel}
+\usepackage{fancyhdr}
+\usepackage{tikz}
+\usetikzlibrary{calc}
+\usepackage{graphicx}
+\usepackage[useregional,showzoneminutes=false,showseconds=false]{datetime2}
+{% graphicspath %}
+             
+%\usepackage[fontsize=0.2\paperwidth,colorspec=.95,firstpageonly=true]{draftwatermark}
+
+\fancyhead[L]{\textbf{ {{- organization_acronym | latex_escape }} IT Servicekatalog}}
+\fancyhead[C]{}
+\fancyhead[R]{\nouppercase{\leftmark}}
+{% if user.is_authenticated and caching_time_seconds == 0 %}
+  \fancyfoot[L]{\tiny Erzeugt mit {{ branding }} für {{ user.username }} \\Stand: \DTMnow }
+{% else %}
+  \fancyfoot[L]{\tiny Erzeugt mit {{ branding }}\\Stand: \DTMnow }
+{% endif %}
+\fancyfoot[C]{}
+\fancyfoot[R]{\thepage}
+\pagestyle{fancy}
+
+%ignore non-valid utf8-characters:
+\makeatletter
+\def\UTFviii@undefined@err#1{(?)}
+\makeatother
+
+\begin{document}
+\shorthandoff{"}
+\thispagestyle{empty}
+
+\title{IT Servicekatalog}
+\maketitle
+{% if logo_filename %}
+\begin{tikzpicture}[overlay, remember picture]
+\node[anchor=north west,
+      xshift=12cm,
+      yshift=-.5cm] 
+      at (current page.north west)
+     {\includegraphics[height=2.5cm]{ {{- logo_filename -}} }}; 
+\end{tikzpicture}
+{% endif %}
+
+\tableofcontents
+
+{% for cl in clienteles %}  
+\clearpage
+\section{Services für {{ cl.name | latex_escape }} } 
+
+{% for sr in object_list if cl.id in sr.availability_set.values_list("clientele__id",flat=True) %} 
+ {% if loop.changed(sr.service.category.name) %}
+    \subsection{ {{- sr.service.category.name | latex_escape -}} }
+    {% if sr.service.category.description %}
+      {\it {{ sr.service.category.description | latex_escape }} }
+    {% endif %}
+  {% endif %}
+  \subsubsection{ {{- sr.service.name | latex_escape }} ({{ sr.version | latex_escape }})}                
+  \begin{tabular}{@{}p{.2\textwidth}p{.77\textwidth}}
+  Servicekennung:& {{ sr.key | latex_escape}}\\
+  Ziel / Mehrwert:&{{sr.service.purpose | latex_escape}}\\
+  Beschreibung:&{{sr.description | latex_escape}}\\
+  {% if show_usage_information and sr.usage_information %}Zu beachten:&{{sr.usage_information | latex_escape }}\\{% endif %}
+  {% if show_requirements and sr.requirements %}Voraussetzungen:&{{sr.requirements | latex_escape }}\\{% endif %}
+  {% if show_details and sr.details %}Details:&{{sr.details | latex_escape }}\\{% endif %}
+  {% if show_options and sr.options %}Optionen:&{{sr.options | latex_escape }}\\{% endif %}
+  {% if show_service_level and sr.service_level %}Service Level:&{{sr.service_level | latex_escape }}\\{% endif %}
+  {% if sr.url %}Link zum Service:&\href{ {{- sr.url -}} }{ {{- sr.url | latex_escape -}} }\\{% endif %}
+  {% if sr.contact %}Service-Kontakt:&\href{mailto: {{- sr.contact -}} ?subject=[Service Request {{ sr.key | iriencode  }}] {{sr.service.name | iriencode }} }{ {{- sr.contact | latex_escape -}} }\\{% endif %}
+  {% if not sr.available_from %}Verfügbar ab:&\emph{noch nicht festgelegt}\\{% elif sr.available_from > today %}Verfügbar ab:&{{sr.available_from}}\\{% endif %}
+  {% if sr.available_until %}Verfügbar bis:&{{sr.available_until}}\\{% endif %}
+  {% for av in sr.availability_set.all() %}
+    {% if ( av.clientele.id == cl.id ) and ( av.charged ) %}
+      Kosten:& {{ av.fee if av.fee > 0 }} {{ av.fee_unit.name }}\\
+    {% endif %}
+    {% if ( av.clientele.id == cl.id ) and ( av.comment ) %}
+      Anmerkung:& {{ av.comment | latex_escape }}\\
+    {% endif %}
+  {% endfor %}    
+  \end{tabular}
+  {% else %}
+      Derzeit leider keine IT-Services.
+{% endfor %}
+
+{% endfor %}
+
+{# Here: list for all services with ``for whom'' as extra information #}
+
+\clearpage
+\section{Vollständige Liste aller Services } 
+
+{% for sr in object_list %} 
+ {% if loop.changed(sr.service.category.name) %}
+    \subsection{ {{- sr.service.category.name | latex_escape -}} }
+    {% if sr.service.category.description %}
+      {\textit {{ sr.service.category.description | latex_escape }} }
+    {% endif %}
+  {% endif %}
+  {% if not loop.previtem or sr.service.key != loop.previtem.service.key %} {# unfortunately changed cannot be nested #}
+  \subsubsection{ {{- sr.service.name | latex_escape }} }
+  {{sr.service.purpose | latex_escape}}\\
+  {% endif %} 
+  \begin{tabular}{@{}p{.2\textwidth}p{.77\textwidth}}
+  \rowcolor{gray!10}\textbf{Servicekennung:}&\textbf{ {{- sr.key | latex_escape }} }\\  
+  Beschreibung:&{{sr.description | latex_escape}}\\
+  {% if show_usage_information and sr.usage_information %}Zu beachten:&{{sr.usage_information | latex_escape }}\\{% endif %}
+  {% if show_requirements and sr.requirements %}Anforderungen:&{{sr.requirements | latex_escape }}\\{% endif %}
+  {% if show_details and sr.details %}Details:&{{sr.details | latex_escape }}\\{% endif %}
+  {% if show_options and sr.options %}Optionen:&{{sr.options | latex_escape }}\\{% endif %}
+  {% if show_service_level and sr.service_level %}Service Level:&{{sr.service_level | latex_escape }}\\{% endif %}
+  {% if sr.url %}Link zum Service:&\href{ {{- sr.url -}} }{ {{- sr.url | latex_escape -}} }\\{% endif %}
+  {% if sr.contact %}Service-Kontakt:&\href{mailto: {{- sr.contact -}} ?subject=[Service Request {{ sr.key | iriencode  }}] {{sr.service.name | iriencode }} }{ {{- sr.contact | latex_escape -}} }\\{% endif %}
+  Verfügbarkeit:&{% if sr.available_from and  sr.available_until %}{% if sr.available_from > today %}ab {% endif %} {{sr.available_from}} -- {{sr.available_until}}
+    {% elif sr.available_from %}{% if sr.available_from > today %}ab {% else %} seit {% endif %} {{sr.available_from}}, Ende der Verfügbarkeit noch nicht festgelegt
+    {% else %}\emph{noch nicht festgelegt}{% endif %}\\
+{#  Available for:&{{ sr.availability_set.values_list("clientele__name",flat=True) | join(", ") }}\\ #}
+  Verfügbar für:&{% for av in sr.availability_set.all() %}{{ av.clientele_name_with_costs | latex_escape }}{% if not loop.last %}, {% endif %}{% else %}derzeit für keine Nutzergruppe{% endfor %}\\
+  \end{tabular}
+  {% else %}
+      Derzeit leider keine IT-Services.
+{% endfor %}
+
+\end{document}
+

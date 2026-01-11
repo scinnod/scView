@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+{% load i18n %}{% get_current_language as CURRENT_LANGUAGE %}
+{% load static %}
+<html lang="{{ CURRENT_LANGUAGE }}" data-bs-theme="light">
+
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="{% static 'css/bootstrap-icons.min.css' %}">
+    <title>{% block title %}{% endblock %}</title>
+    <style>
+      :root {
+          /* Corporate Identity Colors */
+          --primary-color: #{{ primary_color|default:"0d6efd" }};
+          --secondary-color: #{{ secondary_color|default:"6610f2" }};
+          
+          /* Softer color palette */
+          --bg-light: #f8f9fa;
+          --bg-card: #ffffff;
+          --text-primary: #2c3e50;
+          --text-secondary: #6c757d;
+          --border-color: #e9ecef;
+          --shadow-sm: 0 0.125rem 0.5rem rgba(0, 0, 0, 0.075);
+          --shadow-md: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+          --shadow-lg: 0 1rem 3rem rgba(0, 0, 0, 0.125);
+      }
+      
+      /* Modern, comfortable typography */
+      body {
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+          font-size: 16px;
+          line-height: 1.7;
+          color: var(--text-primary);
+          background-color: var(--bg-light);
+      }
+      
+      /* Smooth headings */
+      h1, h2, h3, h4, h5, h6 {
+          font-weight: 600;
+          letter-spacing: -0.02em;
+          color: var(--text-primary);
+      }
+      
+      /* Override Bootstrap primary colors with corporate identity */
+      .btn-primary {
+          background-color: var(--primary-color);
+          border-color: var(--primary-color);
+      }
+      
+      .btn-primary:hover {
+          background-color: color-mix(in srgb, var(--primary-color) 85%, black);
+          border-color: color-mix(in srgb, var(--primary-color) 85%, black);
+      }
+      
+      .text-primary {
+          color: var(--primary-color) !important;
+      }
+      
+      .bg-primary {
+          background-color: var(--primary-color) !important;
+      }
+      
+      /* Smooth rounded corners everywhere */
+      .card, .btn, .form-control, .form-select, .input-group,
+      .badge, .alert, .dropdown-menu, .nav-pills .nav-link,
+      .accordion-button {
+          border-radius: 0.75rem;
+      }
+      
+      /* Softer shadows */
+      .card {
+          border: 1px solid var(--border-color);
+          box-shadow: var(--shadow-sm);
+          transition: all 0.3s ease;
+      }
+      
+      .card:hover {
+          box-shadow: var(--shadow-md);
+      }
+      
+      /* Navbar branding */
+      .navbar-brand {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          font-weight: 600;
+          font-size: 1.25rem;
+      }
+      
+      .navbar-brand img {
+          max-height: 40px;
+          width: auto;
+          object-fit: contain;
+      }
+      
+      /* Smooth buttons */
+      .btn {
+          font-weight: 500;
+          padding: 0.5rem 1.25rem;
+          transition: all 0.2s ease;
+          border: none;
+      }
+      
+      .btn:hover {
+          transform: translateY(-1px);
+          box-shadow: var(--shadow-sm);
+      }
+      
+      /* Smooth badges */
+      .badge {
+          font-weight: 500;
+          padding: 0.4em 0.75em;
+      }
+      
+      .content {
+          padding-top: 70px;
+          padding-bottom: 3rem;
+      }
+      
+      html {
+          scroll-padding-top: 70px;
+      }
+      
+      /* Sticky footer layout */
+      html, body {
+          height: 100%;
+      }
+      
+      body {
+          display: flex;
+          flex-direction: column;
+      }
+      
+      body > .container-xxl {
+          flex: 1 0 auto;
+      }
+      
+      footer {
+          flex-shrink: 0;
+      }
+      
+      .navbar {
+          box-shadow: var(--shadow-sm);
+      }
+      
+      /* Mobile-first responsive design */
+      @media (max-width: 768px) {
+          .container {
+              padding-left: 10px;
+              padding-right: 10px;
+          }
+          
+          h1 { font-size: 1.75rem; }
+          h2 { font-size: 1.5rem; }
+          h3 { font-size: 1.25rem; }
+          
+          .navbar-brand img {
+              max-height: 32px;
+          }
+          
+          .content {
+              padding-top: 65px;
+          }
+      }
+      
+      /* Ensure tables are responsive */
+      .table-responsive {
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+      }
+      
+      /* Footer app link - no underline for cleaner look */
+      .footer-app-link {
+          text-decoration: none;
+      }
+      
+      .footer-app-link:hover {
+          text-decoration: underline;
+      }
+    </style>
+    {% block extra_css %}{% endblock %}
+  </head>
+
+  <body class="bg-light">
+    <div class="container-xxl px-3 px-md-4">
+      {% block content %}
+      {% endblock %}
+    </div>
+    
+    {% block footer %}
+    {% endblock %}
+  
+    <!-- Bootstrap 5.3 Bundle with Popper -->
+    <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+    <!-- Mark.js for search highlighting -->
+    <script src="{% static 'js/mark.min.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+  </body>
+
+</html>

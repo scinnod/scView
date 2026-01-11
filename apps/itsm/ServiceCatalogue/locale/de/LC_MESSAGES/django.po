@@ -1,0 +1,1522 @@
+# German translations for ServiceCatalogue
+# Copyright (C) 2025
+# This file is distributed under the same license as the ITSM package.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: ITSM ServiceCatalogue\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-01-05 09:46+0000\n"
+"PO-Revision-Date: 2025-12-23 17:00+0000\n"
+"Last-Translator: \n"
+"Language-Team: German\n"
+"Language: de\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: ServiceCatalogue/admin.py:161
+msgid "Link to add form (empty new service revision)"
+msgstr "Link zum Hinzufügen-Formular (neue, leere Revision für diesen Service)"
+
+#: ServiceCatalogue/admin.py:165
+msgid "Please save this new service first. Link will be available then."
+msgstr "Neuen Service bitte zunächst sichern. Link wird dann angezeigt."
+
+#: ServiceCatalogue/admin.py:190
+msgid "not yet submitted"
+msgstr "noch nicht eingereicht"
+
+#: ServiceCatalogue/admin.py:191
+msgid "submitted but not scheduled"
+msgstr "eingereicht aber noch nicht geplant"
+
+#: ServiceCatalogue/admin.py:192
+msgid "scheduled for listing"
+msgstr "geplant"
+
+#: ServiceCatalogue/admin.py:193
+msgid "currently listed"
+msgstr "derzeit gelistet"
+
+#: ServiceCatalogue/admin.py:194
+msgid "not anymore more listed"
+msgstr "nicht mehr gelistet"
+
+#: ServiceCatalogue/admin.py:227
+msgid "Available"
+msgstr "Verfügbar"
+
+#: ServiceCatalogue/admin.py:241
+#: ServiceCatalogue/templates/ServiceCatalogue/services_internal.html:262
+#: ServiceCatalogue/templates/ServiceCatalogue/services_internal.html:292
+#: ServiceCatalogue/templates/ServiceCatalogue/services_listed.html:102
+msgid "not yet scheduled"
+msgstr "noch nicht geplant"
+
+#: ServiceCatalogue/admin.py:242
+msgid "scheduled"
+msgstr "geplant"
+
+#: ServiceCatalogue/admin.py:243
+#: ServiceCatalogue/templates/ServiceCatalogue/services_base.html:30
+#: ServiceCatalogue/templates/ServiceCatalogue/services_base.html:52
+#: ServiceCatalogue/templates/ServiceCatalogue/services_internal.html:289
+msgid "available"
+msgstr "verfügbar"
+
+#: ServiceCatalogue/admin.py:244
+msgid "available, EOL scheduled"
+msgstr "verfügbar, EOL geplant"
+
+#: ServiceCatalogue/admin.py:245
+msgid "EOL reached"
+msgstr "EOL erreicht"
+
+#: ServiceCatalogue/admin.py:427
+msgid "Link to add form (new service)"
+msgstr "Link zum Hinzufügen-Formular (neuer Service in dieser Kategorie)"
+
+#: ServiceCatalogue/admin.py:431
+msgid "Please save this new category. Link will be available then."
+msgstr "Neue Kategorie bitte zunächst sichern. Link wird dann angezeigt."
+
+#: ServiceCatalogue/models.py:15
+msgid "Hierarchy of service providing units"
+msgstr "Hierarchie der Serviceprovider"
+
+#: ServiceCatalogue/models.py:16
+msgid "Recommendation: seperation by 'dots'"
+msgstr "Empfehlung: Trennung durch Punkte"
+
+#: ServiceCatalogue/models.py:18 ServiceCatalogue/models.py:52
+#: ServiceCatalogue/models.py:79 ServiceCatalogue/models.py:139
+msgid "Name"
+msgstr "Name"
+
+#: ServiceCatalogue/models.py:141
+msgid "Name (public, search, ai)"
+msgstr "Name (öffentlich, Suche, KI)"
+
+#: ServiceCatalogue/models.py:23
+msgid "Acronym"
+msgstr "Abkürzung"
+
+#: ServiceCatalogue/models.py:24
+msgid "Not required, only if applies."
+msgstr "Angabe nicht erforderlich, nur falls bekannt."
+
+#: ServiceCatalogue/models.py:35
+msgid "_Service provider"
+msgstr "_Serviceprovider"
+
+#: ServiceCatalogue/models.py:36
+msgid "_Service Providers"
+msgstr "_Serviceprovider"
+
+#: ServiceCatalogue/models.py:45 ServiceCatalogue/models.py:72
+#: ServiceCatalogue/models.py:129
+msgid "Order in listings"
+msgstr "Ordnungsnummer für Reihenfolge"
+
+#: ServiceCatalogue/models.py:49 ServiceCatalogue/models.py:76
+#: ServiceCatalogue/models.py:133
+msgid ""
+"Can be used to adjust order of service providers. Otherwise names are used."
+msgstr ""
+"Kann verwendet werden, um die Reihenfolge der Serviceprovider anzupassen. "
+"Andernfalls werden die Namen der Serviceprovider verwendet."
+
+#: ServiceCatalogue/models.py:54 ServiceCatalogue/models.py:81
+#: ServiceCatalogue/models.py:140
+msgid "Identifyer / Acronym"
+msgstr "Identifizierer / Akronym"
+
+#: ServiceCatalogue/models.py:61
+msgid "_Clientele Group"
+msgstr "_Nutzerkreis"
+
+#: ServiceCatalogue/models.py:62
+msgid "_Clientele Groups"
+msgstr "_Nutzerkreise"
+
+#: ServiceCatalogue/models.py:86
+msgid "Service category description shown in catalogues"
+msgstr "Beschreibung der Servicekategorie in Katalogen."
+
+#: ServiceCatalogue/models.py:93
+msgid "Responsible / category owner"
+msgstr "Verantwortlich / Kategorie-Owner"
+
+#: ServiceCatalogue/models.py:100
+msgid "  Service Category"
+msgstr "  Servicekategorie"
+
+#: ServiceCatalogue/models.py:101
+msgid "  Service Categories"
+msgstr "  Servicekategorien"
+
+#: ServiceCatalogue/models.py:137
+msgid "Service Category"
+msgstr "Servicekategorie"
+
+#: ServiceCatalogue/models.py:142
+msgid "Main purpose / added value of this service"
+msgstr "Kernziel / Mehrwert"
+
+#: ServiceCatalogue/models.py:143
+msgid "Main purpose / added value of this service (public, search, ai)"
+msgstr "Kernziel / Mehrwert (öffentlich, Suche, KI)"
+
+#: ServiceCatalogue/models.py:144
+msgid ""
+"Why is this service offered? What is the intended particular benefit for the "
+"user? (brief description only)"
+msgstr ""
+"Warum wird dieser Service angeboten? Was istr der angestrebte, spezifische "
+"Mehrwert für NutzerInnen? (kurz und prägnant)"
+
+#: ServiceCatalogue/models.py:152
+msgid "Responsible / service owner"
+msgstr "Verantwortlich / Service-Owner"
+
+#: ServiceCatalogue/models.py:154
+msgid ""
+"Contact person with overall responsibility for aligning the service with the "
+"needs of the users, the quality and the improvement of the service"
+msgstr ""
+"AnsprechpartnerIn mit ganzheitlicher Verantwortung für die Ausrichtung des "
+"Dienstes an den Bedürfnissen der Nutzenden, der Qualität und die "
+"Verbesserung des Dienstes"
+
+#: ServiceCatalogue/models.py:160
+msgid "Teams involved in service provision"
+msgstr "In die Serviceerbringung involvierte Teams"
+
+#: ServiceCatalogue/models.py:167
+msgid " Service"
+msgstr " Service"
+
+#: ServiceCatalogue/models.py:168
+msgid " Services"
+msgstr " Services"
+
+#: ServiceCatalogue/models.py:204
+msgid "Service"
+msgstr "Service"
+
+#: ServiceCatalogue/models.py:206
+msgid "Version / Revision"
+msgstr "Version / Revision"
+
+#: ServiceCatalogue/models.py:208
+msgid "Search keywords"
+msgstr "Suchbegriffe"
+
+#: ServiceCatalogue/models.py:209
+msgid "Search keywords (search)"
+msgstr "Suchbegriffe (Suche)"
+
+#: ServiceCatalogue/models.py:210
+msgid "Additional keywords for fulltext search (words separated by spaces). These keywords are used for searching but not visible to users."
+msgstr "Zusätzliche Schlagwörter für die Volltextsuche (Wörter durch Leerzeichen getrennt). Diese Schlagwörter werden für die Suche verwendet, sind aber für Benutzer nicht sichtbar."
+
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail_internal.html:125
+msgid "Keywords"
+msgstr "Schlagwörter"
+
+#: ServiceCatalogue/models.py:214
+msgid "Submitted for public listing?"
+msgstr "Für Übernahme in öffentlichen Katalog eingereicht?"
+
+#: ServiceCatalogue/models.py:211
+msgid ""
+"Submitted services revisions become visible for staff users. Contact an "
+"editor for final publication or if further changes are required."
+msgstr ""
+"Eingereichte Servicerevisionen werden für RZ-Mitarbeitende sichtbar. Zur "
+"Veröffentlichung oder für den Fall, dass nach dem Einreichen noch Änderungen "
+"notwendig sind, bitte einen Editor kontaktieren."
+
+#: ServiceCatalogue/models.py:217
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail_internal.html:318
+msgid "Listed from"
+msgstr "Gelistet ab / seit"
+
+#: ServiceCatalogue/models.py:219
+msgid ""
+"Date, when this service is listed initially and can be ordered. Not listed "
+"if blank."
+msgstr ""
+"Datum, ab dem dieser Dienst öffentlich gelistet ist und bestellt werden "
+"kann. Falls nicht angegeben wird der Service nicht gelistet."
+
+#: ServiceCatalogue/models.py:225
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail.html:250
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail_internal.html:326
+msgid "Available from"
+msgstr "Verfügbar ab / seit"
+
+#: ServiceCatalogue/models.py:227
+msgid "Date, when this service is available for users. Should not be empty."
+msgstr ""
+"Datum, ab dem der Service für NutzerInnen verfügbar ist. Sollte für "
+"gelistete Services nicht leer sein.Datum, ab dem der Service für NutzerInnen "
+"verfügbar ist. Sollte für gelistete Services nicht leer sein."
+
+#: ServiceCatalogue/models.py:233
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail_internal.html:169
+#: ServiceCatalogue/templates/ServiceCatalogue/services_internal.html:83
+msgid "Internal description / configuration"
+msgstr "Interne Beschreibung / Konfiguration"
+
+#: ServiceCatalogue/models.py:235
+msgid ""
+"For instance: details on hardware, configuration details, pitfalls, "
+"documentation requirements etc. May contain links to external sources."
+msgstr ""
+"Zum Beispiel: Details zu Hardware, Konfiguation, typ. Schwierigkeiten, "
+"Notwendigkeit der Dokumentation, etc. Kann auch Verweise / Links auf externe "
+"Quellen enthalten."
+
+#: ServiceCatalogue/models.py:239
+msgid "Service description"
+msgstr "Beschreibung des Services"
+
+#: ServiceCatalogue/models.py:241
+msgid "Service description (public, search, ai)"
+msgstr "Beschreibung des Services (öffentlich, Suche, KI)"
+
+#: ServiceCatalogue/models.py:241
+msgid ""
+"Self-contained service description. Please avoid links to external sources, "
+"if possible."
+msgstr ""
+"In sich geschlossene Beschreibung des Services. Links / Verweise auf externe "
+"Quellen gerne vermeiden."
+
+#: ServiceCatalogue/models.py:247
+msgid "Requirements for use of service, if any."
+msgstr ""
+"Voraussetzungen um den Service nutzen zu können, falls welche "
+"bestehen.Voraussetzungen um den Service nutzen zu können, falls welche "
+"bestehen."
+
+#: ServiceCatalogue/models.py:249
+msgid "Requirements for use of service, if any. (public, search, ai)"
+msgstr ""
+"Voraussetzungen um den Service nutzen zu können, falls welche "
+"bestehen (öffentlich, Suche, KI)"
+
+#: ServiceCatalogue/models.py:252
+msgid "Please Note"
+msgstr "Zu beachten"
+
+#: ServiceCatalogue/models.py:254
+msgid "Please Note (public, search, ai)"
+msgstr "Zu beachten (öffentlich, Suche, KI)"
+
+#: ServiceCatalogue/models.py:253
+msgid ""
+"Important information for using this service, e.g. regarding compliance with "
+"data privacy, information security and/or AI regulations (EU AI Act). This "
+"text is displayed highlighted in the service description."
+msgstr ""
+"Wichtige Informationen zur Nutzung dieses Services, z.B. hinsichtlich "
+"Einhaltung von Datenschutz, Informationssicherheit und/oder KI-Regulierungen "
+"(EU KI Act). Dieser Text wird hervorgehoben in der Service-Beschreibung angezeigt."
+
+#: ServiceCatalogue/models.py:258
+msgid "Service details"
+msgstr "Detaillierte Beschreibung"
+
+#: ServiceCatalogue/models.py:265
+msgid "Service details (public, search, ai)"
+msgstr "Detaillierte Beschreibung (öffentlich, Suche, KI)"
+
+#: ServiceCatalogue/models.py:254
+msgid ""
+"Detailed description and notes on availability / service levels and support "
+"during operation, etc. if applicable.  May contain links to external sources."
+msgstr ""
+"Detaillierte Beschreibung sowie Anmerkungen zur Verfügbarkeit / Servicelevel "
+"und Support, sofern relevant. Kann auch Verweise / Links auf externe Quellen "
+"enthalten."
+
+#: ServiceCatalogue/models.py:260
+msgid "Available options"
+msgstr "Verfügbare Optionen"
+
+#: ServiceCatalogue/models.py:273
+msgid "Available options (public, search, ai)"
+msgstr "Verfügbare Optionen (öffentlich, Suche, KI)"
+
+#: ServiceCatalogue/models.py:262
+msgid ""
+"Can be used to harmonize user-specific requirements and wishes, at least to "
+"some extent."
+msgstr ""
+"Kann verwendet werden, um Nutzer-spezifische Anforderungen und Wünsche nach "
+"Möglichkeit zur harmonisieren."
+
+#: ServiceCatalogue/models.py:270
+msgid "Contact Email"
+msgstr "Email Servicekontakt"
+
+#: ServiceCatalogue/models.py:281
+msgid "Service level / SLA (public, ai)"
+msgstr "Servicelevel / SLA (öffentlich, KI)"
+
+#: ServiceCatalogue/models.py:283
+msgid ""
+"Service level agreement, availability guarantees, support hours, uptime "
+"commitments, and response time expectations."
+msgstr ""
+"Service-Level-Agreement, Verfügbarkeitsgarantien, Supportzeiten, "
+"Verfügbarkeitszusagen und Antwortzeiten."
+
+#: ServiceCatalogue/models.py:272
+msgid ""
+"Email address which should be used for service requests. If possible "
+"helpdesk or other institutional email address, if not applicable also "
+"personal email adresses can be used (but might require effort in "
+"maintenance)."
+msgstr ""
+"Email-Adresse, die für Service-Anfragen genutzt werden soll. Falls möglich "
+"gerne des Helpdesk oder eine andere institutionelle Adresse verwenden, "
+"andernfalls können auch persönliche Emailadressen angegeben werden "
+"(benötigen dann unter Umständen aber einen erhöhten Aufwand in der Pflege)."
+
+#: ServiceCatalogue/models.py:279
+msgid "URL to service"
+msgstr "URL des Services"
+
+#: ServiceCatalogue/models.py:281
+msgid ""
+"If available. Please include http://  or https:// and make sure the URL is "
+"safe, i.e. it does not contain malicious code and it is maintained."
+msgstr ""
+"Wenn verfügbar. Angabe inkl. http://  oder https://. Bitte sicherstellen, "
+"dass die URL sicher ist, d.h. dass sie keinen Schadcode enthält und "
+"hinreichend gut gepflegt wird."
+
+#: ServiceCatalogue/models.py:287
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail_internal.html:322
+msgid "Listed until"
+msgstr "Gelistet bis"
+
+#: ServiceCatalogue/models.py:289
+msgid ""
+"Date, when this service is removed from the catalogue and is not avaliable "
+"to new users any more."
+msgstr ""
+"Datum, an dem dieser Service aus dem Katalog entfernt wird und damit für "
+"neue NutzerInnen nicht mehr verfügbar ist."
+
+#: ServiceCatalogue/models.py:295
+msgid "Available until / EOL"
+msgstr "Verfügbar bis / EOL"
+
+#: ServiceCatalogue/models.py:297
+msgid ""
+"Date, when this service is discontinued for all users. Should be known and "
+"set when service is removed from the catalogue."
+msgstr ""
+"Datum, an dem dieser Service für keinen Nutzer / keine Nutzerin mehr "
+"weitergeführt wird. Sollte bekannt sein, wenn ein Service aus dem Katalog "
+"entfernt wird (d.h. wenn das Ende der Verfügbarkeit gesetzt wird)."
+
+#: ServiceCatalogue/models.py:303
+msgid "What should happen at EOL?"
+msgstr "Was soll am EOL passieren?"
+
+#: ServiceCatalogue/models.py:305
+msgid ""
+"Give some hints what to do with this service at end of life, e.g. which "
+"which revision to transfer to or which action to take."
+msgstr ""
+"Gib Hinweise darauf, was am EOL zu erfolgen hat und auf welche Services ggf. "
+"noch bestehene Geräte / NutzerInnen überführt werden sollen."
+
+#: ServiceCatalogue/models.py:313
+msgid "used for fulltext-search only, should not be editable"
+msgstr "für die Volltext-Sucher verwendte, nicht editierbar"
+
+#: ServiceCatalogue/models.py:320
+msgid "Can publish services"
+msgstr "Kann Services veröffentlichen"
+
+#: ServiceCatalogue/models.py:321
+msgid "Service Revision / Detail"
+msgstr "Servicerevision / -detail"
+
+#: ServiceCatalogue/models.py:322
+msgid "Service Revisions / Details"
+msgstr "Servicerevisionen / -details"
+
+#: ServiceCatalogue/models.py:334
+msgid ""
+"If \"listed until\" is set please also indicate \"listed from\". "
+"Alternatively remove \"listed until\"."
+msgstr ""
+"Wenn \"Gelistet bis\" gesetzt ist bitte auch  \"gelistet ab / seit\" "
+"angeben. Alternativ \"gelistet bis\" löschen."
+
+#: ServiceCatalogue/models.py:344
+msgid "\"listed until\" cannot be earlier than \"listed from\"."
+msgstr "\"Gelistet bis\" kann nicht vor \"gelistet ab / seit\" liegen."
+
+#: ServiceCatalogue/models.py:349
+msgid ""
+"If setting \"listed_until\" please also indicate end of availabiliy of "
+"service (\"available_until\")."
+msgstr ""
+"Wenn \"gelistet bis\" gesetzt ist, bitte auch das Ende der Verfügbarkeit des "
+"Dienstes (\"verfügbar bis\") angeben."
+
+#: ServiceCatalogue/models.py:355
+msgid ""
+"Please indicate what to do at EOL with remaining users (if any) and fill "
+"field \"What should happen att EOL?\"."
+msgstr ""
+"Wenn \"verfügbar bis\" gesetzt ist, muss auch die Frage \"Was soll am EOL "
+"passieren?\" beantwortet werden."
+
+#: ServiceCatalogue/models.py:361
+msgid ""
+"If \"available until\" is set please also indicate \"available from\". "
+"Alternatively remove \"available until\"."
+msgstr ""
+"Wenn \"verfügbar bis\" gesetzt ist bitte auch  \"verfügbar ab / seit\" "
+"angeben. Alternativ \"verfügbar bis\" löschen."
+
+#: ServiceCatalogue/models.py:371
+msgid "\"available until\" cannot be earlier than \"available from\"."
+msgstr "\"Verfügbar bis\" kann nicht vor \"verfügbar ab\" liegen."
+
+#: ServiceCatalogue/models.py:379
+msgid "service main purpose / added value"
+msgstr "Kernziel / Mehrwert des Services"
+
+#: ServiceCatalogue/models.py:398
+msgid "0-not yet submitted"
+msgstr "0-noch nicht eingereicht"
+
+#: ServiceCatalogue/models.py:400
+msgid "1-submitted but not yet scheduled"
+msgstr "1-eingereicht aber noch nicht geplant"
+
+#: ServiceCatalogue/models.py:402
+msgid "2-listing at {}"
+msgstr "2-gelistet ab {}"
+
+#: ServiceCatalogue/models.py:404
+msgid "4-not more listed since {}"
+msgstr "4-nicht mehr gelistst seit {}"
+
+#: ServiceCatalogue/models.py:406
+msgid "3-currently listed"
+msgstr "3-derzeit gelistet"
+
+#: ServiceCatalogue/models.py:412
+msgid "0-availability not scheduled"
+msgstr "0-Verfügbarkeit nicht geplant"
+
+#: ServiceCatalogue/models.py:414
+msgid "1-available at {}"
+msgstr "1-verfügbar ab {}"
+
+#: ServiceCatalogue/models.py:416
+msgid "4-not more available since {}"
+msgstr "4-nicht mehr verfügbar seit {}"
+
+#: ServiceCatalogue/models.py:418
+msgid "3-available, EOL {}"
+msgstr "3-verfügbar, EOL {}"
+
+#: ServiceCatalogue/models.py:420
+msgid "2-available, EOL unknown"
+msgstr "2-verfügbar, EOL unbekannt"
+
+#: ServiceCatalogue/models.py:456
+msgid "Label"
+msgstr "Bezeichnung"
+
+#: ServiceCatalogue/models.py:462
+msgid "_Charging unit"
+msgstr "_Abrechnungseinheit"
+
+#: ServiceCatalogue/models.py:463
+msgid "_Charging units"
+msgstr "_Abrechnungseinheiten"
+
+#: ServiceCatalogue/models.py:472
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail_internal.html:285
+msgid "Comment"
+msgstr "Anmerkung"
+
+#: ServiceCatalogue/models.py:473
+msgid "Subject to charges?"
+msgstr "Mit Kosten verbunden?"
+
+#: ServiceCatalogue/models.py:475
+msgid "User fee"
+msgstr "Nutzerkosten"
+
+#: ServiceCatalogue/models.py:482
+msgid "Unit"
+msgstr "Einheit"
+
+#: ServiceCatalogue/models.py:489
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail.html:209
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail_internal.html:276
+#: ServiceCatalogue/templates/ServiceCatalogue/services_listed.html:95
+msgid "Availability"
+msgstr "Verfügbarkeit"
+
+#: ServiceCatalogue/models.py:490
+msgid "Availabilities"
+msgstr "Verfügbarkeiten"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail.html:65
+msgid "Public View"
+msgstr "Öffentliche Ansicht"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail.html:67
+msgid "You are viewing this page as a regular user would see it."
+msgstr "Sie sehen diese Seite so, wie sie ein normaler Benutzer sehen würde."
+
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail.html:69
+msgid "Switch to internal view"
+msgstr "Zur internen Ansicht wechseln"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail.html:70
+msgid "Internal view"
+msgstr "Interne Ansicht"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail.html:79
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail_internal.html:85
+msgid "Back to service directory"
+msgstr "Zurück zum Serviceverzeichnis"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail.html:82
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail.html:93
+msgid "Catalogue"
+msgstr "Katalog"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail.html:86
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail.html:292
+msgid "Back to catalogue"
+msgstr "Zurück zum Katalog"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail.html:89
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail.html:96
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail_internal.html:95
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail_internal.html:102
+msgid "Service directory"
+msgstr "Serviceverzeichnis"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail.html:100
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail_internal.html:109
+msgid "Print"
+msgstr "Drucken"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail.html:114
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail_internal.html:123
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail_internal.html:378
+msgid "Version"
+msgstr "Version"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail.html:126
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail_internal.html:140
+#: ServiceCatalogue/templates/ServiceCatalogue/services_internal.html:54
+#: ServiceCatalogue/templates/ServiceCatalogue/services_listed.html:30
+msgid "Main purpose"
+msgstr "Ziel / Mehrwert"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail.html:135
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail_internal.html:154
+#: ServiceCatalogue/templates/ServiceCatalogue/services_internal.html:68
+#: ServiceCatalogue/templates/ServiceCatalogue/services_listed.html:36
+msgid "Description"
+msgstr "Beschreibung"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail.html:145
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail_internal.html:187
+#: ServiceCatalogue/templates/ServiceCatalogue/services_internal.html:101
+#: ServiceCatalogue/templates/ServiceCatalogue/services_listed.html:43
+msgid "Requirements"
+msgstr "Voraussetzungen"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail.html:156
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail_internal.html:203
+#: ServiceCatalogue/templates/ServiceCatalogue/services_internal.html:39
+#: ServiceCatalogue/templates/ServiceCatalogue/services_internal.html:117
+#: ServiceCatalogue/templates/ServiceCatalogue/services_listed.html:51
+msgid "Details"
+msgstr "Details"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail.html:167
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail_internal.html:219
+#: ServiceCatalogue/templates/ServiceCatalogue/services_internal.html:133
+#: ServiceCatalogue/templates/ServiceCatalogue/services_listed.html:59
+msgid "Options"
+msgstr "Optionen"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail.html:182
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail_internal.html:220
+#: ServiceCatalogue/templates/ServiceCatalogue/services_internal.html:154
+#: ServiceCatalogue/templates/ServiceCatalogue/services_listed.html:82
+msgid "Service Level"
+msgstr "Servicelevel"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail.html:178
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail_internal.html:235
+#: ServiceCatalogue/templates/ServiceCatalogue/services_internal.html:149
+#: ServiceCatalogue/templates/ServiceCatalogue/services_listed.html:67
+msgid "Link to service"
+msgstr "Link zum Service"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail.html:182
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail_internal.html:244
+msgid "Open service"
+msgstr "Service öffnen"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail.html:194
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail_internal.html:256
+#: ServiceCatalogue/templates/ServiceCatalogue/services_internal.html:169
+#: ServiceCatalogue/templates/ServiceCatalogue/services_listed.html:79
+msgid "Service contact"
+msgstr "Service-Kontakt"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail.html:216
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail_internal.html:283
+msgid "User group"
+msgstr "Nutzergruppe"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail.html:217
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail_internal.html:284
+msgid "Fee"
+msgstr "Gebühr"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail.html:228
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail_internal.html:296
+msgid "Free"
+msgstr "Kostenlos"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail.html:244
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail_internal.html:313
+msgid "Service lifecycle"
+msgstr "Service-Lebenszyklus"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail.html:256
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail_internal.html:330
+msgid "Available until"
+msgstr "Verfügbar bis"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail.html:269
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail_internal.html:348
+msgid "Responsible"
+msgstr "Verantwortlich"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail.html:283
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail_internal.html:393
+msgid "Last updated"
+msgstr "Zuletzt aktualisiert"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail_internal.html:6
+msgid "Internal"
+msgstr "Intern"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail_internal.html:74
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail_internal.html:390
+#: ServiceCatalogue/templates/ServiceCatalogue/services_internal.html:19
+msgid "Internal View"
+msgstr "Interne Ansicht"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail_internal.html:76
+#: ServiceCatalogue/templates/ServiceCatalogue/services_internal.html:21
+msgid ""
+"Internal view, some of the information on the services might be intended for "
+"internal purposes only!"
+msgstr ""
+"Interne Darstellung, einige der Informationen u.U. nur für interne Zwecke!"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail_internal.html:77
+msgid "Switch to public view"
+msgstr "Zur öffentlichen Ansicht wechseln"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail_internal.html:78
+msgid "Public view"
+msgstr "Öffentliche Ansicht"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail_internal.html:88
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail_internal.html:99
+msgid "Internal catalogue"
+msgstr "Interner Katalog"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail_internal.html:92
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail_internal.html:402
+msgid "Back to internal catalogue"
+msgstr "Zurück zum internen Katalog"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail_internal.html:106
+msgid "Public catalogue"
+msgstr "Öffentlicher Katalog"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail_internal.html:128
+#: ServiceCatalogue/templates/ServiceCatalogue/services_internal.html:42
+msgid "Edit in admin"
+msgstr "Im Admin bearbeiten"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail_internal.html:129
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail_internal.html:142
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail_internal.html:156
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail_internal.html:171
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail_internal.html:189
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail_internal.html:205
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail_internal.html:221
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail_internal.html:237
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail_internal.html:258
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail_internal.html:350
+#: ServiceCatalogue/templates/ServiceCatalogue/services_internal.html:56
+#: ServiceCatalogue/templates/ServiceCatalogue/services_internal.html:70
+#: ServiceCatalogue/templates/ServiceCatalogue/services_internal.html:85
+#: ServiceCatalogue/templates/ServiceCatalogue/services_internal.html:103
+#: ServiceCatalogue/templates/ServiceCatalogue/services_internal.html:119
+#: ServiceCatalogue/templates/ServiceCatalogue/services_internal.html:135
+#: ServiceCatalogue/templates/ServiceCatalogue/services_internal.html:151
+#: ServiceCatalogue/templates/ServiceCatalogue/services_internal.html:171
+#: ServiceCatalogue/templates/ServiceCatalogue/services_internal.html:211
+#: ServiceCatalogue/templates/ServiceCatalogue/services_internal.html:230
+#: ServiceCatalogue/templates/ServiceCatalogue/services_internal.html:267
+#: ServiceCatalogue/templates/ServiceCatalogue/services_internal.html:297
+#: ServiceCatalogue/templates/ServiceCatalogue/services_internal.html:313
+#: ServiceCatalogue/templates/ServiceCatalogue/services_internal.html:333
+#: ServiceCatalogue/templates/ServiceCatalogue/services_internal.html:357
+msgid "Edit"
+msgstr "Bearbeiten"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail_internal.html:336
+msgid "End of Life Information"
+msgstr "End-of-Life-Informationen"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail_internal.html:363
+msgid "Status"
+msgstr "Status"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail_internal.html:368
+msgid "Submitted for publication"
+msgstr "Für Veröffentlichung eingereicht"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail_internal.html:371
+msgid "Yes"
+msgstr "Ja"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail_internal.html:373
+msgid "No"
+msgstr "Nein"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/services_base.html:30
+#: ServiceCatalogue/templates/ServiceCatalogue/services_base.html:52
+msgid "Views"
+msgstr "Sichten"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/services_base.html:30
+msgid "View: Directory"
+msgstr "Ansicht: Verzeichnis"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/services_base.html:30
+#: ServiceCatalogue/templates/ServiceCatalogue/services_base.html:52
+msgid "View: Service Details"
+msgstr "Ansicht: Servicedetails"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/services_base.html:30
+#: ServiceCatalogue/templates/ServiceCatalogue/services_base.html:52
+msgid "Internal view:"
+msgstr "Interne Ansicht:"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/services_base.html:30
+#: ServiceCatalogue/templates/ServiceCatalogue/services_base.html:52
+#: ServiceCatalogue/templates/ServiceCatalogue/services_internal.html:285
+msgid "upcoming"
+msgstr "zukünftig"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/services_base.html:30
+#: ServiceCatalogue/templates/ServiceCatalogue/services_base.html:52
+#: ServiceCatalogue/templates/ServiceCatalogue/services_internal.html:287
+msgid "retired"
+msgstr "archiviert"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/services_base.html:30
+#: ServiceCatalogue/templates/ServiceCatalogue/services_base.html:52
+msgid "under revision"
+msgstr "eingereicht"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/services_base.html:33
+msgid "Public views"
+msgstr "Öffentliche Sichten"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/services_base.html:34
+#: ServiceCatalogue/templates/ServiceCatalogue/services_base.html:55
+msgid "Directory of Online Services"
+msgstr "Verzeichnis der Online-Services"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/services_base.html:35
+#: ServiceCatalogue/templates/ServiceCatalogue/services_base.html:56
+msgid "Full Service Catalogue"
+msgstr "Vollständiger Servicekatalog"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/services_base.html:36
+#: ServiceCatalogue/templates/ServiceCatalogue/services_base.html:58
+msgid "PDF catalogue for download"
+msgstr "PDF-Version zum Download"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/services_base.html:38
+msgid "Internal views"
+msgstr "Interne Sichten"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/services_base.html:39
+#: ServiceCatalogue/views.py:260
+msgid "Available Services"
+msgstr "Verfügbare Services"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/services_base.html:40
+#: ServiceCatalogue/views.py:314
+msgid "Upcoming Services"
+msgstr "Zukünftige Services"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/services_base.html:41
+#: ServiceCatalogue/views.py:286
+msgid "Retired Services"
+msgstr "Archivierte Services"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/services_base.html:42
+msgid "Services under Revision"
+msgstr "Services unter Begutachtung"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/services_base.html:44
+msgid "Internal documents"
+msgstr "Interne Dokumente"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/services_base.html:45
+msgid "Data export (xlsx)"
+msgstr "Datenexport (xlsx)"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/services_base.html:52
+msgid "View: Online Services"
+msgstr "Ansicht: Online-Services"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/services_base.html:67
+msgid "Clientele groups"
+msgstr "Nutzerkreise"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/services_base.html:67
+msgid "Clientele group"
+msgstr "Nutzerkreis"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/services_base.html:70
+msgid "any"
+msgstr "alle"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/services_base.html:112
+msgid "Switch to backend"
+msgstr "Zum Backend wechseln"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/services_base.html:114
+msgid "Logout"
+msgstr "Abmelden"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/services_base.html:120
+msgid "Login"
+msgstr "Anmelden"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/services_base.html:142
+msgid "search term"
+msgstr "Suchbegriff"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/services_base.html:143
+msgid "Search"
+msgstr "Suchen"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/services_base.html:151
+msgid "Search results for key"
+msgstr "Suchergebnisse für Schlüssel"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/services_base.html:153
+msgid "Search results for"
+msgstr "Suchergebnisse für"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/services_base.html:157
+msgid "Clear search"
+msgstr "Suche zurücksetzen"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/services_base.html:198
+#: ServiceCatalogue/templates/ServiceCatalogue/services_jump.html:94
+msgid "Currently no services in list."
+msgstr "Derzeit keine passenden Services."
+
+#: ServiceCatalogue/templates/ServiceCatalogue/services_internal.html:6
+#: ServiceCatalogue/templates/ServiceCatalogue/services_jump.html:6
+#: ServiceCatalogue/templates/ServiceCatalogue/services_jump.html:10
+#: ServiceCatalogue/templates/ServiceCatalogue/services_listed.html:6
+msgid "for"
+msgstr "für"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/services_internal.html:38
+#: ServiceCatalogue/templates/ServiceCatalogue/services_listed.html:23
+msgid "View details"
+msgstr "Details anzeigen"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/services_internal.html:182
+#: ServiceCatalogue/templates/ServiceCatalogue/services_listed.html:86
+msgid "(visible only for authenticated users after login)"
+msgstr "(nur für authentifizierte Nutzer nach Login sichtbar)"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/services_internal.html:192
+msgid "Organizational Information"
+msgstr "Organisatorische Informationen"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/services_internal.html:201
+msgid "Involved unit(s)"
+msgstr "Involvierte OUs"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/services_internal.html:206
+msgid "not yet specified"
+msgstr "noch nicht festgelegt"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/services_internal.html:224
+msgid "Service owner(s)"
+msgstr "Service-Owner(s)"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/services_internal.html:241
+msgid "Timeline & Availability"
+msgstr "Zeitplan & Verfügbarkeit"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/services_internal.html:250
+msgid "Listing"
+msgstr "Gelistet"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/services_internal.html:255
+msgid "not yet listed"
+msgstr "noch nicht gelistet"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/services_internal.html:257
+msgid "unlisted"
+msgstr "nicht gelistet"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/services_internal.html:259
+msgid "listed"
+msgstr "gelistet"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/services_internal.html:280
+msgid "Availablity"
+msgstr "Verfügbarkeit"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/services_internal.html:311
+msgid "EOL action"
+msgstr "EOL Umsetzung"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/services_internal.html:324
+msgid "Target Groups & Costs"
+msgstr "Zielgruppen & Kosten"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/services_internal.html:331
+#: ServiceCatalogue/templates/ServiceCatalogue/services_listed.html:114
+msgid "Available for"
+msgstr "Verfügbar für"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/services_internal.html:344
+#: ServiceCatalogue/templates/ServiceCatalogue/services_listed.html:119
+msgid "unfortunately nobody yet"
+msgstr "leider noch niemanden"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/services_internal.html:355
+#: ServiceCatalogue/templates/ServiceCatalogue/services_listed.html:128
+msgid "Costs"
+msgstr "Kosten"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/services_internal.html:369
+msgid "none"
+msgstr "keine(r)"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/services_jump.html:21
+msgid "Search all services..."
+msgstr "Alle Services durchsuchen..."
+
+#: ServiceCatalogue/templates/ServiceCatalogue/services_jump.html:57
+msgid "Open service in new window"
+msgstr "Service in neuem Fenster öffnen"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/services_jump.html:60
+msgid "New"
+msgstr "Neu"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/services_jump.html:70
+msgid "Details about this service"
+msgstr "Detaillierte Informationen über diesen Service"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/services_jump.html:77
+msgid "Availability currently scheduled for only until"
+msgstr "Die Verfügbarkeit endet nach derzeitiger Planung am"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/services_listed.html:100
+msgid "not yet available"
+msgstr "noch nicht verfügbar"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/services_listed.html:105
+msgid "end of availability scheduled"
+msgstr "Ende der Verfügbarkeit festgelegt"
+
+#: ServiceCatalogue/views.py:64
+msgid "Login required"
+msgstr "Login erforderlich"
+
+#: ServiceCatalogue/views.py:66
+msgid ""
+"Access to this page is currently restricted to authenticated users. Please "
+"log in first."
+msgstr ""
+"Der Zugriff auf die Seite ist derzeit nur nach Authentifizierung möglich. "
+"Bitte loggen Sie sich zunächst ein."
+
+#: ServiceCatalogue/views.py:83
+msgid "Login not successful"
+msgstr "Login nicht erfolreich"
+
+#: ServiceCatalogue/views.py:85
+#, python-brace-format
+msgid ""
+"Currently you unfortunately do not seem to have access to restricted "
+"features and to the backend. Please contact {email} for assistance if you "
+"think you should."
+msgstr ""
+"Derzeit scheint kein Zugriff auf diese Seite und auf das Backend zu "
+"bestehen. Wenden Sie sich bitte an {email}, wenn Sie meinen, dass ein "
+"Zugriff erforderlich ist."
+
+#: ServiceCatalogue/views.py:193
+msgid "IT Service Catalogue"
+msgstr "IT Servicekatalog"
+
+#: ServiceCatalogue/views.py:196
+msgid "phone"
+msgstr "Telefon"
+
+#: ServiceCatalogue/views.py:198
+#, python-brace-format
+msgid ""
+"As a central entry point, this catalogue provides an overview of the IT "
+"services currently available or soon to be available at {organization}. "
+"Please take a look at the services relevant to you or use the search "
+"function to narrow down the selection of services displayed. If you do not "
+"find what you are looking for, our helpdesk ({helpdesk}) will be happy to "
+"assist you!\n"
+"\n"
+"For a convenient and direct access to our online services feel free to check "
+"out the new directory view available <a href=\"{jump_url}\">here</a>.\n"
+msgstr ""
+"Dieser Katalog bietet als zentraler Einstiegspunkt eine Übersicht über "
+"derzeit oder in Kürze bei {organization} verfügbare IT-Services. Werfen Sie "
+"gerne einen Blick auf die für Sie relevanten Services oder nutzen die "
+"Suchfunktion, um die Auswahl der angezeigten Services einzugrenzen. Sollten "
+"Sie nicht fündig werden, unterstützt unser Helpdesk ({helpdesk}) Sie sonst "
+"gerne!\n"
+"\n"
+"Für einen bequemen und direkten Zugang zu unseren Online-Diensten können Sie "
+"auch die neue Verzeichnisansicht nutzen, die Sie <a href=\"{jump_url}"
+"\">hier</a> finden.\n"
+
+#: ServiceCatalogue/views.py:232
+msgid "Services under revision for publication"
+msgstr "Services unter Begutachtung zur Veröffentlichung"
+
+#: ServiceCatalogue/views.py:234
+#, python-brace-format
+msgid ""
+"{organization} IT Services currently under revision for publication. Please "
+"mind, that these services are not yet offered to anyone and still might "
+"change or disappear without further notice!"
+msgstr ""
+"{organization} IT-Services, die sich derzeit unter Begutachtung für eine "
+"Veröffentlichung befinden. Bitte beachten, dass diese Services noch nicht "
+"zur Verfügung stehen und die Entwürfe sich noch verändern oder ohne weitere "
+"Information auch wieder verschwinden können."
+
+#: ServiceCatalogue/views.py:262
+#, python-brace-format
+msgid ""
+"{organization} IT Services currently available, not necessariliy listed "
+"public. May in addition differ from public services, since upcoming services "
+"are not listed here."
+msgstr ""
+"{organization} IT-Services, die derzeit verfügbar sind. Die Services sind "
+"nicht notwendiger Weise auch öffentlich gelistet. Kann sich vom öffentlichen "
+"Servicekatalog ferner unterscheiden, weil erst zukünftig verfügbare Services "
+"separat gelistet sind."
+
+#: ServiceCatalogue/views.py:288
+#, python-brace-format
+msgid ""
+"{organization} IT Services not available anymore. May not be exhaustive."
+msgstr ""
+"{organization} IT-Services, die nicht mehr verfügbar sind. Kein Anspruch auf "
+"Vollständigkeit."
+
+#: ServiceCatalogue/views.py:316
+#, python-brace-format
+msgid ""
+"{organization} IT Services with availability starting in future or "
+"availability not yet set. May or may not yet be listed in the public service "
+"catalogue."
+msgstr ""
+"{organization} IT-Services mit einer Verfügbarkeit, die erst in der Zukunft "
+"beginnt, oder mit noch unbekannter Verfügbarkeit. Diese Services sind im "
+"öffentlichen Katalog u.U. (noch) nicht gelistet."
+
+#: ServiceCatalogue/views.py:347
+#, python-brace-format
+msgid "Directory of {organization} Online Services"
+msgstr "Verzeichnis der {organization} Online-Services"
+
+#: ServiceCatalogue/views.py:349
+#, python-brace-format
+msgid ""
+"Links to online services for ease of navigation. For a complete list of "
+"services and details to the services please check the comprehensive service "
+"catalogue available <a href=\"{here_url}\">here</a>."
+msgstr ""
+"Links zu Online-Diensten für eine einfache Navigation. Eine vollständige "
+"Liste der IT-Services und Details zu den jeweiligen Leistungen finden Sie im "
+"umfassenden Servicekatalog, der <a href=\"{here_url}\">hier</a> verfügbar "
+"ist."
+
+#: ServiceCatalogue/views.py:398 ServiceCatalogue/views.py:408
+msgid ""
+"Error in rendering and compiling template {}. Please contact editors or "
+"administrators for assistance."
+msgstr ""
+"Fehler beim Verarbeiten der Vorlage {}. Bitte suchen Sie Unterstützung bei "
+"den Editoren oder den Administratoren der Anwendung."
+
+#: ServiceCatalogue/templatetags/html_links.py:35
+#, python-brace-format
+msgid ""
+"Reference does not contain key separator \"{0}\" - not validated. Click to "
+"search."
+msgstr ""
+"Referenz enthält kein Trennzeichen \"{0}\" - nicht validiert. Klicken Sie, "
+"um zu suchen."
+
+#: ServiceCatalogue/templatetags/html_links.py:53
+#, python-brace-format
+msgid "Direct link to service: {0}"
+msgstr "Direkter Link zum Service: {0}"
+
+#: ServiceCatalogue/templatetags/html_links.py:63
+#, python-brace-format
+msgid "Search for \"{0}\" ({1} matches)"
+msgstr "Suche nach \"{0}\" ({1} Treffer)"
+
+#: ServiceCatalogue/templatetags/html_links.py:70
+#, python-brace-format
+msgid "No service found for \"{0}\""
+msgstr "Kein Service gefunden für \"{0}\""
+
+#: ServiceCatalogue/templatetags/html_links.py:77
+#, python-brace-format
+msgid "Search for \"{0}\""
+msgstr "Suche nach \"{0}\""
+
+# AI-Assisted Search translations
+#: ServiceCatalogue/views.py:781 ServiceCatalogue/views.py:793
+msgid "AI-Assisted Service Search"
+msgstr "KI-gestützte Servicesuche"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/services_base.html:81
+msgid "AI Search"
+msgstr "KI-Suche"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/ai_search.html:154
+msgid "AI-Assisted Search Not Available"
+msgstr "KI-gestützte Suche nicht verfügbar"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/ai_search.html:155
+msgid ""
+"The AI-assisted search feature is currently not enabled on this system. "
+"Please use the regular search function in the service catalogue."
+msgstr ""
+"Die KI-gestützte Suchfunktion ist auf diesem System derzeit nicht aktiviert. "
+"Bitte nutzen Sie die reguläre Suchfunktion im Servicekatalog."
+
+#: ServiceCatalogue/templates/ServiceCatalogue/ai_search.html:165
+msgid ""
+"The AI-assisted search feature is activated but currently not available, "
+"probably due to configuration errors. Please contact the system "
+"administrator or use the regular search function in the service catalogue."
+msgstr ""
+"Die KI-gestützte Suchfunktion ist aktiviert, aber derzeit nicht verfügbar, "
+"wahrscheinlich aufgrund von Konfigurationsfehlern. Bitte kontaktieren Sie "
+"den Systemadministrator oder nutzen Sie die reguläre Suchfunktion im "
+"Servicekatalog."
+
+#: ServiceCatalogue/templates/ServiceCatalogue/ai_search.html:176
+msgid "Data Protection Information"
+msgstr "Datenschutzhinweis"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/ai_search.html:160
+#: ServiceCatalogue/templates/ServiceCatalogue/ai_search.html:171
+msgid "Go to Service Catalogue"
+msgstr "Zum Servicekatalog"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/ai_search.html:182
+msgid ""
+"Describe your problem or need in a few sentences, and our AI will help you "
+"find relevant IT services from our catalogue. The AI analyzes your "
+"description and recommends the most suitable services for your situation."
+msgstr ""
+"Beschreiben Sie Ihr Problem oder Ihren Bedarf in wenigen Sätzen, und unsere "
+"KI hilft Ihnen, relevante IT-Services aus unserem Katalog zu finden. Die KI "
+"analysiert Ihre Beschreibung und empfiehlt die am besten geeigneten Services "
+"für Ihre Situation."
+
+#: ServiceCatalogue/templates/ServiceCatalogue/ai_search.html:190
+msgid "Describe your problem or need:"
+msgstr "Beschreiben Sie Ihr Problem oder Ihren Bedarf:"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/ai_search.html:197
+msgid ""
+"Example: I need to collaborate with colleagues on documents and share files "
+"securely..."
+msgstr ""
+"Beispiel: Ich muss mit Kolleg:innen an Dokumenten zusammenarbeiten und "
+"Dateien sicher teilen..."
+
+#: ServiceCatalogue/templates/ServiceCatalogue/ai_search.html:201
+msgid ""
+"Please describe your situation in detail. The more information you provide, "
+"the better the AI can help you find the right services."
+msgstr ""
+"Bitte beschreiben Sie Ihre Situation detailliert. Je mehr Informationen Sie "
+"bereitstellen, desto besser kann die KI Ihnen helfen, die richtigen Services "
+"zu finden."
+
+#: ServiceCatalogue/templates/ServiceCatalogue/ai_search.html:208
+#: ServiceCatalogue/templates/ServiceCatalogue/ai_search.html:405
+msgid "Find Services"
+msgstr "Services finden"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/ai_search.html:212
+msgid "Clear"
+msgstr "Löschen"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/ai_search.html:221
+msgid "Processing your request..."
+msgstr "Ihre Anfrage wird bearbeitet..."
+
+#: ServiceCatalogue/templates/ServiceCatalogue/ai_search.html:226
+msgid "Analyzing your problem and identifying relevant services..."
+msgstr "Ihr Problem wird analysiert und relevante Services identifiziert..."
+
+#: ServiceCatalogue/templates/ServiceCatalogue/ai_search.html:231
+msgid "Evaluating services in detail..."
+msgstr "Services werden detailliert ausgewertet..."
+
+#: ServiceCatalogue/templates/ServiceCatalogue/ai_search.html:236
+msgid "Preparing recommendations..."
+msgstr "Empfehlungen werden vorbereitet..."
+
+#: ServiceCatalogue/templates/ServiceCatalogue/ai_search.html:293
+msgid "Searching..."
+msgstr "Suche läuft..."
+
+#: ServiceCatalogue/templates/ServiceCatalogue/ai_search.html:315
+msgid "Failed to start search"
+msgstr "Suche konnte nicht gestartet werden"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/ai_search.html:318
+msgid "Network error. Please try again."
+msgstr "Netzwerkfehler. Bitte versuchen Sie es erneut."
+
+#: ServiceCatalogue/templates/ServiceCatalogue/ai_search.html:385
+msgid "An error occurred during the search"
+msgstr "Bei der Suche ist ein Fehler aufgetreten"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/ai_search.html:391
+msgid "Error checking search status"
+msgstr "Fehler beim Prüfen des Suchstatus"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/ai_search.html:417
+msgid "Search failed"
+msgstr "Suche fehlgeschlagen"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/ai_search.html:434
+msgid "Why this service:"
+msgstr "Warum dieser Service:"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/ai_search.html:436
+msgid "What to check:"
+msgstr "Worauf zu achten ist:"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/ai_search.html:444
+msgid "Also evaluated but not recommended:"
+msgstr "Ebenfalls geprüft, aber nicht empfohlen:"
+
+#: ServiceCatalogue/admin.py:503
+msgid "Services requested"
+msgstr "Angeforderte Services"
+
+#: ServiceCatalogue/admin.py:510 ServiceCatalogue/models.py:647
+msgid "Services recommended"
+msgstr "Empfohlene Services"
+
+#: ServiceCatalogue/admin.py:517
+msgid "Total tokens"
+msgstr "Tokens insgesamt"
+
+#: ServiceCatalogue/models.py:619
+msgid "Timestamp"
+msgstr "Zeitstempel"
+
+#: ServiceCatalogue/models.py:620
+msgid "When the AI search was initiated"
+msgstr "Wann die KI-Suche initiiert wurde"
+
+#: ServiceCatalogue/models.py:625
+msgid "User"
+msgstr "Benutzer"
+
+#: ServiceCatalogue/models.py:626
+msgid "User who initiated the search"
+msgstr "Benutzer, der die Suche initiiert hat"
+
+#: ServiceCatalogue/models.py:630
+msgid "Step 1 completed"
+msgstr "Schritt 1 abgeschlossen"
+
+#: ServiceCatalogue/models.py:631
+msgid "Whether the first AI call (initial evaluation) completed successfully"
+msgstr "Ob der erste KI-Aufruf (erste Bewertung) erfolgreich abgeschlossen wurde"
+
+#: ServiceCatalogue/models.py:635
+msgid "Step 2 needed"
+msgstr "Schritt 2 erforderlich"
+
+#: ServiceCatalogue/models.py:636
+msgid "Whether detailed service information was requested"
+msgstr "Ob detaillierte Serviceinformationen angefordert wurden"
+
+#: ServiceCatalogue/models.py:641
+msgid "Services requested for detailed evaluation"
+msgstr "Für detaillierte Bewertung angeforderte Services"
+
+#: ServiceCatalogue/models.py:642
+msgid ""
+"List of service keys requested in step 1 for detailed evaluation in step 2"
+msgstr ""
+"Liste der Service-Schlüssel, die in Schritt 1 für eine detaillierte "
+"Bewertung in Schritt 2 angefordert wurden"
+
+#: ServiceCatalogue/models.py:648
+msgid "List of service keys recommended to the user in the final response"
+msgstr "Liste der Service-Schlüssel, die dem Benutzer in der finalen Antwort empfohlen wurden"
+
+#: ServiceCatalogue/models.py:653
+msgid "Tokens used in step 1"
+msgstr "In Schritt 1 verwendete Tokens"
+
+#: ServiceCatalogue/models.py:654
+msgid "Number of tokens consumed in the first AI call"
+msgstr "Anzahl der im ersten KI-Aufruf verbrauchten Tokens"
+
+#: ServiceCatalogue/models.py:659
+msgid "Tokens used in step 2"
+msgstr "In Schritt 2 verwendete Tokens"
+
+#: ServiceCatalogue/models.py:660
+msgid "Number of tokens consumed in the second AI call (if applicable)"
+msgstr "Anzahl der im zweiten KI-Aufruf verbrauchten Tokens (falls zutreffend)"
+
+#: ServiceCatalogue/models.py:665
+msgid "Error occurred"
+msgstr "Fehler aufgetreten"
+
+#: ServiceCatalogue/models.py:666
+msgid "Whether an error occurred during the search process"
+msgstr "Ob während des Suchvorgangs ein Fehler aufgetreten ist"
+
+#: ServiceCatalogue/models.py:671
+msgid "Error message"
+msgstr "Fehlermeldung"
+
+#: ServiceCatalogue/models.py:672
+msgid "Error message if an error occurred (for debugging)"
+msgstr "Fehlermeldung, wenn ein Fehler aufgetreten ist (zum Debuggen)"
+
+#: ServiceCatalogue/models.py:677
+msgid "Duration (seconds)"
+msgstr "Dauer (Sekunden)"
+
+#: ServiceCatalogue/models.py:678
+msgid "Total duration of the search process in seconds"
+msgstr "Gesamtdauer des Suchvorgangs in Sekunden"
+
+#: ServiceCatalogue/models.py:685
+msgid "AI Search Log"
+msgstr "KI-Suchprotokoll"
+
+#: ServiceCatalogue/models.py:686
+msgid "AI Search Logs"
+msgstr "KI-Suchprotokolle"
+
+#: ServiceCatalogue/ai_service.py:101
+msgid "AI API request timed out"
+msgstr "KI-API-Anfrage hat Zeitlimit überschritten"
+
+#: ServiceCatalogue/ai_service.py:295 ServiceCatalogue/ai_service.py:342
+msgid "AI response was not valid JSON"
+msgstr "KI-Antwort war kein gültiges JSON"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/services_base.html
+msgid "Online Services"
+msgstr "Online-Services"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/services_base.html
+msgid "Service Catalogue"
+msgstr "Servicekatalog"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/services_base.html
+msgid "Full Catalogue"
+msgstr "Vollständiger Katalog"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail.html
+msgid "Back to Online Services"
+msgstr "Zurück zu Online-Services"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail.html
+msgid "Back to Service Catalogue"
+msgstr "Zurück zum Servicekatalog"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/login_landing.html
+msgid "Try logging in again"
+msgstr "Erneut anmelden"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/services_base.html
+msgid "Quick access to online services"
+msgstr "Schnellzugriff auf Online-Services"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/services_base.html
+msgid "Browse complete service catalogue"
+msgstr "Vollständigen Servicekatalog durchsuchen"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/services_base.html
+#: ServiceCatalogue/templates/ServiceCatalogue/ai_search.html
+msgid "Ctrl"
+msgstr "Strg"
+
+#~ msgid "Published"
+#~ msgstr "Veröffentlicht"
+
+#~ msgid "Add new service"
+#~ msgstr "Neuen Service hinzufügen"

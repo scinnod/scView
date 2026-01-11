@@ -1,0 +1,722 @@
+[
+    {
+        "model": "ServiceCatalogue.clientele",
+        "pk": 1,
+        "fields": {
+            "order": "10",
+            "name_de": "Studierende",
+            "name_en": "Students",
+            "acronym": "STUDENT"
+        }
+    },
+    {
+        "model": "ServiceCatalogue.clientele",
+        "pk": 2,
+        "fields": {
+            "order": "20",
+            "name_de": "Mitarbeitende",
+            "name_en": "Staff",
+            "acronym": "STAFF"
+        }
+    },
+    {
+        "model": "ServiceCatalogue.clientele",
+        "pk": 3,
+        "fields": {
+            "order": "30",
+            "name_de": "Forschende",
+            "name_en": "Researchers",
+            "acronym": "RESEARCH"
+        }
+    },
+    {
+        "model": "ServiceCatalogue.clientele",
+        "pk": 4,
+        "fields": {
+            "order": "40",
+            "name_de": "Externe Partner",
+            "name_en": "External Partners",
+            "acronym": "EXTERNAL"
+        }
+    },
+    {
+        "model": "ServiceCatalogue.feeunit",
+        "pk": 1,
+        "fields": {
+            "name_de": "pro Monat",
+            "name_en": "per month"
+        }
+    },
+    {
+        "model": "ServiceCatalogue.feeunit",
+        "pk": 2,
+        "fields": {
+            "name_de": "pro GB",
+            "name_en": "per GB"
+        }
+    },
+    {
+        "model": "ServiceCatalogue.feeunit",
+        "pk": 3,
+        "fields": {
+            "name_de": "pro Kernstunde",
+            "name_en": "per core-hour"
+        }
+    },
+    {
+        "model": "ServiceCatalogue.feeunit",
+        "pk": 4,
+        "fields": {
+            "name_de": "pro Projekt",
+            "name_en": "per project"
+        }
+    },
+    {
+        "model": "ServiceCatalogue.serviceprovider",
+        "pk": 1,
+        "fields": {
+            "hierarchy": "1.0",
+            "name": "IT Services",
+            "acronym": "IT"
+        }
+    },
+    {
+        "model": "ServiceCatalogue.serviceprovider",
+        "pk": 2,
+        "fields": {
+            "hierarchy": "1.1",
+            "name": "Infrastructure Team",
+            "acronym": "INFRA"
+        }
+    },
+    {
+        "model": "ServiceCatalogue.serviceprovider",
+        "pk": 3,
+        "fields": {
+            "hierarchy": "1.2",
+            "name": "Applications Team",
+            "acronym": "APPS"
+        }
+    },
+    {
+        "model": "ServiceCatalogue.serviceprovider",
+        "pk": 4,
+        "fields": {
+            "hierarchy": "2.0",
+            "name": "Research Computing",
+            "acronym": "HPC"
+        }
+    },
+    {
+        "model": "ServiceCatalogue.servicecategory",
+        "pk": 1,
+        "fields": {
+            "order": "10",
+            "name_de": "Kommunikation & Zusammenarbeit",
+            "name_en": "Communication & Collaboration",
+            "acronym": "COLLAB",
+            "description_de": "Dienste für Kommunikation und Zusammenarbeit einschließlich E-Mail, Dateifreigabe und Videokonferenzen.",
+            "description_en": "Services for communication and collaboration including email, file sharing, and video conferencing.",
+            "responsible": "IT Services Manager"
+        }
+    },
+    {
+        "model": "ServiceCatalogue.servicecategory",
+        "pk": 2,
+        "fields": {
+            "order": "20",
+            "name_de": "Datenmanagement",
+            "name_en": "Data Management",
+            "acronym": "DATA",
+            "description_de": "Dienste für Forschungsdatenmanagement, Speicherung und Archivierung.",
+            "description_en": "Services for research data management, storage, and archiving.",
+            "responsible": "Data Manager"
+        }
+    },
+    {
+        "model": "ServiceCatalogue.servicecategory",
+        "pk": 3,
+        "fields": {
+            "order": "30",
+            "name_de": "Rechenressourcen",
+            "name_en": "Computing Resources",
+            "acronym": "COMPUTE",
+            "description_de": "Hochleistungsrechner und Cloud-Computing-Ressourcen für Forschung und Lehre.",
+            "description_en": "High-performance computing and cloud computing resources for research and teaching.",
+            "responsible": "HPC Manager"
+        }
+    },
+    {
+        "model": "ServiceCatalogue.servicecategory",
+        "pk": 4,
+        "fields": {
+            "order": "40",
+            "name_de": "Identität & Zugang",
+            "name_en": "Identity & Access",
+            "acronym": "IAM",
+            "description_de": null,
+            "description_en": null,
+            "responsible": "Security Manager"
+        }
+    },
+    {
+        "model": "ServiceCatalogue.service",
+        "pk": 1,
+        "fields": {
+            "order": "10",
+            "category": 1,
+            "name_de": "E-Mail-Dienst",
+            "name_en": "Email Service",
+            "acronym": "EMAIL",
+            "purpose_de": "Bereitstellung institutioneller E-Mail-Konten mit großzügigem Speicherplatz und modernen Funktionen für die Zusammenarbeit.",
+            "purpose_en": "Provide institutional email accounts with generous storage and modern collaboration features.",
+            "responsible": "Email Administrator"
+        }
+    },
+    {
+        "model": "ServiceCatalogue.service",
+        "pk": 2,
+        "fields": {
+            "order": "20",
+            "category": 1,
+            "name_de": "Dateifreigabe & Synchronisation",
+            "name_en": "File Sharing & Sync",
+            "acronym": "FILES",
+            "purpose_de": "Ermöglicht Benutzern das Speichern, Teilen und Synchronisieren von Dateien über Geräte hinweg mit sicherem Cloud-Speicher.",
+            "purpose_en": "Enable users to store, share, and synchronize files across devices with secure cloud storage.",
+            "responsible": "Storage Administrator"
+        }
+    },
+    {
+        "model": "ServiceCatalogue.service",
+        "pk": 3,
+        "fields": {
+            "order": "30",
+            "category": 1,
+            "name_de": "Videokonferenzen",
+            "name_en": "Video Conferencing",
+            "acronym": "VIDEO",
+            "purpose_de": "Hochwertige Videokonferenzen für Fernbesprechungen, Vorlesungen und Seminare.",
+            "purpose_en": "High-quality video conferencing for remote meetings, lectures, and seminars.",
+            "responsible": "Communications Manager"
+        }
+    },
+    {
+        "model": "ServiceCatalogue.service",
+        "pk": 4,
+        "fields": {
+            "order": "10",
+            "category": 2,
+            "name_de": "Forschungsdatenarchiv",
+            "name_en": "Research Data Repository",
+            "acronym": "REPO",
+            "purpose_de": "Langzeitarchivierung und Veröffentlichung von Forschungsdaten mit DOI-Vergabe.",
+            "purpose_en": "Long-term preservation and publication of research data with DOI assignment.",
+            "responsible": "Repository Manager"
+        }
+    },
+    {
+        "model": "ServiceCatalogue.service",
+        "pk": 5,
+        "fields": {
+            "order": "20",
+            "category": 2,
+            "name_de": "Datensicherungsdienst",
+            "name_en": "Data Backup Service",
+            "acronym": "BACKUP",
+            "purpose_de": "Automatisierte Sicherung von Forschungsdaten und wichtigen Dateien.",
+            "purpose_en": "Automated backup of research data and important files.",
+            "responsible": "Backup Administrator"
+        }
+    },
+    {
+        "model": "ServiceCatalogue.service",
+        "pk": 6,
+        "fields": {
+            "order": "10",
+            "category": 3,
+            "name_de": "HPC-Cluster",
+            "name_en": "HPC Cluster",
+            "acronym": "HPC",
+            "purpose_de": "Hochleistungsrechnen für rechenintensive Forschungsprojekte.",
+            "purpose_en": "High-performance computing for computationally intensive research projects.",
+            "responsible": "HPC Manager"
+        }
+    },
+    {
+        "model": "ServiceCatalogue.service",
+        "pk": 7,
+        "fields": {
+            "order": "20",
+            "category": 3,
+            "name_de": "Cloud Computing",
+            "name_en": "Cloud Computing",
+            "acronym": "CLOUD",
+            "purpose_de": "Bedarfsorientierte Cloud-Ressourcen für flexible Rechenanforderungen.",
+            "purpose_en": "On-demand cloud resources for flexible computing needs.",
+            "responsible": "Cloud Administrator"
+        }
+    },
+    {
+        "model": "ServiceCatalogue.service",
+        "pk": 8,
+        "fields": {
+            "order": "10",
+            "category": 4,
+            "name_de": "Single Sign-On",
+            "name_en": "Single Sign-On",
+            "acronym": "SSO",
+            "purpose_de": "Einheitliche Authentifizierung über alle institutionellen Dienste hinweg.",
+            "purpose_en": "Unified authentication across all institutional services.",
+            "responsible": "Identity Manager"
+        }
+    },
+    {
+        "model": "ServiceCatalogue.servicerevision",
+        "pk": 1,
+        "fields": {
+            "service": 1,
+            "version": "1.0",
+            "keywords_de": "E-Mail Post Outlook Thunderbird Webmail IMAP SMTP Exchange",
+            "keywords_en": "email mail outlook thunderbird webmail imap smtp exchange",
+            "submitted": false,
+            "listed_from": "2024-01-01",
+            "available_from": "2024-01-01",
+            "description_internal": "Exchange/IMAP email system with 50GB mailbox quota. Server: mail.example.edu",
+            "description_de": "Institutioneller E-Mail-Dienst mit professionellen E-Mail-Adressen, großzügigem Speicherplatz, Spam-Filterung und mobiler Geräteunterstützung. Zugriff über Webmail, Desktop-Clients oder mobile Apps.",
+            "description_en": "Institutional email service providing professional email addresses with generous storage, spam filtering, and mobile device support. Access via webmail, desktop clients, or mobile apps.",
+            "usage_information_de": "Bitte beachten Sie die Datenschutzbestimmungen bei der Verarbeitung sensibler Informationen. E-Mail-Aufbewahrungsrichtlinien gelten. Weitere Kollaborationsdienste wie [[COLLAB-FILES]] oder [[COLLAB-VIDEO]] stehen zur Verfügung. Für allgemeine Infos zu [[collaboration]] suchen.",
+            "usage_information_en": "Please ensure compliance with data protection regulations when handling sensitive information. Email retention policies apply. Additional collaboration services like [[COLLAB-FILES]] or [[COLLAB-VIDEO]] are available. For general info about [[collaboration]], search.",
+            "requirements_de": "Gültiges institutionelles Benutzerkonto.",
+            "requirements_en": "Valid institutional account.",
+            "details_de": "Verfügbarkeit rund um die Uhr mit 99,9% Verfügbarkeitsgarantie. Support während der Geschäftszeiten (Mo-Fr, 8:00-17:00 Uhr). Maximale Postfachgröße: 50GB. Aufbewahrung: 90 Tage für gelöschte Elemente. Automatische Archivierung nach 2 Jahren.",
+            "details_en": "24/7 availability with 99.9% uptime guarantee. Support during business hours (Mon-Fri, 8:00-17:00). Maximum mailbox size: 50GB. Retention: 90 days for deleted items. Automatic archiving after 2 years.",
+            "options_de": "Zusätzliche Postfächer für Projekte oder gemeinsam genutzte Konten können angefordert werden. Mailinglisten verfügbar. Integration mit Kalender und Kontakten.",
+            "options_en": "Additional mailboxes for projects or shared accounts can be requested. Mailing lists available. Integration with calendar and contacts.",
+            "contact": "helpdesk@localhost",
+            "url": "http://localhost/webmail",
+            "listed_until": null,
+            "available_until": null,
+            "eol": null,
+            "service_level_de": "99,9% Verfügbarkeit (24/7). Support: Geschäftszeiten (Mo-Fr, 8-17 Uhr). Antwortzeit: 4h für kritische Probleme.",
+            "service_level_en": "99.9% uptime (24/7). Support: Business hours (Mon-Fri, 8AM-5PM). Response time: 4h for critical issues."
+        }
+    },
+    {
+        "model": "ServiceCatalogue.servicerevision",
+        "pk": 2,
+        "fields": {
+            "service": 2,
+            "version": "1.0",
+            "submitted": false,
+            "listed_from": "2024-01-01",
+            "available_from": "2024-01-01",
+            "description_internal": "NextCloud instance on storage.example.edu. Default quota: 100GB. Max file size: 10GB.",
+            "description_de": "Cloud-basierter Dateispeicher- und Synchronisationsdienst. Speichern, teilen und arbeiten Sie an Dateien mit automatischer Synchronisation über alle Ihre Geräte. Enthält Desktop- und mobile Clients für Windows, Mac, Linux, iOS und Android.",
+            "description_en": "Cloud-based file storage and synchronization service. Store, share, and collaborate on files with automatic syncing across all your devices. Includes desktop and mobile clients for Windows, Mac, Linux, iOS, and Android.",
+            "requirements_de": "Gültiges institutionelles Benutzerkonto. Installation des Desktop-Clients empfohlen für automatische Synchronisation.",
+            "requirements_en": "Valid institutional account. Desktop client installation recommended for automatic synchronization.",
+            "details_de": "99,5% Verfügbarkeitsgarantie. Regelmäßige automatische Backups (stündliche Snapshots, 30 Tage aufbewahrt). Ende-zu-Ende-Verschlüsselung verfügbar für sensible Daten. Standard-Quota: 100GB (kann auf Anfrage bis zu 1TB erhöht werden). Für E-Mail-Anhänge nutzen Sie bitte [[COLLAB-EMAIL]]. Wichtige Daten sollten zusätzlich über [[DATA-BACKUP]] gesichert werden. Integration mit [[COLLAB-CALENDAR]] geplant (noch nicht verfügbar).",
+            "details_en": "99.5% uptime guarantee. Regular automated backups (hourly snapshots, kept for 30 days). End-to-end encryption available for sensitive data. Default quota: 100GB (can be increased upon request up to 1TB). For email attachments, please use [[COLLAB-EMAIL]]. Important data should additionally be backed up via [[DATA-BACKUP]]. Integration with [[COLLAB-CALENDAR]] planned (not yet available).",
+            "options_de": "Externe Freigabe über passwortgeschützte Links. Ablaufdaten für Freigaben. Gemeinsame Bearbeitung von Dokumenten. Versionsverlauf (bis zu 50 Versionen).",
+            "options_en": "External sharing via password-protected links. Expiration dates for shares. Collaborative editing of documents. Version history (up to 50 versions).",
+            "contact": "storage@localhost",
+            "url": "http://127.0.0.1/files",
+            "listed_until": null,
+            "available_until": null,
+            "eol": null,
+            "service_level_de": "99,95% Verfügbarkeit. Redundante Speicherung. Support während Geschäftszeiten.",
+            "service_level_en": "99.95% uptime. Redundant storage. Support during business hours."
+        }
+    },
+    {
+        "model": "ServiceCatalogue.servicerevision",
+        "pk": 3,
+        "fields": {
+            "service": 3,
+            "version": "1.0",
+            "keywords_de": "Zoom Teams BBB BigBlueButton Webex Videokonferenz Videoanruf Besprechung",
+            "keywords_en": "zoom teams bbb bigbluebutton webex videoconference videocall meeting",
+            "submitted": false,
+            "listed_from": "2024-01-01",
+            "available_from": "2024-01-01",
+            "description_internal": "Zoom/BigBlueButton platform. Max 300 participants per meeting.",
+            "description_de": "Professionelle Videokonferenzlösung mit Unterstützung für Besprechungen mit bis zu 300 Teilnehmern. Funktionen umfassen Bildschirmfreigabe, Aufzeichnung, Breakout-Räume und integrierten Chat.",
+            "description_en": "Professional video conferencing solution supporting meetings up to 300 participants. Features include screen sharing, recording, breakout rooms, and integrated chat.",
+            "usage_information_de": "Holen Sie die Zustimmung der Teilnehmer ein, bevor Sie Besprechungen aufzeichnen. Aufzeichnungen können personenbezogene Daten enthalten, die der DSGVO unterliegen. Automatische Löschung nach 90 Tagen.",
+            "usage_information_en": "Obtain participant consent before recording meetings. Recordings may contain personal data subject to GDPR. Automatic deletion after 90 days.",
+            "requirements_de": "Stabile Internetverbindung (mindestens 2 Mbit/s Download, 1 Mbit/s Upload). Moderner Webbrowser oder dedizierte App.",
+            "requirements_en": "Stable internet connection (minimum 2 Mbps download, 1 Mbps upload). Modern web browser or dedicated app.",
+            "details_de": "Rund um die Uhr verfügbar. Besprechungsaufzeichnungen werden 90 Tage gespeichert (automatische Löschung). Maximale Besprechungsdauer: 24 Stunden. Full-HD-Videoqualität (1080p). Technischer Support während der Geschäftszeiten.",
+            "details_en": "Available 24/7. Meeting recordings stored for 90 days (automatic deletion). Maximum meeting duration: 24 hours. Full HD video quality (1080p). Technical support available during business hours.",
+            "options_de": "Virtuelle Hintergründe, Transkription, Live-Untertitel, Umfragen, Q&A-Funktion. Für die Archivierung von Aufzeichnungen siehe [[DATA-REPO]]. Integration mit [[COLLAB-CALENDAR]] geplant.",
+            "options_en": "Virtual backgrounds, transcription, live captions, polls, Q&A feature. For archiving recordings, see [[DATA-REPO]]. Integration with [[COLLAB-CALENDAR]] planned.",
+            "contact": "video@localhost",
+            "url": "http://localhost/video",
+            "listed_until": null,
+            "available_until": null,
+            "eol": null,
+            "service_level_de": "Verfügbar 24/7. Best-effort Support. Maximale Besprechungsdauer: 24h.",
+            "service_level_en": "Available 24/7. Best-effort support. Maximum meeting duration: 24 hours."
+        }
+    },
+    {
+        "model": "ServiceCatalogue.servicerevision",
+        "pk": 4,
+        "fields": {
+            "service": 4,
+            "version": "1.0",
+            "submitted": false,
+            "listed_from": "2024-01-01",
+            "available_from": "2024-01-01",
+            "description_internal": "DSpace/Dataverse repository. DOI minting via DataCite. Storage backend: CEPH cluster.",
+            "description_de": "Forschungsdatenarchiv für Langzeitarchivierung und Veröffentlichung von Forschungsergebnissen. Automatische DOI-Vergabe für veröffentlichte Datensätze. Unterstützt FAIR-Datenprinzipien und verschiedene Metadatenstandards einschließlich DataCite, Dublin Core und domänenspezifischen Schemas.",
+            "description_en": "Research data repository for long-term preservation and publication of research outputs. Automatic DOI assignment for published datasets. Supports FAIR data principles and various metadata standards including DataCite, Dublin Core, and domain-specific schemas.",
+            "usage_information_de": "Veröffentlichte Daten werden öffentlich zugänglich. Stellen Sie eine ordnungsgemäße Anonymisierung personenbezogener Daten und die Einhaltung der Einwilligungsanforderungen sicher. Beachten Sie rechtliche und ethische Implikationen vor der Veröffentlichung.",
+            "usage_information_en": "Published data becomes publicly accessible. Ensure proper anonymization of personal data and compliance with informed consent requirements. Consider legal and ethical implications before publication.",
+            "requirements_de": "Gültiges institutionelles Benutzerkonto. Datenmanagementplan für Projekte empfohlen. Verständnis der Metadatenanforderungen. Für die Datenvorbereitung kann [[COLLAB-FILES]] genutzt werden.",
+            "requirements_en": "Valid institutional account. Data management plan recommended for projects. Understanding of metadata requirements. For data preparation, [[COLLAB-FILES]] can be used.",
+            "details_de": "Unbegrenzter Speicherplatz für veröffentlichte Datensätze. Metadaten werden von wichtigen Aggregatoren (OpenAIRE, DataCite, BASE) gesammelt. Unterstützung für Versionierung und Updates. Professionelle Kuratierungsunterstützung verfügbar. Langzeitarchivierungsverpflichtung (10+ Jahre).",
+            "details_en": "Unlimited storage for published datasets. Metadata harvested by major aggregators (OpenAIRE, DataCite, BASE). Support for versioning and updates. Professional curation support available. Long-term preservation commitment (10+ years).",
+            "options_de": "Sperrfristen (bis zu 5 Jahre). Zugriffsbeschränkungen (offen, eingeschränkt, nur Metadaten). Mehrere Lizenzoptionen (CC-BY, CC0, benutzerdefiniert). Privater Arbeitsbereich für Datenvorbereitung.",
+            "options_en": "Embargo periods (up to 5 years). Access restrictions (open, restricted, metadata-only). Multiple licensing options (CC-BY, CC0, custom). Private workspace for data preparation.",
+            "contact": "repository@localhost",
+            "url": "http://127.0.0.1/repository",
+            "listed_until": null,
+            "available_until": null,
+            "eol": null,
+            "service_level_de": "",
+            "service_level_en": ""
+        }
+    },
+    {
+        "model": "ServiceCatalogue.servicerevision",
+        "pk": 5,
+        "fields": {
+            "service": 5,
+            "version": "1.0",
+            "submitted": false,
+            "listed_from": "2024-01-01",
+            "available_from": "2024-01-01",
+            "description_internal": "TSM/Bacula backup system. 30-day retention for daily, 90-day for weekly, 1-year for monthly.",
+            "description_de": "Automatisierter Sicherungsdienst für Forschungsdaten und wichtige Dateien. Schützt vor Datenverlust durch Hardwareausfall, versehentliches Löschen oder Ransomware.",
+            "description_en": "Automated backup service for research data and important files. Protects against data loss from hardware failure, accidental deletion, or ransomware.",
+            "requirements_de": "Server oder Arbeitsplatz mit Netzwerkverbindung. Installation der Backup-Client-Software.",
+            "requirements_en": "Server or workstation with network connectivity. Backup client software installation.",
+            "usage_information_de": null,
+            "usage_information_en": null,
+            "details_de": null,
+            "details_en": null,
+            "options_de": null,
+            "options_en": null,
+            "contact": "backup@localhost",
+            "url": null,
+            "listed_until": null,
+            "available_until": null,
+            "eol": null,
+            "service_level_de": "",
+            "service_level_en": ""
+        }
+    },
+    {
+        "model": "ServiceCatalogue.servicerevision",
+        "pk": 6,
+        "fields": {
+            "service": 6,
+            "version": "2.1",
+            "keywords_de": "HPC Cluster SLURM GPU Supercomputer Paralleles Rechnen NVIDIA A100",
+            "keywords_en": "hpc cluster slurm gpu supercomputer parallel computing nvidia a100",
+            "submitted": false,
+            "listed_from": "2024-01-01",
+            "available_from": "2024-01-01",
+            "description_internal": "SLURM-based cluster. 512 compute nodes (24 cores each). 16 GPU nodes (4x NVIDIA A100). Infiniband network. 2 PB scratch storage.",
+            "description_de": "Hochleistungsrechner-Cluster für rechenintensive Forschung. Funktionen umfassen paralleles Rechnen, Batch-Job-Scheduling und spezialisierte Software für verschiedene wissenschaftliche Bereiche.",
+            "description_en": "High-performance computing cluster for computationally intensive research. Features include parallel computing, batch job scheduling, and specialized software for various scientific domains.",
+            "usage_information_de": "KI/ML-Workloads können die Einhaltung des EU AI Act erfordern. Benutzer sind verantwortlich für die Sicherstellung rechtmäßiger Datenverarbeitung und die Wahrung geistiger Eigentumsrechte.",
+            "usage_information_en": "AI/ML workloads may require compliance with EU AI Act. Users are responsible for ensuring lawful data processing and respecting intellectual property rights.",
+            "requirements_de": "Abschluss eines HPC-Schulungskurses empfohlen. Projektantrag mit Ressourcenschätzung. Grundkenntnisse der Linux-Befehlszeile.",
+            "requirements_en": "HPC training course completion recommended. Project application with resource estimate. Basic Linux command-line knowledge.",
+            "details_de": "512 Rechenknoten mit jeweils 24 Kernen (12.288 Kerne insgesamt). 16 GPU-Knoten mit 4x NVIDIA A100 GPUs. 100 Gbit/s Infiniband-Netzwerk. 2 PB Hochleistungs-Scratch-Speicher. Regelmäßige Wartungsfenster: 1. Dienstag im Monat, 6:00-12:00 Uhr. Für kleinere Workloads siehe auch [[COMPUTE-CLOUD-1.0]].",
+            "details_en": "512 compute nodes with 24 cores each (12,288 total cores). 16 GPU nodes with 4x NVIDIA A100 GPUs. 100 Gbit/s Infiniband network. 2 PB high-performance scratch storage. Regular maintenance windows: 1st Tuesday of each month, 6:00-12:00. For smaller workloads, see also [[COMPUTE-CLOUD-1.0]].",
+            "options_de": "Priorisierter Warteschlangenzugriff für dringende Jobs (Aufpreis). Dedizierte Knoten für große Projekte (Zuteilung erforderlich). Softwareinstallationsanfragen. Schulungsworkshops vierteljährlich.",
+            "options_en": "Priority queue access for urgent jobs (extra fee). Dedicated nodes for large projects (allocation required). Software installation requests. Training workshops quarterly.",
+            "contact": "hpc@localhost",
+            "url": "http://localhost/hpc",
+            "listed_until": null,
+            "available_until": "2028-12-31",
+            "eol": "End of funding period. Successor system planned for Q1 2029.",
+            "service_level_de": "",
+            "service_level_en": ""
+        }
+    },
+    {
+        "model": "ServiceCatalogue.servicerevision",
+        "pk": 7,
+        "fields": {
+            "service": 7,
+            "version": "1.0",
+            "submitted": false,
+            "listed_from": "2024-06-01",
+            "available_from": "2024-06-01",
+            "description_internal": "OpenStack cloud platform. Multiple availability zones. S3-compatible object storage.",
+            "description_de": "Flexible Cloud-Computing-Plattform basierend auf OpenStack. Bereitstellung virtueller Maschinen, Objektspeicher und Netzwerke auf Abruf. Self-Service-Portal für Ressourcenverwaltung.",
+            "description_en": "Flexible cloud computing platform based on OpenStack. Provision virtual machines, object storage, and networks on-demand. Self-service portal for resource management.",
+            "requirements_de": "Projektgenehmigung für Ressourcenzuteilung erforderlich. Grundverständnis von Virtualisierungskonzepten.",
+            "requirements_en": "Project approval required for resource allocation. Basic understanding of virtualization concepts.",
+            "details_de": "Mehrere VM-Konfigurationen verfügbar (1-32 vCPUs, 2-128 GB RAM). Verschiedene Betriebssystem-Images (Ubuntu, CentOS, Windows Server). S3-kompatible Objektspeicher. Software-definiertes Netzwerk. Automatische Backups verfügbar.",
+            "details_en": "Multiple VM flavors available (1-32 vCPUs, 2-128 GB RAM). Various operating system images (Ubuntu, CentOS, Windows Server). S3-compatible object storage. Software-defined networking. Automated backups available.",
+            "options_de": "Lastverteilung, Floating-IPs, Sicherheitsgruppen, Volume-Snapshots, Heat-Orchestrierungsvorlagen.",
+            "options_en": "Load balancing, floating IPs, security groups, volume snapshots, heat orchestration templates.",
+            "contact": "cloud@localhost",
+            "url": "http://127.0.0.1:8080/dashboard",
+            "listed_until": null,
+            "available_until": null,
+            "eol": null,
+            "service_level_de": "99% Verfügbarkeit. Wartungsfenster: Sonntags 2-6 Uhr. Support: Geschäftszeiten.",
+            "service_level_en": "99% uptime. Maintenance window: Sundays 2-6 AM. Support: Business hours."
+        }
+    },
+    {
+        "model": "ServiceCatalogue.servicerevision",
+        "pk": 8,
+        "fields": {
+            "service": 8,
+            "version": "1.0",
+            "keywords_de": "SSO SAML Shibboleth eduGAIN Authentifizierung MFA 2FA Login Identität",
+            "keywords_en": "sso saml shibboleth edugain authentication mfa 2fa login identity",
+            "submitted": false,
+            "listed_from": "2024-01-01",
+            "available_from": "2024-01-01",
+            "description_internal": "Shibboleth/SAML2 IdP. eduGAIN federation member. Multi-factor authentication via TOTP.",
+            "description_de": "Einheitliches Authentifizierungssystem mit Single Sign-On-Zugriff auf alle institutionellen Dienste. Ein Satz von Anmeldeinformationen für E-Mail, Dateifreigabe, HPC und andere Dienste.",
+            "description_en": "Unified authentication system providing single sign-on access to all institutional services. One set of credentials for email, file sharing, HPC, and other services.",
+            "requirements_de": "Institutionelles Benutzerkonto. Smartphone oder Hardware-Token für Zwei-Faktor-Authentifizierung (MFA).",
+            "requirements_en": "Institutional account. Smartphone or hardware token for multi-factor authentication (MFA).",
+            "details_de": "SAML2-basierte Authentifizierung. eduGAIN-Föderationsmitgliedschaft ermöglicht Zugriff auf Tausende von Diensten weltweit. Zwei-Faktor-Authentifizierung verpflichtend für privilegierte Konten, optional für andere.",
+            "details_en": "SAML2-based authentication. eduGAIN federation membership enables access to thousands of services worldwide. Multi-factor authentication mandatory for privileged accounts, optional for others.",
+            "options_de": "Self-Service-Passwort-Zurücksetzung, Kontowiederherstellung per E-Mail/SMS, Gastkonten für externe Mitarbeiter (Sponsor erforderlich).",
+            "options_en": "Self-service password reset, account recovery via email/SMS, guest accounts for external collaborators (sponsor required).",
+            "contact": "identity@localhost",
+            "url": "http://localhost/sso",
+            "listed_until": null,
+            "available_until": null,
+            "eol": null,
+            "service_level_de": "99,9% Verfügbarkeit (24/7). Support: Geschäftszeiten (Mo-Fr, 8-17 Uhr). Antwortzeit: 4h für kritische Probleme.",
+            "service_level_en": "99.9% uptime (24/7). Support: Business hours (Mon-Fri, 8AM-5PM). Response time: 4h for critical issues."
+        }
+    },
+    {
+        "model": "ServiceCatalogue.availability",
+        "pk": 1,
+        "fields": {
+            "servicerevision": 1,
+            "clientele": 1,
+            "comment": "Free access for students as part of institutional subscription",
+            "fee": "0.00",
+            "fee_unit": null
+        }
+    },
+    {
+        "model": "ServiceCatalogue.availability",
+        "pk": 2,
+        "fields": {
+            "servicerevision": 1,
+            "clientele": 2,
+            "fee": "0.00",
+            "fee_unit": null
+        }
+    },
+    {
+        "model": "ServiceCatalogue.availability",
+        "pk": 3,
+        "fields": {
+            "servicerevision": 1,
+            "clientele": 3,
+            "fee": "0.00",
+            "fee_unit": null
+        }
+    },
+    {
+        "model": "ServiceCatalogue.availability",
+        "pk": 4,
+        "fields": {
+            "servicerevision": 2,
+            "clientele": 1,
+            "fee": "0.00",
+            "fee_unit": null
+        }
+    },
+    {
+        "model": "ServiceCatalogue.availability",
+        "pk": 5,
+        "fields": {
+            "servicerevision": 2,
+            "clientele": 2,
+            "fee": "0.00",
+            "fee_unit": null
+        }
+    },
+    {
+        "model": "ServiceCatalogue.availability",
+        "pk": 6,
+        "fields": {
+            "servicerevision": 2,
+            "clientele": 3,
+            "comment": "Researchers pay storage costs above base allocation. Fee applies per GB over quota.",
+            "fee": "0.50",
+            "fee_unit": 2
+        }
+    },
+    {
+        "model": "ServiceCatalogue.availability",
+        "pk": 7,
+        "fields": {
+            "servicerevision": 3,
+            "clientele": 1,
+            "fee": "0.00",
+            "fee_unit": null
+        }
+    },
+    {
+        "model": "ServiceCatalogue.availability",
+        "pk": 8,
+        "fields": {
+            "servicerevision": 3,
+            "clientele": 2,
+            "fee": "0.00",
+            "fee_unit": null
+        }
+    },
+    {
+        "model": "ServiceCatalogue.availability",
+        "pk": 9,
+        "fields": {
+            "servicerevision": 3,
+            "clientele": 3,
+            "fee": "0.00",
+            "fee_unit": null
+        }
+    },
+    {
+        "model": "ServiceCatalogue.availability",
+        "pk": 10,
+        "fields": {
+            "servicerevision": 4,
+            "clientele": 3,
+            "fee": "0.00",
+            "fee_unit": null
+        }
+    },
+    {
+        "model": "ServiceCatalogue.availability",
+        "pk": 11,
+        "fields": {
+            "servicerevision": 4,
+            "clientele": 2,
+            "fee": "0.00",
+            "fee_unit": null
+        }
+    },
+    {
+        "model": "ServiceCatalogue.availability",
+        "pk": 12,
+        "fields": {
+            "servicerevision": 5,
+            "clientele": 2,
+            "fee": "0.00",
+            "fee_unit": null
+        }
+    },
+    {
+        "model": "ServiceCatalogue.availability",
+        "pk": 13,
+        "fields": {
+            "servicerevision": 5,
+            "clientele": 3,
+            "comment": "Monthly subscription for researchers. Includes automated backups and 24/7 support.",
+            "fee": "10.00",
+            "fee_unit": 1
+        }
+    },
+    {
+        "model": "ServiceCatalogue.availability",
+        "pk": 14,
+        "fields": {
+            "servicerevision": 6,
+            "clientele": 3,
+            "comment": "HPC usage billed per core-hour for external research projects. Grant-funded projects may qualify for discounts.",
+            "fee": "0.02",
+            "fee_unit": 3
+        }
+    },
+    {
+        "model": "ServiceCatalogue.availability",
+        "pk": 15,
+        "fields": {
+            "servicerevision": 6,
+            "clientele": 2,
+            "fee": "0.00",
+            "fee_unit": null
+        }
+    },
+    {
+        "model": "ServiceCatalogue.availability",
+        "pk": 16,
+        "fields": {
+            "servicerevision": 7,
+            "clientele": 2,
+            "fee": "0.00",
+            "fee_unit": null
+        }
+    },
+    {
+        "model": "ServiceCatalogue.availability",
+        "pk": 17,
+        "fields": {
+            "servicerevision": 7,
+            "clientele": 3,
+            "fee": "100.00",
+            "fee_unit": 4
+        }
+    },
+    {
+        "model": "ServiceCatalogue.availability",
+        "pk": 18,
+        "fields": {
+            "servicerevision": 8,
+            "clientele": 1,
+            "fee": "0.00",
+            "fee_unit": null
+        }
+    },
+    {
+        "model": "ServiceCatalogue.availability",
+        "pk": 19,
+        "fields": {
+            "servicerevision": 8,
+            "clientele": 2,
+            "fee": "0.00",
+            "fee_unit": null
+        }
+    },
+    {
+        "model": "ServiceCatalogue.availability",
+        "pk": 20,
+        "fields": {
+            "servicerevision": 8,
+            "clientele": 3,
+            "fee": "0.00",
+            "fee_unit": null
+        }
+    },
+    {
+        "model": "ServiceCatalogue.availability",
+        "pk": 21,
+        "fields": {
+            "servicerevision": 8,
+            "clientele": 4,
+            "fee": "0.00",
+            "fee_unit": null
+        }
+    }
+]

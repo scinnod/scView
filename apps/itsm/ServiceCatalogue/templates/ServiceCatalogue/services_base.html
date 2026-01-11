@@ -1,0 +1,293 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+{% load cache %}
+{% load static %}
+
+{% block content %}
+<style media="print">
+  .navbar { display: none !important; }
+  .content { padding-top: 0 !important; margin-top: 0 !important; }
+  body { padding-top: 0 !important; }
+</style>
+{% cache caching_time_seconds services_base_navigation request.path user.is_authenticated user.is_staff %}
+<nav class="navbar navbar-expand-lg navbar-light bg-white fixed-top shadow-sm">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="{% url 'index' %}">
+      <img src="{% static 'logos/' %}{{ logo_filename|default:'logo.png' }}" alt="{{ organization_name }} Logo" onerror="this.style.display='none'">
+      <span>{{ organization_name|default:branding }}</span>
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNavDropdown">
+      <ul class="navbar-nav me-auto">
+	
+	{# Online Services - standalone button (first position) #}
+	<li class="nav-item">
+          <a class="nav-link{% if base_name == 'services_jump' %} active{% endif %}" href="{% if kwargs.clientele_id %}{% url 'services_jump_clientele' kwargs.clientele_id %}{% else %}{% url 'services_jump' %}{% endif %}" title="{% translate 'Quick access to online services' %} [{% translate 'Ctrl' %}+1]">
+            <i class="bi bi-globe me-1"></i>{% translate "Online Services" %}
+          </a>
+	</li>
+	
+	{# Service Catalogue - simple button for users, dropdown for staff #}
+	{% if user.is_staff %}
+	<li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle{% if base_name == 'services_listed' or base_name == 'services_available' or base_name == 'services_upcoming' or base_name == 'services_retired' or base_name == 'services_under_revision' %} active{% endif %}" href="#" id="navbarDropdownCatalogue" role="button" data-bs-toggle="dropdown" aria-expanded="false" title="{% translate 'Browse complete service catalogue' %} [{% translate 'Ctrl' %}+2]">
+            <i class="bi bi-book me-1"></i>{% translate "Service Catalogue" %}
+          </a>
+          <ul class="dropdown-menu shadow-sm" aria-labelledby="navbarDropdownCatalogue">
+            <li><a href="{% if kwargs.clientele_id %}{% url 'services_listed_clientele' kwargs.clientele_id %}{% else %}{% url 'services_listed' %}{% endif %}" {% if base_name == 'services_listed' %}class="dropdown-item active" aria-current="true"{% else %}class="dropdown-item"{% endif %}><i class="bi bi-list-ul me-2"></i>{% translate "Full Catalogue" %}</a></li>
+	    <li><hr class="dropdown-divider" /></li>
+	    <li><h6 class="dropdown-header"><i class="bi bi-shield-lock"></i> {% translate "Internal views" %}</h6></li>
+            <li><a href="{% if kwargs.clientele_id %}{% url 'services_available_clientele' kwargs.clientele_id %}{% else %}{% url 'services_available' %}{% endif %}" {% if base_name == 'services_available' %}class="dropdown-item active" aria-current="true"{% else %}class="dropdown-item"{% endif %}><i class="bi bi-check-circle me-2"></i>{% translate "Available Services" %}</a></li>
+            <li><a href="{% if kwargs.clientele_id %}{% url 'services_upcoming_clientele' kwargs.clientele_id %}{% else %}{% url 'services_upcoming' %}{% endif %}" {% if base_name == 'services_upcoming' %}class="dropdown-item active" aria-current="true"{% else %}class="dropdown-item"{% endif %}><i class="bi bi-calendar-plus me-2"></i>{% translate "Upcoming Services" %}</a></li>
+            <li><a href="{% if kwargs.clientele_id %}{% url 'services_retired_clientele' kwargs.clientele_id %}{% else %}{% url 'services_retired' %}{% endif %}" {% if base_name == 'services_retired' %}class="dropdown-item active" aria-current="true"{% else %}class="dropdown-item"{% endif %}><i class="bi bi-archive me-2"></i>{% translate "Retired Services" %}</a></li>
+            <li><a href="{% if kwargs.clientele_id %}{% url 'services_under_revision_clientele' kwargs.clientele_id %}{% else %}{% url 'services_under_revision' %}{% endif %}" {% if base_name == 'services_under_revision' %}class="dropdown-item active" aria-current="true"{% else %}class="dropdown-item"{% endif %}><i class="bi bi-pencil-square me-2"></i>{% translate "Services under Revision" %}</a></li>
+	    <li><hr class="dropdown-divider" /></li>
+	    <li><h6 class="dropdown-header"><i class="bi bi-file-earmark-spreadsheet"></i> {% translate "Internal documents" %}</h6></li>
+            <li><a href="{% url 'export_excel' %}" class="dropdown-item"><i class="bi bi-file-excel me-2"></i>{% translate "Data export (xlsx)" %}</a></li>
+          </ul>
+	</li>
+	{% else %}
+	<li class="nav-item">
+          <a class="nav-link{% if base_name == 'services_listed' %} active{% endif %}" href="{% if kwargs.clientele_id %}{% url 'services_listed_clientele' kwargs.clientele_id %}{% else %}{% url 'services_listed' %}{% endif %}" title="{% translate 'Browse complete service catalogue' %} [{% translate 'Ctrl' %}+2]">
+            <i class="bi bi-book me-1"></i>{% translate "Service Catalogue" %}
+          </a>
+	</li>
+	{% endif %}
+
+	{% if clienteles %}
+	<li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownClientele" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="bi bi-people me-1"></i>
+	    {% if not kwargs.clientele_id %}{% translate "Clientele groups" %}{% else %}{% translate "Clientele group" %}: {% for clientele in clienteles %}{% if clientele.id == kwargs.clientele_id %}{{ clientele.name }}{% endif %}{% endfor %}{% endif %}
+	  </a>
+          <ul class="dropdown-menu shadow-sm" aria-labelledby="navbarDropdownClientele">
+	    <li><a href="{% url base_name %}{% if request.GET.q %}?q={{request.GET.q}}{% endif %}" {% if not kwargs.clientele_id %}class="dropdown-item active" aria-current="true"{% else %}class="dropdown-item"{% endif %}>{% translate "any" %}</a></li>
+	    {% for clientele in clienteles %}
+	    <li><a href="{% url base_name|add:'_clientele' clientele.id %}{% if request.GET.q %}?q={{request.GET.q}}{% endif %}" {% if clientele.id == kwargs.clientele_id %}class="dropdown-item active" aria-current="true"{% else %}class="dropdown-item"{% endif %}>{{ clientele.name }}</a></li>
+	    {% endfor %}
+	  </ul>
+	</li>
+	{% endif %}
+	
+	{% if AI_SEARCH_ENABLED %}
+	<li class="nav-item d-none d-lg-block">
+	  <span class="nav-link disabled px-1" aria-hidden="true">|</span>
+	</li>
+	<li class="nav-item">
+          <a class="nav-link{% if base_name == 'ai_search' %} active{% endif %}" href="{% url 'ai_search' %}" id="ai-search-link" title="{% translate 'AI-Assisted Service Search' %} [{% translate 'Ctrl' %}+3]">
+            <i class="bi bi-stars me-1"></i>
+            <span class="d-lg-none d-xl-inline">{% translate "AI Search" %}</span>{% if not user.is_authenticated %} <i class="bi bi-lock-fill ms-1 text-muted" title="{% translate 'Login required' %}"></i>{% endif %}
+          </a>
+	</li>
+	{% endif %}
+      </ul>
+
+      <ul class="navbar-nav">
+	
+	{% get_available_languages as LANGUAGES %}
+	{% if LANGUAGES|length > 1 %}
+	{% get_current_language as CURRENT_LANGUAGE %}
+	<li class="nav-item dropdown me-2">
+          <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownLanguage" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="bi bi-translate me-1"></i>{{ CURRENT_LANGUAGE|upper }}
+	  </a>
+          <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="navbarDropdownLanguage">	    
+	    {% for lang_code, lang_name in LANGUAGES %}
+	    {% if lang_code != CURRENT_LANGUAGE %}
+	    {% language lang_code %}
+	    <li>
+	      <a class="dropdown-item" href="{% if kwargs.pk %}{% url base_name pk=kwargs.pk %}{% else %}{% url base_name %}{% if kwargs.clientele_id %}/{{kwargs.clientele_id}}{% endif %}{% endif %}{% if request.GET.q %}?q={{request.GET.q}}{% endif %}">
+	        <i class="bi bi-flag me-2"></i>{{ lang_code|upper }}
+	      </a>
+	    </li>
+	    {% endlanguage %}
+	    {% endif %}
+	    {% endfor %}
+	  </ul>
+	</li>
+	{% endif %}
+{% endcache %}
+	
+	{% if user.is_authenticated %}
+ 	<li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownUser" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="bi bi-person-circle me-1"></i>{{ user.email }}{% if user.is_staff %} <span class="badge bg-secondary">Staff</span>{% endif %}
+	  </a>
+          <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="navbarDropdownUser">
+	    {% if user.is_staff %}
+	    <li><a href="{% url 'admin:index' %}" class="dropdown-item"><i class="bi bi-gear me-2"></i>{% translate "Switch to backend" %}</a></li>
+	    {% endif %}
+	    <li>
+	      <a href="{% url 'sso_logout' %}" class="dropdown-item"><i class="bi bi-box-arrow-right me-2"></i>{% translate "Logout" %}</a>
+	    </li>
+	  </ul>
+	</li>
+	{% else %}
+      	<li class="nav-item">
+          <a class="nav-link" href="{% url 'sso_login' %}?next={{ request.path }}">
+            <i class="bi bi-box-arrow-in-right me-1"></i>{% translate "Login" %}
+          </a>
+	</li>
+	{% endif %}
+      </ul>
+    </div>
+  </div>
+</nav>
+
+{% cache caching_time_seconds services_base_content request.get_full_path user.is_authenticated user_can_edit_services user_can_edit_servicerevisions %}
+<div class="content mb-5">
+  {% block bodycontent %}
+  <div class="service-header mb-4 mt-3">
+    <h1 class="display-6 mb-3" style="font-weight: 500;">{% block title %}{% endblock %}</h1>
+    {% block description %}{% endblock %}
+  </div>
+
+  <div class="row mb-5">
+    <div class="col-12">
+      <form class="d-flex" method="get">
+        <div class="input-group input-group-lg shadow-sm">
+          <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+          <input class="form-control border-start-0" type="search" value="{{request.GET.q}}" placeholder="{% translate 'search term' %}" aria-label="{% translate 'search term' %}" name="q" autofocus onfocus="this.setSelectionRange(this.value.length,this.value.length);">
+          <button class="btn btn-primary px-4" type="submit">{% translate 'Search' %}</button>
+        </div>
+      </form>
+      {% if base_name == 'services_listed' %}
+      <div class="mt-3 text-end">
+        <a href="{% url 'export_pdf' %}" class="btn btn-sm btn-outline-secondary">
+          <i class="bi bi-file-pdf me-1"></i>{% translate "PDF catalogue for download" %}{% if not user.is_authenticated %} <i class="bi bi-lock-fill ms-1 text-muted" title="{% translate 'Login required' %}"></i>{% endif %}
+        </a>
+      </div>
+      {% endif %}
+      {% if request.GET.q %}
+      <div class="mt-3">
+        <span class="badge bg-info text-dark">
+          <i class="bi bi-funnel"></i>
+          {% if request.GET.q|slice:":5" == "key::" %}
+            {% translate "Search results for key" %} '{{request.GET.q|slice:"5:"}}'
+          {% else %}
+            {% translate "Search results for" %} '{{request.GET.q}}'
+          {% endif %}
+        </span>
+        <a href="{% url base_name %}{% if kwargs.clientele_id %}/{{kwargs.clientele_id}}{% endif %}" class="btn btn-sm btn-outline-secondary ms-2">
+          <i class="bi bi-x-circle"></i> {% translate "Clear search" %}
+        </a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  
+  {% for sr in object_list %}
+  {% ifchanged sr.service.category.name %}
+  {% if not forloop.first %}
+  </div>
+  <div class="mb-5"></div>
+  {% endif %}
+  <div class="mb-4">
+    <h3 class="border-bottom pb-2" id="sc-{{sr.service.category.id}}">
+      <i class="bi bi-folder me-2 text-primary"></i>{{sr.service.category.name}}
+    </h3>
+    {% if sr.service.category.description %} 
+    <p class="text-muted">{{sr.service.category.description|linebreaks}}</p>
+    {% endif %}
+  </div>
+  <div class="accordion accordion-flush" id="accordion-{{sr.service.category.id}}">
+  {% endifchanged %}
+    <div class="accordion-item bg-white mb-2 rounded shadow-sm">
+      <h5 class="accordion-header" id="acc-header-{{sr.id}}">
+       <button class="accordion-button{% if object_list|length > 1 %} collapsed{% endif %} fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{sr.id}}" aria-expanded="{% if object_list|length > 1 %}false{% else %}true{% endif %}" aria-controls="collapse-{{sr.id}}">
+         {{sr.service.name}} {% ifchanged sr.service %}{% else %}<span class="badge bg-secondary ms-2">{{sr.version}}</span>{% endifchanged %}
+       </button>
+      </h5>
+      <div id="collapse-{{sr.id}}" class="accordion-collapse collapse{% if object_list|length == 1 %} show{% endif %}" aria-labelledby="acc-header-{{sr.id}}">
+       <div class="accordion-body">
+         {% block element %}
+         {% endblock %}
+       </div>
+      </div>
+    </div>
+  {% if forloop.last %}
+  </div>
+  {% endif %}
+  {% empty %}
+  <div class="alert alert-info" role="alert">
+    <i class="bi bi-info-circle me-2"></i><em>{% translate "Currently no services in list." %}</em>
+  </div>
+  {% endfor %}
+  {% endblock %}
+</div>
+{% endcache %}
+
+{% endblock %}
+
+{% block footer %}
+<!-- Footer -->
+<footer class="bg-white border-top mt-5 py-4 rounded">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-6 text-center text-md-start mb-3 mb-md-0">
+                <p class="mb-1 text-muted">
+                    {% if app_url %}<a href="{{ app_url }}" class="text-muted footer-app-link" target="_blank" rel="noopener noreferrer">{{ app_name|default:"scView" }} {% if app_version %}{{ app_version }}{% endif %}</a>{% else %}{{ app_name|default:"scView" }} {% if app_version %}{{ app_version }}{% endif %}{% endif %} | 
+                    © {% now "Y" %} {{ app_copyright|default:organization_name }}{% if app_license %}. {{ app_license }}{% endif %}
+                </p>
+            </div>
+            <div class="col-md-6 text-center text-md-end">
+                <p class="mb-1 text-muted">
+                    <i class="bi bi-envelope me-1"></i> <a href="mailto:{{ helpdesk_email }}" class="text-muted text-decoration-none">{{ helpdesk_email }}</a>
+                    {% if helpdesk_phone %}<span class="mx-2">|</span>
+                    <i class="bi bi-telephone me-1"></i> {{ helpdesk_phone }}{% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+{% endblock %}
+
+{% block extra_js %}
+{% if request.GET.q %}
+<script>
+  var context = document.querySelectorAll(".checkmark");
+  var instance = new Mark(context);
+  instance.mark("{{ request.GET.q|escapejs }}");
+</script>
+{% endif %}
+<script>
+  // Global keyboard shortcuts
+  document.addEventListener('keydown', function(event) {
+    // Ctrl+Enter: Submit regular search form
+    if (event.ctrlKey && event.key === 'Enter') {
+      event.preventDefault();
+      var searchForm = document.querySelector('form.d-flex');
+      if (searchForm) {
+        searchForm.submit();
+      }
+      return;
+    }
+    
+    // Ctrl+1: Online Services
+    if (event.ctrlKey && event.key === '1') {
+      event.preventDefault();
+      window.location.href = "{% if kwargs.clientele_id %}{% url 'services_jump_clientele' kwargs.clientele_id %}{% else %}{% url 'services_jump' %}{% endif %}";
+      return;
+    }
+    
+    // Ctrl+2: Service Catalogue (public view)
+    if (event.ctrlKey && event.key === '2') {
+      event.preventDefault();
+      window.location.href = "{% if kwargs.clientele_id %}{% url 'services_listed_clientele' kwargs.clientele_id %}{% else %}{% url 'services_listed' %}{% endif %}";
+      return;
+    }
+    
+    {% if AI_SEARCH_ENABLED %}
+    // Ctrl+3: AI Search
+    if (event.ctrlKey && event.key === '3') {
+      event.preventDefault();
+      window.location.href = "{% url 'ai_search' %}";
+      return;
+    }
+    {% endif %}
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,100 @@
+services:
+
+  nginx:
+    image: nginx:alpine
+    container_name: itsm_nginx
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/proxy_params:/etc/nginx/proxy_params:ro
+      - staticfiles_itsm:/var/www/staticfiles:ro
+    # Upstream proxy (e.g., nginx proxy manager) connects via external 'proxy' network
+    # The upstream proxy handles SSL/TLS
+    networks:
+      - itsm_backend          # External network for upstream itsm_backend
+      - app_itsm       # Internal network for communication with Django app
+    depends_on:
+      - itsm
+    restart: unless-stopped
+
+  # Using postgres:15 (Debian-based) instead of postgres:15-alpine
+  # Reason: Better performance (glibc vs musl), production stability, and psycopg2 compatibility
+  # Alpine variant considered but prioritizing data integrity and performance for critical database service
+  postgres:
+    image: postgres:15
+    container_name: itsm_postgres
+    environment:
+      # PostgreSQL superuser credentials (for administrative tasks)
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      # Application database configuration (used by init script)
+      # Note: Password is secure for internal Docker network use (postgres not exposed externally)
+      # Change to a strong password if exposing PostgreSQL outside Docker network
+      POSTGRES_DB: itsm
+      POSTGRES_APP_USER: itsm_user
+      POSTGRES_APP_PASSWORD: itsm_secure_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres/init:/docker-entrypoint-initdb.d
+    shm_size: '512mb'
+    networks:
+      - net_db
+    restart: unless-stopped
+
+  itsm:
+    build:
+      context: ./apps/itsm
+    container_name: itsm_app
+    environment:
+      DJANGO_SETTINGS_DIR: itsm_config
+      # Database connection (postgres accessible only via internal Docker network)
+      DB_HOST: postgres
+      DB_PORT: 5432
+      POSTGRES_DATABASE: itsm
+      POSTGRES_USER: itsm_user
+      POSTGRES_PASSWORD: itsm_secure_password
+    volumes:
+      # Development: Uncomment to mount app code for live editing (requires fixing permissions)
+      # Production: Code is baked into Docker image, no mount needed
+      # - ./apps/itsm:/app
+      - staticfiles_itsm:/var/www/staticfiles
+      - django_secrets:/secrets
+    env_file:
+      - env/itsm.env
+    # Django app is not exposed externally - only accessible via nginx
+    expose:
+      - "8000"
+    depends_on:
+      - postgres
+    networks:
+      - app_itsm       # Internal network for nginx communication
+      - net_db         # Internal network for database communication
+      - internet       # External network for outbound API calls (AI search)
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  staticfiles_itsm:
+  django_secrets:
+
+networks:
+  # External network for upstream proxy (e.g., nginx proxy manager)
+  # Must be created manually: docker network create proxy
+  itsm_backend:
+    external: true
+  
+  # Internal network for nginx <-> Django app communication
+  app_itsm:
+    driver: bridge
+    internal: true
+  
+  # Internal network for Django app <-> PostgreSQL communication
+  net_db:
+    driver: bridge
+    internal: true
+  
+  # External network for outbound internet access (AI API calls)
+  # Allows itsm container to reach external APIs while keeping other services isolated
+  internet:
+    driver: bridge
+    internal: false
+    

@@ -1,0 +1,103 @@
+{% extends "ServiceCatalogue/services_base.html" %}
+
+{% load i18n %}
+{% load html_links %}
+
+{% block title %} {{ title }}{% if kwargs.clientele_id %} {% translate "for" %} {% for clientele in clienteles %}{% if clientele.id == kwargs.clientele_id %}{{ clientele.name }}{% endif %}{% endfor %}{% endif %}{% endblock %}
+
+{% block bodycontent %}
+  <div class="service-header mb-4 mt-3">
+    <h1 class="display-6 mb-3" style="font-weight: 500;">{{ title }}{% if kwargs.clientele_id %} {% translate "for" %} {% for clientele in clienteles %}{% if clientele.id == kwargs.clientele_id %}{{ clientele.name }}{% endif %}{% endfor %}{% endif %}</h1>
+    {% if description and not request.GET.q %}
+    <p class="text-muted mb-3">{{ description|safe|linebreaks }}</p>
+    {% endif %}
+    
+    <!-- Compact Search Bar -->
+    <div class="row mb-3">
+      <div class="col-12 col-lg-8">
+        <form class="d-flex" method="get" action="{% url 'services_listed' %}{% if kwargs.clientele_id %}/{{kwargs.clientele_id}}{% endif %}">
+          <div class="input-group shadow-sm">
+            <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
+            <input class="form-control border-start-0" type="search" placeholder="{% translate 'Search all services...' %}" name="q" style="padding: 0.5rem;">
+            <button class="btn btn-outline-secondary" type="submit" style="padding: 0.5rem 1rem;">
+              <i class="bi bi-arrow-right"></i>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="container-fluid px-0">
+    <div class="row row-cols-1 row-cols-lg-2 row-cols-xl-3 g-3">
+    {% for sr in object_list %}
+    {% ifchanged sr.service.category.name %}
+    {% if not forloop.first %}
+      </ul>
+      </div>
+    </div>
+  </div>
+    {% endif %}
+    <div class="col">
+      <div class="card h-100 border-0 shadow-sm">
+        <!-- Category Header -->
+        <div class="card-header d-flex align-items-center gap-2 py-2 px-3" style="background: linear-gradient(135deg, var(--primary-color), color-mix(in srgb, var(--primary-color) 80%, black)); color: white;">
+          <i class="bi bi-folder-fill"></i>
+          <h6 class="mb-0 fw-semibold" id="sc-{{sr.service.category.id}}" style="color: white;">{{sr.service.category.name}}</h6>
+        </div>
+        <!-- Services List -->
+        <div class="card-body p-0" style="background-color: #f8f9fa;">
+          <ul class="list-unstyled mb-0 py-2 px-3">
+    {% endifchanged %}
+            <li class="mb-2">
+              <div class="d-flex align-items-start gap-2">
+                <a class="flex-grow-1 fw-semibold link-dark text-decoration-none" 
+                   href="{{sr.url}}" 
+                   target="_blank" 
+                   title="{% translate 'Open service in new window' %}"
+                   style="font-size: 0.95rem; line-height: 1.3;">
+                  {% if sr.available_from > new_until %}
+                    <span class="badge bg-success bg-opacity-10 text-success border border-success me-1" style="font-size: 0.7rem;">{% translate "New" %}</span>
+                  {% endif %}
+                  {{sr.service.name}}
+                  {% ifchanged sr.service %}{% else %}
+                    <span class="badge bg-secondary ms-1" style="font-size: 0.7rem;">{{sr.version}}</span>
+                  {% endifchanged %}
+                </a>
+                <div class="d-flex gap-1 flex-shrink-0">
+                  <a class="link-secondary text-decoration-none" 
+                     href="{% url 'service_detail' sr.id %}?from=jump" 
+                     title="{% translate 'Details about this service' %}"
+                     style="font-size: 0.9rem;">
+                    <i class="bi bi-info-circle"></i>
+                  </a>
+                  {% if sr.available_until <= discontinuation_warning_from %}
+                    <a class="link-warning text-decoration-none" 
+                       href="{% url 'service_detail' sr.id %}?from=jump" 
+                       title="{% translate 'Availability currently scheduled for only until' %} {{ sr.available_until }}."
+                       style="font-size: 0.9rem;">
+                      <i class="bi bi-exclamation-triangle-fill"></i>
+                    </a>
+                  {% endif %}
+                </div>
+              </div>
+            </li>
+    {% if forloop.last %}
+          </ul>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+    {% empty %}
+    <div class="col-12">
+      <div class="alert alert-info" role="alert">
+        <i class="bi bi-info-circle me-2"></i><em>{% translate "Currently no services in list." %}</em>
+      </div>
+    </div>
+    {% endfor %}
+    </div>
+  </div>
+  
+{% endblock %}
+
+

@@ -1,0 +1,611 @@
+{% extends "ServiceCatalogue/services_base.html" %}
+{% load i18n %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .ai-search-container {
+        max-width: 900px;
+        margin: 2rem auto;
+    }
+    
+    .search-input-area {
+        background: var(--bg-card);
+        border-radius: 1rem;
+        padding: 2rem;
+        box-shadow: var(--shadow-md);
+        margin-bottom: 2rem;
+    }
+    
+    .progress-area {
+        background: var(--bg-card);
+        border-radius: 1rem;
+        padding: 1.5rem;
+        box-shadow: var(--shadow-sm);
+        margin-bottom: 2rem;
+        display: none;
+    }
+    
+    .progress-area.active {
+        display: block;
+    }
+    
+    .progress-step {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem 0;
+        opacity: 0.4;
+        transition: opacity 0.3s;
+    }
+    
+    .progress-step.active {
+        opacity: 1;
+    }
+    
+    .progress-step.completed {
+        opacity: 0.7;
+    }
+    
+    .progress-step i {
+        font-size: 1.5rem;
+        margin-right: 1rem;
+        width: 2rem;
+        text-align: center;
+    }
+    
+    .progress-spinner {
+        display: inline-block;
+        width: 1.5rem;
+        height: 1.5rem;
+        border: 3px solid rgba(0, 0, 0, 0.1);
+        border-top-color: var(--primary-color);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-right: 1rem;
+    }
+    
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+    
+    .results-area {
+        background: var(--bg-card);
+        border-radius: 1rem;
+        padding: 2rem;
+        box-shadow: var(--shadow-md);
+        display: none;
+    }
+    
+    .results-area.active {
+        display: block;
+    }
+    
+    .service-recommendation {
+        background: #f0f9ff;
+        border-left: 4px solid var(--primary-color);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        border-radius: 0.5rem;
+    }
+    
+    .service-recommendation h5 {
+        margin-top: 0;
+        margin-bottom: 0.75rem;
+    }
+    
+    .service-recommendation .service-link {
+        font-weight: 600;
+        color: var(--primary-color);
+        text-decoration: none;
+    }
+    
+    .service-recommendation .service-link:hover {
+        text-decoration: underline;
+    }
+    
+    .also-checked-section {
+        margin-top: 2rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--border-color);
+    }
+    
+    .also-checked-item {
+        padding: 0.5rem 0;
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+    }
+    
+    .error-message {
+        background: #fee;
+        border-left: 4px solid #c33;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        color: #c33;
+    }
+    
+    .info-box {
+        background: #f8f9fa;
+        border-radius: 0.75rem;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .ai-icon {
+        font-size: 3rem;
+        text-align: center;
+        margin-bottom: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block bodycontent %}
+    <div class="ai-search-container">
+        <div class="text-center ai-icon">
+            <i class="bi bi-stars"></i>
+        </div>
+        
+        <h1 class="text-center mb-4">{{ title }}</h1>
+        
+        {% if not ai_enabled %}
+        <div class="alert alert-info">
+            <h5>{% trans "AI-Assisted Search Not Available" %}</h5>
+            <p>{% trans "The AI-assisted search feature is currently not enabled on this system. Please use the regular search function in the service catalogue." %}</p>
+            <p class="mb-0">
+                <a href="{% url 'services_listed' %}" class="btn btn-primary">
+                    {% trans "Go to Service Catalogue" %}
+                </a>
+            </p>
+        </div>
+        {% elif not ai_configured %}
+        <div class="alert alert-warning">
+            <h5>{% trans "AI-Assisted Search Not Available" %}</h5>
+            <p>{% trans "The AI-assisted search feature is activated but currently not available, probably due to configuration errors. Please contact the system administrator or use the regular search function in the service catalogue." %}</p>
+            <p class="mb-0">
+                <a href="{% url 'services_listed' %}" class="btn btn-primary">
+                    {% trans "Go to Service Catalogue" %}
+                </a>
+            </p>
+        </div>
+        {% else %}
+        
+        <div class="info-box">
+            <p class="mb-0">
+                <i class="bi bi-info-circle me-2"></i>
+                {% trans "Describe your problem or need in a few sentences, and our AI will help you find relevant IT services from our catalogue. The AI analyzes your description and recommends the most suitable services for your situation." %}
+            </p>
+        </div>
+        
+        <div class="search-input-area">
+            <form id="aiSearchForm">
+                <div class="mb-3">
+                    <label for="userInput" class="form-label fw-bold">
+                        {% trans "Describe your problem or need:" %}
+                    </label>
+                    <textarea 
+                        class="form-control" 
+                        id="userInput" 
+                        name="user_input" 
+                        rows="5" 
+                        placeholder="{% trans 'Example: I need to collaborate with colleagues on documents and share files securely...' %}"
+                        required
+                    ></textarea>
+                    <div class="form-text">
+                        {% trans "Please describe your situation in detail. The more information you provide, the better the AI can help you find the right services." %}
+                    </div>
+                </div>
+                
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn" id="searchButton" style="background-color: var(--primary-color); border-color: var(--primary-color); color: white;">
+                        <i class="bi bi-search me-2"></i>
+                        {% trans "Find Services" %}
+                        <small class="d-none d-lg-inline ms-2 opacity-75">({% translate 'Ctrl' %}+Enter)</small>
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" id="clearButton" style="display: none;">
+                        <i class="bi bi-x-circle me-2"></i>
+                        {% trans "Clear" %}
+                    </button>
+                </div>
+                
+                {% if data_protection_statement %}
+                <div class="mt-3">
+                    <small class="text-muted" style="opacity: 0.7;">
+                        <i class="bi bi-shield-check me-1"></i>{{ data_protection_statement|safe }}
+                    </small>
+                </div>
+                {% endif %}
+            </form>
+        </div>
+        
+        <div class="progress-area" id="progressArea">
+            <h5 class="mb-3">
+                <i class="bi bi-hourglass-split me-2"></i>
+                {% trans "Processing your request..." %}
+            </h5>
+            
+            <div class="progress-step" id="step1">
+                <div class="progress-spinner"></div>
+                <span>{% trans "Analyzing your problem and identifying relevant services..." %}</span>
+            </div>
+            
+            <div class="progress-step" id="step2">
+                <i class="bi bi-circle"></i>
+                <span>{% trans "Evaluating services in detail..." %}</span>
+            </div>
+            
+            <div class="progress-step" id="step3">
+                <i class="bi bi-circle"></i>
+                <span>{% trans "Preparing recommendations..." %}</span>
+            </div>
+        </div>
+        
+        <div class="results-area" id="resultsArea">
+            <!-- Results will be inserted here by JavaScript -->
+        </div>
+        
+    </div>
+    {% endif %}
+
+{% endblock %}
+
+{% if ai_enabled %}
+{% block extra_js %}
+{{ block.super }}
+<script>
+    // Keyboard shortcut: Ctrl+Enter to submit AI search form
+    document.addEventListener('keydown', function(event) {
+        if (event.ctrlKey && event.key === 'Enter') {
+            event.preventDefault();
+            var aiSearchForm = document.getElementById('aiSearchForm');
+            if (aiSearchForm) {
+                aiSearchForm.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+            }
+        }
+    });
+    
+    let currentRequestId = null;
+    let pollInterval = null;
+    
+    // LocalStorage key for persisting search state
+    const STORAGE_KEY = 'ai_search_request_id';
+    
+    // Get CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    const csrftoken = getCookie('csrftoken');
+    
+    // Restore previous search on page load
+    async function restorePreviousSearch() {
+        const savedRequestId = localStorage.getItem(STORAGE_KEY);
+        if (savedRequestId) {
+            try {
+                const statusUrl = '{% url "ai_search_status" "PLACEHOLDER" %}'.replace('PLACEHOLDER', savedRequestId);
+                const response = await fetch(statusUrl);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    if (data.status === 'completed') {
+                        // Restore completed search
+                        currentRequestId = savedRequestId;
+                        showResults(data.result, data.user_input);
+                        document.getElementById('userInput').value = data.user_input;
+                        document.getElementById('searchButton').disabled = false;
+                        document.getElementById('clearButton').style.display = 'inline-block';
+                    } else if (data.status === 'error') {
+                        // Search had an error, clear it
+                        localStorage.removeItem(STORAGE_KEY);
+                    } else if (data.status === 'initiated' || data.status === 'step1' || data.status === 'step2') {
+                        // Search is still in progress, resume polling
+                        currentRequestId = savedRequestId;
+                        document.getElementById('progressArea').classList.add('active');
+                        document.getElementById('searchButton').disabled = true;
+                        document.getElementById('clearButton').style.display = 'inline-block';
+                        updateProgressStep(data.status);
+                        startPolling();
+                    }
+                } else {
+                    // Request not found in session, clear localStorage
+                    localStorage.removeItem(STORAGE_KEY);
+                }
+            } catch (error) {
+                console.error('Error restoring previous search:', error);
+                localStorage.removeItem(STORAGE_KEY);
+            }
+        }
+    }
+    
+    // Form submission
+    document.getElementById('aiSearchForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const userInput = document.getElementById('userInput').value.trim();
+        if (!userInput) return;
+        
+        // Clear any previous request
+        if (currentRequestId) {
+            clearPoll();
+        }
+        
+        // Show progress, hide results
+        document.getElementById('progressArea').classList.add('active');
+        document.getElementById('resultsArea').classList.remove('active');
+        document.getElementById('resultsArea').innerHTML = '';
+        
+        // Reset progress steps
+        resetProgressSteps();
+        
+        // Disable search button
+        const searchButton = document.getElementById('searchButton');
+        searchButton.disabled = true;
+        searchButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>{% trans "Searching..." %}';
+        
+        // Show clear button
+        document.getElementById('clearButton').style.display = 'inline-block';
+        
+        try {
+            // Initiate the search
+            const response = await fetch('{% url "ai_search_initiate" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken
+                },
+                body: JSON.stringify({ user_input: userInput })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                currentRequestId = data.request_id;
+                // Save to localStorage for persistence
+                localStorage.setItem(STORAGE_KEY, currentRequestId);
+                startPolling();
+            } else {
+                showError(data.error || '{% trans "Failed to start search" %}');
+            }
+        } catch (error) {
+            showError('{% trans "Network error. Please try again." %}');
+        }
+    });
+    
+    // Clear button
+    document.getElementById('clearButton').addEventListener('click', function() {
+        clearSearch();
+    });
+    
+    function resetProgressSteps() {
+        document.querySelectorAll('.progress-step').forEach(step => {
+            step.classList.remove('active', 'completed');
+            const icon = step.querySelector('i');
+            if (icon) {
+                icon.className = 'bi bi-circle';
+            }
+        });
+        document.getElementById('step1').classList.add('active');
+    }
+    
+    function updateProgressStep(status) {
+        const stepMapping = {
+            'initiated': 'step1',
+            'step1': 'step1',
+            'step2': 'step2',
+            'completed': 'step3'
+        };
+        
+        const currentStepId = stepMapping[status];
+        if (!currentStepId) return;
+        
+        // Update all steps
+        ['step1', 'step2', 'step3'].forEach(stepId => {
+            const step = document.getElementById(stepId);
+            if (!step) return;
+            
+            const iconContainer = step.querySelector('i, .progress-spinner');
+            if (!iconContainer) return;
+            
+            if (stepId === currentStepId) {
+                // Current step: show spinner
+                step.classList.add('active');
+                step.classList.remove('completed');
+                const spinner = document.createElement('div');
+                spinner.className = 'progress-spinner';
+                iconContainer.replaceWith(spinner);
+            } else if (stepId < currentStepId || (stepId === 'step1' && status === 'step2') || (stepId <= 'step2' && status === 'completed')) {
+                // Previous steps: show checkmark
+                step.classList.remove('active');
+                step.classList.add('completed');
+                const checkIcon = document.createElement('i');
+                checkIcon.className = 'bi bi-check-circle text-success';
+                iconContainer.replaceWith(checkIcon);
+            } else {
+                // Future steps: show circle
+                step.classList.remove('active', 'completed');
+                const circle = document.createElement('i');
+                circle.className = 'bi bi-circle';
+                iconContainer.replaceWith(circle);
+            }
+        });
+    }
+    
+    async function startPolling() {
+        pollInterval = setInterval(async () => {
+            try {
+                const statusUrl = '{% url "ai_search_status" "PLACEHOLDER" %}'.replace('PLACEHOLDER', currentRequestId);
+                const response = await fetch(statusUrl);
+                const data = await response.json();
+                
+                if (data.status === 'completed') {
+                    clearPoll();
+                    updateProgressStep('completed');
+                    setTimeout(() => {
+                        showResults(data.result, data.user_input);
+                    }, 500);
+                } else if (data.status === 'error') {
+                    clearPoll();
+                    showError(data.error || '{% trans "An error occurred during the search" %}');
+                } else {
+                    updateProgressStep(data.status);
+                }
+            } catch (error) {
+                clearPoll();
+                showError('{% trans "Error checking search status" %}');
+            }
+        }, 1000); // Poll every second
+    }
+    
+    function clearPoll() {
+        if (pollInterval) {
+            clearInterval(pollInterval);
+            pollInterval = null;
+        }
+        
+        // Re-enable search button
+        const searchButton = document.getElementById('searchButton');
+        searchButton.disabled = false;
+        searchButton.innerHTML = '<i class="bi bi-search me-2"></i>{% trans "Find Services" %}';
+    }
+    
+    function showResults(result, userInput) {
+        document.getElementById('progressArea').classList.remove('active');
+        const resultsArea = document.getElementById('resultsArea');
+        resultsArea.classList.add('active');
+        
+        // Get base URL for service detail links
+        const serviceByKeyUrlTemplate = '{% url "service_detail_by_key" "PLACEHOLDER" %}';
+        
+        let html = '';
+        
+        if (!result.success) {
+            html = `<div class="error-message">${result.error || '{% trans "Search failed" %}'}</div>`;
+        } else if (result.step1_only) {
+            // Only step 1 was performed
+            html = `<div class="alert alert-info">${escapeHtml(result.message)}</div>`;
+        } else {
+            // Full results with recommendations
+            html += `<h4 class="mb-3">${escapeHtml(result.overall_assessment)}</h4>`;
+            
+            if (result.recommended_services && result.recommended_services.length > 0) {
+                result.recommended_services.forEach(service => {
+                    const serviceUrl = serviceByKeyUrlTemplate.replace('PLACEHOLDER', encodeURIComponent(service.service_key));
+                    // Extract service name and version from the result if available, otherwise use key
+                    const serviceName = service.service_name || service.service_key;
+                    const serviceVersion = service.service_version ? ` (${escapeHtml(service.service_version)})` : '';
+                    const displayName = `${escapeHtml(serviceName)}${serviceVersion}`;
+                    
+                    html += `
+                        <div class="service-recommendation">
+                            <h5>
+                                <a href="${serviceUrl}" class="service-link">
+                                    ${displayName}
+                                </a>
+                            </h5>
+                            <p class="mb-2"><strong>{% trans "Why this service:" %}</strong><br>
+                                ${escapeHtml(service.relevance_explanation)}</p>
+                            <p class="mb-0 text-muted"><strong>{% trans "What to check:" %}</strong><br>
+                                ${escapeHtml(service.focus_areas)}</p>
+                        </div>
+                    `;
+                });
+            }
+            
+            if (result.also_checked && result.also_checked.length > 0) {
+                html += `
+                    <div class="also-checked-section">
+                        <h6 class="text-muted">{% trans "Also evaluated but not recommended:" %}</h6>
+                `;
+                result.also_checked.forEach(service => {
+                    const serviceUrl = serviceByKeyUrlTemplate.replace('PLACEHOLDER', encodeURIComponent(service.service_key));
+                    const serviceName = service.service_name || service.service_key;
+                    const serviceVersion = service.service_version ? ` (${escapeHtml(service.service_version)})` : '';
+                    const displayName = `${escapeHtml(serviceName)}${serviceVersion}`;
+                    
+                    html += `
+                        <div class="also-checked-item">
+                            <a href="${serviceUrl}" class="text-muted">
+                                ${displayName}
+                            </a>
+                            - ${escapeHtml(service.reason_not_recommended)}
+                        </div>
+                    `;
+                });
+                html += `</div>`;
+            }
+        }
+        
+        resultsArea.innerHTML = html;
+    }
+    
+    function showError(message) {
+        document.getElementById('progressArea').classList.remove('active');
+        const resultsArea = document.getElementById('resultsArea');
+        resultsArea.classList.add('active');
+        resultsArea.innerHTML = `<div class="error-message">${escapeHtml(message)}</div>`;
+        
+        const searchButton = document.getElementById('searchButton');
+        searchButton.disabled = false;
+        searchButton.innerHTML = '<i class="bi bi-search me-2"></i>{% trans "Find Services" %}';
+    }
+    
+    async function clearSearch() {
+        // Clear UI
+        document.getElementById('userInput').value = '';
+        document.getElementById('progressArea').classList.remove('active');
+        document.getElementById('resultsArea').classList.remove('active');
+        document.getElementById('resultsArea').innerHTML = '';
+        document.getElementById('clearButton').style.display = 'none';
+        
+        // Clear localStorage
+        localStorage.removeItem(STORAGE_KEY);
+        
+        // Clear session data
+        if (currentRequestId) {
+            try {
+                const clearUrl = '{% url "ai_search_clear" "PLACEHOLDER" %}'.replace('PLACEHOLDER', currentRequestId);
+                await fetch(clearUrl, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrftoken
+                    }
+                });
+            } catch (error) {
+                console.error('Error clearing search:', error);
+            }
+            currentRequestId = null;
+        }
+        
+        clearPoll();
+        resetProgressSteps();
+    }
+    
+    function escapeHtml(text) {
+        const map = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;'
+        };
+        return text.replace(/[&<>"']/g, m => map[m]);
+    }
+    
+    // Restore previous search on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        restorePreviousSearch();
+    });
+</script>
+
+{% endblock %}
+{% endif %}

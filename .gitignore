@@ -1,0 +1,146 @@
+# Generated from rep settings - Ignore files for Git
+
+# ========================
+# Python
+# ========================
+*.pyc
+*.pyo
+*.pyd
+*$py.class
+__pycache__/
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+
+# ========================
+# Django
+# ========================
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+media/
+
+# ========================
+# Environment Variables
+# ========================
+.env
+.env.local
+.env.*.local
+*.env~
+env/itsm.env
+
+# ========================
+# IDEs
+# ========================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+\#*\#
+.DS_Store
+
+# ========================
+# Docker
+# ========================
+docker-compose.override.yml
+
+# ========================
+# Testing
+# ========================
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# ========================
+# Database dumps
+# ========================
+*.sql.gz
+*.dump
+
+# ========================
+# Secrets
+# ========================
+secrets/
+
+# ========================
+# User-specific files
+# ========================
+# Note: user_files/ is completely excluded (organization-specific data)
+# But apps/itsm/user_files/ is tracked (dummy data), so we only ignore top-level user_files/
+user_files/
+
+# ========================
+# Backups
+# ========================
+*.bak
+*.orig
+
+# ========================
+# LaTeX temporary files
+# ========================
+*.aux
+*.out
+*.toc
+*.pdf
+
+# ========================
+# Translations
+# ========================
+*.pot
+
+# ========================
+# Virtual Environments
+# ========================
+venv/
+env/
+ENV/
+.venv
+
+# ========================
+# macOS
+# ========================
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# ========================
+# Windows
+# ========================
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# ========================
+# Postgres dumps
+# ========================
+postgres/dumps/*.sql
+
+# ========================
+# Nginx certificates
+# ========================
+# (Assuming these are in a specific path, e.g., nginx/certs/)
+# You can be more specific if needed, e.g.:
+# nginx/certs/
+# or
+# *.crt
+# *.key
+# *.pem
+
+# ========================
+# Explicitly allow .gitignore to be tracked
+# ========================
+!.gitignore
+
+# ========================
+# Optional: Ignore all other hidden files except .gitignore
+# (if you want to be extra strict)
+# ========================
+.*
+!.gitignore
+

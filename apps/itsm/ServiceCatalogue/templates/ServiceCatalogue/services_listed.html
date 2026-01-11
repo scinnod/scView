@@ -1,0 +1,167 @@
+{% extends "ServiceCatalogue/services_base.html" %}
+
+{% load i18n %}
+{% load html_links %}
+
+{% block title %} {{ title }}{% if kwargs.clientele_id %} {% translate "for" %} {% for clientele in clienteles %}{% if clientele.id == kwargs.clientele_id %}{{ clientele.name }}{% endif %}{% endfor %}{% endif %}{% endblock %}
+{% block description %}{% if description and not request.GET.q %}<div class="alert alert-light border"><p class="mb-0">{{ description|safe|linebreaks}}</p></div>{% endif %}{% endblock %}
+
+{% block element %}
+<div class="row g-3">
+  <!-- Service Overview Card -->
+  <div class="col-12">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start mb-3 checkmark">
+          <div class="flex-grow-1">
+            <h5 class="card-title mb-1">
+              <span class="badge bg-primary me-2">{{ sr.key}}</span>
+              {{ sr.service.name }}
+            </h5>
+            <p class="text-muted small mb-0"><i class="bi bi-folder me-1"></i>{{ sr.service.category.name }}</p>
+          </div>
+          <a href="{% url 'service_detail' sr.id %}?from=catalogue" class="btn btn-sm btn-outline-primary" title="{% translate 'View details' %}">
+            <i class="bi bi-box-arrow-up-right"></i>
+          </a>
+        </div>
+
+        <!-- Main Purpose -->
+        <div class="mb-3 checkmark">
+          <h6 class="text-primary fw-semibold mb-2"><i class="bi bi-bullseye me-2"></i>{% translate "Main purpose" %}</h6>
+          <div class="ms-4">{{ sr.service.purpose|linebreaks|parse_internal_links}}</div>
+        </div>
+
+        <!-- Description -->
+        <div class="mb-3 checkmark">
+          <h6 class="text-primary fw-semibold mb-2"><i class="bi bi-info-circle me-2"></i>{% translate "Description" %}</h6>
+          <div class="ms-4">{{ sr.description|linebreaks|parse_internal_links }}</div>
+        </div>
+
+        <!-- Usage Information / Please Note -->
+        {% if show_usage_information and sr.usage_information %}
+        <div class="mb-3 checkmark">
+          <div class="ms-4 p-3 bg-danger bg-opacity-10 border border-danger border-opacity-75 rounded-3 d-flex gap-3">
+            <div class="flex-shrink-0 text-danger" style="line-height: 1.5;">
+              <i class="bi bi-exclamation-circle"></i>
+            </div>
+            <div class="flex-grow-1">
+              <p class="fw-bold mb-0">{% translate "Please Note" %}:</p>
+              <div>{{ sr.usage_information|linebreaks|urlize|parse_internal_links }}</div>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Requirements -->
+        {% if show_requirements and sr.requirements %}
+        <div class="mb-3 checkmark">
+          <h6 class="text-primary fw-semibold mb-2"><i class="bi bi-check2-square me-2"></i>{% translate "Requirements" %}</h6>
+          <div class="ms-4">{{ sr.requirements|linebreaks|parse_internal_links}}</div>
+        </div>
+        {% endif %}
+
+        <!-- Details -->
+        {% if show_details and sr.details %}
+        <div class="mb-3 checkmark">
+          <h6 class="text-primary fw-semibold mb-2"><i class="bi bi-list-check me-2"></i>{% translate "Details" %}</h6>
+          <div class="ms-4">{{ sr.details|linebreaks|urlize|parse_internal_links}}</div>
+        </div>
+        {% endif %}
+
+        <!-- Options -->
+        {% if show_options and sr.options %}
+        <div class="mb-3 checkmark">
+          <h6 class="text-primary fw-semibold mb-2"><i class="bi bi-sliders me-2"></i>{% translate "Options" %}</h6>
+          <div class="ms-4">{{ sr.options|linebreaks|parse_internal_links}}</div>
+        </div>
+        {% endif %}
+
+        <!-- Service Level -->
+        {% if show_service_level and sr.service_level %}
+        <div class="mb-3 checkmark">
+          <h6 class="text-primary fw-semibold mb-2"><i class="bi bi-graph-up-arrow me-2"></i>{% translate "Service Level" %}</h6>
+          <div class="ms-4">{{ sr.service_level|linebreaks|parse_internal_links}}</div>
+        </div>
+        {% endif %}
+
+        <!-- Service Link -->
+        {% if sr.url %}
+        <div class="mb-3">
+          <h6 class="text-primary fw-semibold mb-2"><i class="bi bi-link-45deg me-2"></i>{% translate "Link to service" %}</h6>
+          <div class="ms-4">
+            <a href="{{ sr.url }}" class="btn btn-sm btn-outline-primary" target="_blank">
+              <i class="bi bi-box-arrow-up-right me-1"></i>{{ sr.url | truncatechars:60 }}
+            </a>
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Contact -->
+        {% if sr.contact %}
+        <div class="mb-3">
+          <h6 class="text-primary fw-semibold mb-2"><i class="bi bi-envelope me-2"></i>{% translate "Service contact" %}</h6>
+          <div class="ms-4">
+            {% if True or user.is_authenticated %}
+            <a href="mailto:{{ sr.contact }}?subject=[Service Request {{ sr.key }}] {{sr.service.name }}" class="btn btn-sm btn-outline-secondary">
+              <i class="bi bi-envelope me-1"></i>{{ sr.contact }}
+            </a>
+            {% else %}
+            <span class="text-muted">{% translate "(visible only for authenticated users after login)" %}</span>
+            {% endif %}
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Availability Timeline -->
+        {% if sr.available_from > today or not sr.available_from or sr.available_until %}
+        <div class="mb-3">
+          <h6 class="text-primary fw-semibold mb-2"><i class="bi bi-calendar-range me-2"></i>{% translate "Availability" %}</h6>
+          <div class="ms-4">
+            {% if sr.available_from > today %}
+              <span class="badge bg-warning text-dark"><i class="bi bi-clock me-1"></i>{{ sr.available_from }}</span> 
+              {% if sr.available_until %}- {{ sr.available_until }}{% endif %}
+              <small class="text-muted ms-2">({% translate "not yet available" %})</small>
+            {% elif not sr.available_from %}
+              <span class="badge bg-secondary"><i class="bi bi-question-circle me-1"></i>{% translate "not yet scheduled" %}</span>
+            {% elif sr.available_until %}
+              {{ sr.available_from }} - <span class="badge bg-warning text-dark"><i class="bi bi-calendar-x me-1"></i>{{ sr.available_until }}</span>
+              <small class="text-muted ms-2">({% translate "end of availability scheduled" %})</small>
+            {% endif %}
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Clientele Availability -->
+        {% if not kwargs.clientele_id %}
+        <div class="mb-0">
+          <h6 class="text-primary fw-semibold mb-2"><i class="bi bi-people me-2"></i>{% translate "Available for" %}</h6>
+          <div class="ms-4">
+            {% for avail in sr.availability_set.all %}
+              <span class="badge bg-light text-dark border me-1 mb-1">{{ avail.clientele_name_with_costs }}</span>
+            {% empty %}
+              <span class="text-muted"><em>{% translate "unfortunately nobody yet" %}</em></span>
+            {% endfor %}
+          </div>
+        </div>
+        {% else %}
+        <!-- Costs for specific clientele -->
+        {% for avail in sr.availability_set.all %}
+          {% if avail.clientele.id == kwargs.clientele_id and avail.charged %}
+          <div class="mb-0">
+            <h6 class="text-primary fw-semibold mb-2"><i class="bi bi-currency-dollar me-2"></i>{% translate "Costs" %}</h6>
+            <div class="ms-4">
+              <span class="badge bg-success">
+                {% if avail.fee > 0 %}{{avail.fee}}{% endif %} {{avail.fee_unit}}
+                {% if avail.comment %}<small class="ms-1">({{avail.comment}})</small>{% endif %}
+              </span>
+            </div>
+          </div>
+          {% endif %}
+        {% endfor %}
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
