@@ -6,39 +6,43 @@ Service Catalogue Views
 Views for the ITSM Service Catalogue application.
 """
 
-from django.shortcuts import render, redirect
-from django.views.generic import ListView, DetailView
-from ServiceCatalogue.models import *
 import datetime
 import json
-import pandas as pd
-from django.http import HttpResponse
-from django.urls import reverse
 import logging
-from django.contrib.auth.decorators import login_required
-from django.contrib.admin.views.decorators import staff_member_required
-from django.contrib.auth import login, authenticate
-from django.db import connection
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+import pandas as pd
+import threading
+import uuid
 from functools import wraps
+from urllib.parse import urlencode
 
-from django.http import HttpResponse
-from django_tex.shortcuts import render_to_pdf
-from django_tex.core import render_template_with_context
-
-from django.utils.translation import gettext as _
-from django.utils import translation
-from django.views.decorators.cache import cache_page
-
+from django.conf import settings
+from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib.auth import login, authenticate, logout
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.contrib.auth.views import redirect_to_login
 from django.contrib.postgres.search import SearchVector, SearchQuery
-
-from modeltranslation.manager import rewrite_lookup_key, append_lookup_key
-from modeltranslation.utils import build_localized_fieldname, resolution_order
-from modeltranslation.translator import translator
-
-from django.db import models
+from django.db import connection, models
 from django.db.models import Q, Value
 from django.db.models.functions import Coalesce
+from django.http import HttpResponse, JsonResponse
+from django.shortcuts import render, redirect
+from django.urls import reverse
+from django.utils import translation
+from django.utils.decorators import method_decorator
+from django.utils.translation import gettext as _
+from django.views import View
+from django.views.decorators.cache import cache_page
+from django.views.decorators.http import require_http_methods
+from django.views.generic import ListView, DetailView
+from django_tex.core import render_template_with_context
+from django_tex.shortcuts import render_to_pdf
+from modeltranslation.manager import rewrite_lookup_key, append_lookup_key
+from modeltranslation.translator import translator
+from modeltranslation.utils import build_localized_fieldname, resolution_order
+
+from ServiceCatalogue.ai_service import AISearchService
+from ServiceCatalogue.models import *
 
 
 def sso_login(request):
@@ -61,8 +65,7 @@ def sso_login(request):
     if not settings.IS_PRODUCTION:
         # This shouldn't be called in development (LOGIN_URL points to /admin/login/)
         # But if it is, redirect to admin login as fallback
-        next_url = request.GET.get('next', '/')        
-        from urllib.parse import urlencode
+        next_url = request.GET.get('next', '/')
         redirect_url = f"{settings.LOGIN_URL}?{urlencode({'next': next_url})}"
         return redirect(redirect_url)
     
@@ -89,26 +92,19 @@ def logout_view(request):
                 which clears the OAuth2-proxy cookie and ends the Keycloak session.
     Development: Uses standard Django logout.
     """
-    from django.contrib.auth import logout
-    
     # Clear Django session
     logout(request)
     
-    if settings.IS_PRODUCTION:
-        # Production: Redirect to OAuth2-proxy logout with OIDC end_session
-        # OAuth2-proxy will redirect to Keycloak's end_session_endpoint to fully log out
-        # The 'rd' parameter tells OAuth2-proxy where to redirect after Keycloak logout
-        response = redirect('/oauth2/sign_out?rd=/')
-        # Prevent caching of logout redirect to avoid stale authentication state
-        response['Cache-Control'] = 'no-cache, no-store, must-revalidate, private'
-        response['Pragma'] = 'no-cache'
-        response['Expires'] = '0'
-        return response
-    else:
-        # Development: Redirect to home page after logout
-        return redirect('/')
+    # Redirect to configured logout URL
+    response = redirect(settings.LOGOUT_REDIRECT_URL)
+    
+    # Prevent caching of logout redirect to avoid stale authentication state
+    response['Cache-Control'] = 'no-cache, no-store, must-revalidate, private'
+    response['Pragma'] = 'no-cache'
+    response['Expires'] = '0'
+    
+    return response
 
-from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
@@ -163,7 +159,6 @@ def conditional_login_required(setting_name):
         def wrapped_view(request, *args, **kwargs):
             require_login = getattr(settings, setting_name, True)
             if require_login and not request.user.is_authenticated:
-                from django.contrib.auth.views import redirect_to_login
                 return redirect_to_login(
                     request.get_full_path(),
                     settings.LOGIN_URL,
@@ -197,7 +192,6 @@ def ai_search_login_required(view_func):
             getattr(settings, 'SERVICE_CATALOGUE_REQUIRE_LOGIN', True)
         )
         if require_login and not request.user.is_authenticated:
-            from django.contrib.auth.views import redirect_to_login
             return redirect_to_login(
                 request.get_full_path(),
                 settings.LOGIN_URL,
@@ -975,15 +969,6 @@ def service_detail_by_key(request, service_key):
 
 
 # AI-Assisted Search Views
-from django.views import View
-from django.http import JsonResponse
-from django.views.decorators.http import require_http_methods
-from django.utils.decorators import method_decorator
-import threading
-import uuid
-
-from ServiceCatalogue.ai_service import AISearchService
-
 
 @ai_search_login_required
 def ai_search_view(request):

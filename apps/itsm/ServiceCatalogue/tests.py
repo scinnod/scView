@@ -9,14 +9,16 @@ Tests cover:
 - Database queries and filtering
 """
 
-from django.test import TestCase, Client
-from django.urls import reverse
+import json
+from datetime import date, timedelta
+
 from django.contrib.auth.models import User, Group, Permission
 from django.core.exceptions import ValidationError
-from django.db import IntegrityError
+from django.db import IntegrityError, connection
+from django.test import TestCase, Client
+from django.test.utils import override_settings, CaptureQueriesContext
+from django.urls import reverse
 from django.utils import timezone
-from datetime import date, timedelta
-import json
 
 from .models import (
     ServiceProvider,
@@ -635,9 +637,6 @@ class QueryPerformanceTest(TestCase):
     def test_service_listing_query_count(self):
         """Test that service listing doesn't cause N+1 queries"""
         # This test ensures we use select_related/prefetch_related properly
-        from django.test.utils import override_settings
-        from django.db import connection
-        from django.test.utils import CaptureQueriesContext
         
         with CaptureQueriesContext(connection) as context:
             services = list(Service.objects.select_related('category').all())

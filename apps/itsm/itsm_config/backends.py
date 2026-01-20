@@ -7,12 +7,14 @@ Custom authentication backend for Keycloak SSO via OAuth2-proxy.
 Handles user creation and email population from upstream headers.
 """
 
+import logging
+
+from django.conf import settings
+from django.contrib.auth import get_user_model, authenticate
 from django.contrib.auth.backends import RemoteUserBackend
-from django.contrib.auth import get_user_model
+from django.contrib.auth.middleware import RemoteUserMiddleware
 
 User = get_user_model()
-
-import logging
 logger = logging.getLogger(__name__)
 
 class KeycloakRemoteUserBackend(RemoteUserBackend):
@@ -36,7 +38,6 @@ class KeycloakRemoteUserBackend(RemoteUserBackend):
 
 
     def authenticate(self, request, remote_user=None, **kwargs):
-        from django.conf import settings
         username = request.META.get(settings.REMOTE_USER_HEADER)
         logger.warning("Authenticating user with header value: %s", username)
         
@@ -58,7 +59,6 @@ class KeycloakRemoteUserBackend(RemoteUserBackend):
         
         return user
 
-from django.contrib.auth.middleware import RemoteUserMiddleware
 
 class CustomRemoteUserMiddleware(RemoteUserMiddleware):
     def process_request(self, request):
@@ -77,5 +77,4 @@ class CustomRemoteUserMiddleware(RemoteUserMiddleware):
             # If REMOTE_USER is missing, fall back to session-based authentication
             if not request.user.is_authenticated:
                 # Explicitly call authenticate to check session (fallback)
-                from django.contrib.auth import authenticate
                 authenticate(request)  # Trigger session-based authentication

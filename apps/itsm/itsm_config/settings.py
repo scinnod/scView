@@ -245,7 +245,7 @@ if IS_PRODUCTION:
     # SSO login endpoint - nginx adds X-Remote-User header here after Keycloak auth
     LOGIN_URL = '/sso-login/'
     LOGIN_REDIRECT_URL = '/'
-    LOGOUT_REDIRECT_URL = '/oauth2/sign_out?rd=/'  # Logout from OAuth2-proxy
+    LOGOUT_REDIRECT_URL = '/oauth2/sign_out'  # Logout from OAuth2-proxy
     
     # Header configuration - tells RemoteUserMiddleware which header to trust
     # This header is set by nginx from OAuth2-proxy's X-Auth-Request-User

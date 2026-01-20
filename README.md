@@ -98,7 +98,7 @@ Built by a university IT department, for university IT departments—but works g
 
 ### Installation
 
-\`\`\`bash
+```bash
 # 1. Clone the repository
 git clone https://github.com/YOUR_USERNAME/itsm-service-catalogue.git
 cd itsm-service-catalogue
@@ -118,13 +118,13 @@ docker-compose exec itsm python manage.py createsuperuser
 
 # 6. Optional: Load sample data
 docker-compose exec itsm python manage.py populate_test_data
-\`\`\`
+```
 
 ### Basic Configuration
 
-Edit \`env/itsm.env\`:
+Edit `env/itsm.env`:
 
-\`\`\`bash
+```bash
 # Required
 DJANGO_ENV=production
 ALLOWED_HOSTS=your-domain.com
@@ -138,11 +138,11 @@ PRIMARY_COLOR=003366
 # Optional: AI Search
 AI_SEARCH_ENABLED=True
 OPENAI_API_KEY=sk-your-key-here
-\`\`\`
+```
 
-Configure your reverse proxy to route traffic to \`itsm_nginx:80\`.
+Configure your reverse proxy to route traffic to `itsm_nginx:80`.
 
-**That's it!** Access your catalogue at \`https://your-domain.com/sc/\`
+**That's it!** Access your catalogue at `https://your-domain.com/sc/`
 
 ---
 
@@ -161,7 +161,7 @@ Configure your reverse proxy to route traffic to \`itsm_nginx:80\`.
 
 ## 🏗️ Architecture
 
-\`\`\`
+```
 Internet
     │
     ▼
@@ -185,7 +185,7 @@ Internet
 ┌─────────────────────────────────────┐
 │  PostgreSQL (full-text search)     │
 └─────────────────────────────────────┘
-\`\`\`
+```
 
 - **Network isolation**: Three separate Docker networks for security
 - **Stateless app tier**: Scale Django horizontally if needed

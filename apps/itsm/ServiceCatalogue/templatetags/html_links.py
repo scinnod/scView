@@ -1,14 +1,17 @@
+import datetime
+from re import sub
+
 from django import template
-from django.utils.html import conditional_escape, escape
 from django.template.defaultfilters import stringfilter
-from django.utils.safestring import mark_safe
 from django.urls import reverse
+from django.utils.html import conditional_escape, escape
+from django.utils.safestring import mark_safe
 # Note: Translation in template filters does not currently work despite proper setup.
 # gettext is imported for future Django versions that might fix this issue.
 # The translations remain in django.po for when this starts working.
 from django.utils.translation import gettext as _
-from re import sub
-import datetime
+
+from ServiceCatalogue.models import ServiceRevision, keysep
 
 register = template.Library()
 
@@ -33,7 +36,6 @@ def _resolve_internal_link(link_text, for_detail_view=False):
     - title: Tooltip text explaining the link type
     - display_text: The text to display in the link
     """
-    from ServiceCatalogue.models import ServiceRevision, keysep
     
     # Check if link_text contains the key separator
     if keysep not in link_text:

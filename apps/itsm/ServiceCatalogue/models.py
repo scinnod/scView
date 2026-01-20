@@ -6,14 +6,16 @@ Service Catalogue Models
 Data models for the ITSM Service Catalogue application.
 """
 
-from django.db import models
-from django.utils.translation import gettext_lazy as _
-from simple_history.models import HistoricalRecords
+import re
 from datetime import date
-from django.core.exceptions import ValidationError
+
 from django.contrib.postgres.indexes import GinIndex
+from django.core.exceptions import ValidationError
+from django.db import models
 from django.db.models.signals import pre_save, post_save
 from django.dispatch import receiver
+from django.utils.translation import gettext_lazy as _
+from simple_history.models import HistoricalRecords
 
 # define seperators characters for key hierarchy:
 keysep = "-"
@@ -479,7 +481,6 @@ class ServiceRevision(models.Model):
         Called automatically by pre_save signal to ensure search_keys
         are always up-to-date, even during fixture loading.
         """
-        import re
         
         # Extract searchable keywords from URL
         url_keywords = ""
