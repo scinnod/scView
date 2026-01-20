@@ -5,357 +5,243 @@ SPDX-FileCopyrightText: 2024-2026 David Kleinhans, Jade University of Applied Sc
 
 # ITSM Service Catalogue
 
-A Django-based IT Service Management (ITSM) service catalogue application with multilingual support, Keycloak SSO authentication, and PDF export capabilities.
+**A modern, user-friendly IT Service Catalogue for universities and organizations**
+
+Present your IT services professionally. Help users find what they need. Keep your documentation in one place.
 
 **Author:** David Kleinhans, [Jade University of Applied Sciences](https://www.jade-hs.de/)  
 **License:** [AGPL-3.0-or-later](LICENSE)  
 **Contact:** david.kleinhans@jade-hs.de
 
-## Features
+---
 
-- 📚 Hierarchical service catalogue with versioning
-- 🌍 Multilingual support (German/English)
-- 🔐 Keycloak SSO via OAuth2-proxy (production) and simple auth (development)
-- 📄 PDF export via LaTeX integration
-- 🔍 Full-text search with PostgreSQL
-- 🐳 Docker-based deployment with upstream proxy support
-- 🎨 Corporate identity customization
+## Why This Project?
 
-## Quick Start
+Most IT departments struggle with service documentation scattered across wikis, SharePoint sites, and outdated PDFs. Users can't find services, support teams answer the same questions repeatedly, and nobody knows what's actually available.
+
+The ITSM Service Catalogue solves this by providing:
+
+- **A single source of truth** for all IT services
+- **User-friendly browsing** with categories and clientele filtering
+- **Professional PDF exports** for governance and compliance
+- **Multilingual support** out of the box
+- **AI-powered search** that understands natural language queries
+
+Built by a university IT department, for university IT departments—but works great for any organization.
+
+---
+
+## ✨ Key Features
+
+### 📚 Comprehensive Service Catalogue
+- Hierarchical categories for organized browsing
+- Rich service descriptions with availability, contacts, and documentation links
+- Service versioning with full revision history
+- Distinguish between internal documentation and public-facing information
+
+### 🌐 Online Services Portal
+- Quick-access landing page for frequently used online services
+- Direct links to service portals, support pages, and documentation
+- Perfect for homepage integration or digital signage
+
+### 🤖 AI-Assisted Search
+- Natural language queries: *"How do I get more storage?"* or *"I need to host a website"*
+- Powered by OpenAI GPT models
+- Understands context and recommends relevant services
+- Optional feature—works without AI configuration
+
+### 🌍 Multilingual Support
+- German and English out of the box
+- Database-level translations (not just UI)
+- Automatic language switching based on user preferences
+- Extensible to additional languages
+
+### 📄 Professional PDF Export
+- LaTeX-based PDF generation
+- Customizable templates for your organization
+- Individual service datasheets or complete catalogue
+- Perfect for audits, governance, and offline documentation
+
+### 🎨 Corporate Identity
+- Easy logo and color customization
+- Responsive design for desktop and mobile
+- Clean, modern Bootstrap 5 interface
+- Consistent branding across all pages
+
+### 🔐 Enterprise Authentication
+- Keycloak SSO integration via OAuth2-proxy
+- Automatic user provisioning from identity provider
+- Role-based access (Staff, Editors, Publishers)
+- Simple development mode with Django authentication
+
+### 🐳 Docker Deployment
+- Production-ready Docker Compose setup
+- Three-tier network security (proxy → app → database)
+- Works behind any reverse proxy (nginx, Traefik, Caddy)
+- Automatic secret management
+
+---
+
+## 🖼️ Screenshots
+
+*Coming soon*
+
+---
+
+## 🚀 Quick Start
 
 ### Prerequisites
 
 - Docker and Docker Compose
-- [Edge-Auth Stack](https://github.com/YOUR_USERNAME/edge-auth-stack) for production (Keycloak SSO)
-  - See [docs/LOGIN_FLOW.md](docs/LOGIN_FLOW.md) for authentication details
+- A reverse proxy for SSL termination (nginx Proxy Manager, Traefik, Caddy, etc.)
+- Optional: [Edge-Auth Stack](https://github.com/YOUR_USERNAME/edge-auth-stack) for Keycloak SSO
 
 ### Installation
 
-1. **Create external proxy network:**
-   ```bash
-   docker network create proxy
-   ```
-
-2. **Configure environment:**
-   ```bash
-   cp env/itsm.env.example env/itsm.env
-   # Edit env/itsm.env with your settings
-   ```
-
-3. **Add branding (optional):**
-   ```bash
-   # Add your logo
-   cp /path/to/logo.png apps/itsm/user_files/static/logos/logo.png
-   
-   # Update env/itsm.env:
-   # ORGANIZATION_NAME=Your Organization
-   # ORGANIZATION_ACRONYM=ORG
-   # LOGO_FILENAME=logo.png
-   # PRIMARY_COLOR=0d6efd
-   ```
-
-4. **Start services:**
-   ```bash
-   docker-compose up -d
-   ```
-
-5. **Initialize database:**
-   ```bash
-   # Create admin user
-   docker-compose exec itsm python manage.py createsuperuser
-   
-   # Load sample data (optional)
-   docker-compose exec itsm python manage.py populate_test_data
-   ```
-
-6. **Configure upstream proxy** to route your domain to `itsm_nginx:80`
-   - In production, configure OAuth2-proxy to pass `X-Remote-User` and `X-Remote-Email` headers
-   - See the [Edge-Auth Stack documentation](https://github.com/YOUR_USERNAME/edge-auth-stack) for configuration
-
-### Development Mode
-
-```bash
-# In env/itsm.env:
-DJANGO_ENV=development
-FORCE_SCRIPT_NAME=/dev
-
-# Access at http://localhost/dev/
-```
-
-## Architecture
-
-```
-Internet
-   ↓
-Upstream Proxy (SSL/TLS termination + OAuth2-proxy + Keycloak)
-   ↓ [proxy network]
-nginx (static files, reverse proxy)
-   ↓ [app_itsm network]
-Django + Gunicorn
-   ↓ [net_db network]
-PostgreSQL 15
-```
-
-**Security features:**
-- Three-tier network isolation
-- Secrets in Docker volumes
-- SSL/TLS at edge (upstream proxy)
-- Keycloak SSO authentication (production)
-- No direct database access from outside
-
-## Authentication
-
-This service is designed to work behind the [Edge-Auth Stack](https://github.com/YOUR_USERNAME/edge-auth-stack) - a production-ready authentication gateway combining nginx, Keycloak SSO, and OAuth2-proxy.
-
-### Prerequisites
-
-1. Deploy the Edge-Auth Stack first
-2. Configure Keycloak realm and client
-3. Set up nginx virtual host (see edge-auth-stack documentation)
-
-### Authentication Pattern
-
-This service uses **Pattern A** (Django-controlled) authentication:
-- Django decides which pages require authentication via `@login_required` decorator
-- Public pages are accessible without authentication
-- Protected pages trigger Keycloak login via `/sso-login/` endpoint
-
-**Public pages (no login required):**
-- Online Services landing page (`/sc/`)
-
-**Protected pages (login required):**
-- Service Catalogue (`/sc/services/`)
-- AI-assisted search (`/sc/ai-search/`)
-- Service details (internal view)
-- All administrative functions
-
-See the [Edge-Auth Stack Django Integration Guide](https://github.com/YOUR_USERNAME/edge-auth-stack/blob/main/docs/django-integration.md) for detailed configuration.
-
-### Production Mode
-- **Keycloak SSO** via OAuth2-proxy (upstream authentication)
-- **Login URL:** `/sso-login/`
-- Users automatically created from Keycloak on first login
-- Email addresses populated from Keycloak
-- Username from Keycloak used as unique identifier
-- Login flow:
-  1. User accesses protected page → redirected to `/sso-login/`
-  2. nginx intercepts and checks OAuth2-proxy session
-  3. If not authenticated, OAuth2-proxy redirects to Keycloak
-  4. After Keycloak login, user returns with session headers
-  5. Django creates/updates user and redirects to original page
-
-### Development Mode
-- Django's built-in authentication (username/password)
-- **Login URL:** `/admin/login/` (Django admin login)
-- Create users via Django admin (`/admin/`)
-- Login flow:
-  1. User accesses protected page → redirected to `/admin/login/`
-  2. User enters username/password
-  3. Django authenticates and redirects to original page
-
-**Important:** The `/sso-login/` endpoint is **not used in development mode** to avoid interference from the downstream proxy server, which may intercept this path for external authentication.
-
-### Login URLs Reference
-
-| URL | Purpose | Environment |
-|-----|---------|-------------|
-| `/sso-login/` | SSO login endpoint | Production only |
-| `/admin/login/` | Django admin login | Development (and production fallback) |
-| `/sc/login_required` | Login landing page (info messages) | Both (optional) |
-| `/sso-logout/` | Logout endpoint | Both |
-
-For detailed authentication configuration, see [docs/LOGIN_FLOW.md](docs/LOGIN_FLOW.md).
-
-## Project Structure
-
-```
-.
-├── apps/itsm/               # Django application
-│   ├── itsm_config/        # Settings and custom auth backend
-│   ├── ServiceCatalogue/   # Main app
-│   └── user_files/         # Customization files (logos, LaTeX templates)
-├── docs/                    # Documentation
-│   ├── DEPLOYMENT.md       # Comprehensive deployment guide
-│   ├── LOGIN_FLOW.md       # Authentication flow documentation
-│   └── LOGOUT_KEYCLOAK.md  # Keycloak logout configuration
-├── env/
-│   ├── itsm.env            # Configuration (create from example)
-│   └── itsm.env.example    # Example configuration
-├── nginx/                   # nginx config
-├── postgres/
-│   └── init/               # Database initialization
-└── docker-compose.yml
-```
-
-## Common Tasks
-
-### Management Commands
-
-```bash
-# Django shell
-docker-compose exec itsm python manage.py shell
-
-# Database migrations
-docker-compose exec itsm python manage.py migrate
-
-# Collect static files
-docker-compose exec itsm python manage.py collectstatic
-```
-
-### Data Management
-
-```bash
-# Export data (JSON/SQL)
-docker-compose exec itsm python manage.py export_data --format json
-
-# Import data
-docker-compose exec itsm python manage.py import_data backup.json
-
-# Backup database
-docker-compose exec postgres pg_dump -U postgres itsm > backup.sql
-```
-
-### Service Management
-
-```bash
-# View logs
-docker-compose logs -f itsm
-
-# Restart service
-docker-compose restart itsm
-
-# Stop all services
-docker-compose down
-```
-
-## Configuration
-
-Key environment variables in `env/itsm.env`:
-
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `DJANGO_ENV` | Environment mode | `production` or `development` |
-| `ALLOWED_HOSTS` | Allowed domains | `your-domain.com` |
-| `CSRF_TRUSTED_ORIGINS` | Trusted origins | `https://your-domain.com` |
-| `ORGANIZATION_NAME` | Organization name | `Technical University` |
-| `ORGANIZATION_ACRONYM` | Short name | `TU` |
-| `PRIMARY_COLOR` | Brand color (hex) | `0d6efd` |
-| `LOGO_FILENAME` | Logo file | `logo.png` |
-
-See `env/itsm.env.example` for complete list.
-
-## Customization
-
-### User Files
-
-The project has two `user_files/` directories:
-
-| Location | Purpose | Git Status |
-|----------|---------|------------|
-| `user_files/` (project root) | Organization-specific files | **Gitignored** |
-| `apps/itsm/user_files/` | Templates and examples | **Tracked** |
-
-For production deployments, use `docker-compose.override.yml` to mount your organization's files. See [apps/itsm/user_files/README.md](apps/itsm/user_files/README.md) for details.
-
-### Brand Colors
-
-```bash
-# In env/itsm.env:
-PRIMARY_COLOR=0d6efd      # Main brand color (no # symbol)
-SECONDARY_COLOR=6610f2    # Accent color
-```
-
-Colors apply to buttons, links, badges, and UI accents throughout the interface.
-
-### Logo
-
-1. Place logo in `apps/itsm/user_files/static/logos/`
-2. Recommended: PNG with transparency, 400x80px
-3. Set `LOGO_FILENAME=logo.png` in env file
-4. Restart: `docker-compose restart itsm`
-
-### Contact Information
-
-```bash
-HELPDESK_EMAIL=support@your-domain.com
-HELPDESK_PHONE=+1-555-1234
-```
-
-## Sample Data
-
-The `populate_test_data` command loads generic university service catalogue data:
-
-- **4 permission groups** - Editors, Publishers, Administrators, Viewers
-- **4 clientele groups** - Students, Staff, Researchers, External
-- **5 categories** - Communication, Data, Infrastructure, Computing, Identity
-- **14 services** - Email, File Sharing, Wiki, Video Conferencing, HPC, Cloud, etc.
-
-All data is generic with localhost URLs. Customize via Django admin after loading.
-
-## Technology Stack
-
-- **Django 5.2.8** - Web framework
-- **Python 3.11** - Programming language
-- **PostgreSQL 15** - Database
-- **Gunicorn** - WSGI server
-- **nginx** - Reverse proxy and static files
-- **django-modeltranslation** - Database translations
-- **django-tex** - LaTeX PDF generation
-- **Keycloak** - SSO authentication (production, via upstream OAuth2-proxy)
-
-## Documentation
-
-- **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** - Comprehensive deployment guide
-- **[docs/LOGIN_FLOW.md](docs/LOGIN_FLOW.md)** - Authentication flow documentation
-- **[docs/LOGOUT_KEYCLOAK.md](docs/LOGOUT_KEYCLOAK.md)** - Keycloak logout configuration
-- **[CONTRIBUTING.md](CONTRIBUTING.md)** - Development guidelines and design principles
-- **[SECURITY.md](SECURITY.md)** - Security policy and vulnerability reporting
-
-## Troubleshooting
-
-### Static files not loading
-```bash
-docker-compose exec itsm python manage.py collectstatic --noinput --clear
-docker-compose restart nginx
-```
-
-### Database connection issues
-```bash
-docker-compose exec itsm python manage.py check --database default
-```
-
-### "Proxy network not found"
-```bash
+\`\`\`bash
+# 1. Clone the repository
+git clone https://github.com/YOUR_USERNAME/itsm-service-catalogue.git
+cd itsm-service-catalogue
+
+# 2. Create proxy network (once per host)
 docker network create proxy
+
+# 3. Configure environment
+cp env/itsm.env.example env/itsm.env
+# Edit env/itsm.env with your settings
+
+# 4. Start services
 docker-compose up -d
-```
 
-## Security
+# 5. Create admin user
+docker-compose exec itsm python manage.py createsuperuser
 
-- Auto-generated Django secret key (stored in volume)
-- Network isolation (proxy → app → database)
-- SSL/TLS handled by upstream proxy
-- Keycloak SSO via OAuth2-proxy in production
-- RemoteUserBackend authentication (trusted proxy headers)
+# 6. Optional: Load sample data
+docker-compose exec itsm python manage.py populate_test_data
+\`\`\`
 
-## License
+### Basic Configuration
+
+Edit \`env/itsm.env\`:
+
+\`\`\`bash
+# Required
+DJANGO_ENV=production
+ALLOWED_HOSTS=your-domain.com
+CSRF_TRUSTED_ORIGINS=https://your-domain.com
+
+# Branding
+ORGANIZATION_NAME=Your University
+ORGANIZATION_ACRONYM=YU
+PRIMARY_COLOR=003366
+
+# Optional: AI Search
+AI_SEARCH_ENABLED=True
+OPENAI_API_KEY=sk-your-key-here
+\`\`\`
+
+Configure your reverse proxy to route traffic to \`itsm_nginx:80\`.
+
+**That's it!** Access your catalogue at \`https://your-domain.com/sc/\`
+
+---
+
+## 📖 Documentation
+
+| Document | Description |
+|----------|-------------|
+| [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | Comprehensive deployment guide |
+| [docs/CONFIGURATION.md](docs/CONFIGURATION.md) | Environment variables and customization |
+| [docs/LOGIN_FLOW.md](docs/LOGIN_FLOW.md) | Authentication flow documentation |
+| [docs/LOGOUT_KEYCLOAK.md](docs/LOGOUT_KEYCLOAK.md) | Keycloak logout configuration |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | Development guidelines |
+| [SECURITY.md](SECURITY.md) | Security policy |
+
+---
+
+## 🏗️ Architecture
+
+\`\`\`
+Internet
+    │
+    ▼
+┌─────────────────────────────────────┐
+│  Reverse Proxy (SSL termination)   │
+│  + OAuth2-proxy + Keycloak (SSO)   │
+└─────────────────────────────────────┘
+    │
+    ▼
+┌─────────────────────────────────────┐
+│  nginx (static files, routing)     │
+└─────────────────────────────────────┘
+    │
+    ▼
+┌─────────────────────────────────────┐
+│  Django + Gunicorn                 │
+│  (Service Catalogue Application)   │
+└─────────────────────────────────────┘
+    │
+    ▼
+┌─────────────────────────────────────┐
+│  PostgreSQL (full-text search)     │
+└─────────────────────────────────────┘
+\`\`\`
+
+- **Network isolation**: Three separate Docker networks for security
+- **Stateless app tier**: Scale Django horizontally if needed
+- **Volume persistence**: Database and secrets survive container restarts
+
+---
+
+## 🛠️ Technology Stack
+
+| Component | Technology |
+|-----------|------------|
+| Backend | Django 5.2, Python 3.11 |
+| Database | PostgreSQL 15 (with full-text search) |
+| Server | Gunicorn + nginx |
+| Translations | django-modeltranslation |
+| PDF Generation | django-tex (LaTeX) |
+| AI Search | OpenAI GPT API |
+| Authentication | Keycloak via OAuth2-proxy |
+| Containerization | Docker, Docker Compose |
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for development guidelines.
+
+This is a university infrastructure project developed with limited resources. We appreciate:
+- Bug reports and feature requests
+- Documentation improvements
+- Translations
+- Code contributions
+
+---
+
+## 📄 License
 
 This project is licensed under the **GNU Affero General Public License v3.0 or later** (AGPL-3.0-or-later).
 
+This means:
+- ✅ Free to use, modify, and distribute
+- ✅ Must provide source code when deploying as a service
+- ✅ Modifications must use the same license
+- ✅ Perfect for universities and public institutions
+
 See [LICENSE](LICENSE) for the full license text.
 
-## Author & Support
+---
 
-**Author:** David Kleinhans  
-**Affiliation:** [Jade University of Applied Sciences](https://www.jade-hs.de/)  
-**Contact:** david.kleinhans@jade-hs.de
+## 👤 Author & Support
 
-This is a university infrastructure project with limited external support capacity.
+**David Kleinhans**  
+IT Infrastructure, [Jade University of Applied Sciences](https://www.jade-hs.de/)  
+📧 david.kleinhans@jade-hs.de
 
-For issues or questions:
-- Check logs: `docker-compose logs -f`
-- Verify config: `docker-compose config`
-- Review documentation in this repository
-- Report issues via GitHub Issues
+This is a university infrastructure project with limited external support capacity. Issues and pull requests are monitored, but response times may vary.
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines and [SECURITY.md](SECURITY.md) for security policy.
+---
+
+*Built with ❤️ for the higher education community*
