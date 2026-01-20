@@ -98,7 +98,12 @@ def logout_view(request):
         # Production: Redirect to OAuth2-proxy logout with OIDC end_session
         # OAuth2-proxy will redirect to Keycloak's end_session_endpoint to fully log out
         # The 'rd' parameter tells OAuth2-proxy where to redirect after Keycloak logout
-        return redirect('/oauth2/sign_out?rd=/')
+        response = redirect('/oauth2/sign_out?rd=/')
+        # Prevent caching of logout redirect to avoid stale authentication state
+        response['Cache-Control'] = 'no-cache, no-store, must-revalidate, private'
+        response['Pragma'] = 'no-cache'
+        response['Expires'] = '0'
+        return response
     else:
         # Development: Redirect to home page after logout
         return redirect('/')
