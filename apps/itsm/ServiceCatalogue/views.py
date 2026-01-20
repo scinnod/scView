@@ -77,7 +77,7 @@ def logout_view(request):
     Logout view that handles both production and development environments.
     
     Production: Clears Django session and redirects to OAuth2-proxy logout endpoint,
-                which clears the Keycloak session and OAuth2-proxy cookie.
+                which clears the OAuth2-proxy cookie and ends the Keycloak session.
     Development: Uses standard Django logout.
     """
     from django.contrib.auth import logout
@@ -86,8 +86,9 @@ def logout_view(request):
     logout(request)
     
     if settings.IS_PRODUCTION:
-        # Production: Redirect to OAuth2-proxy logout
-        # This clears the OAuth2-proxy cookie and optionally logs out of Keycloak
+        # Production: Redirect to OAuth2-proxy logout with OIDC end_session
+        # OAuth2-proxy will redirect to Keycloak's end_session_endpoint to fully log out
+        # The 'rd' parameter tells OAuth2-proxy where to redirect after Keycloak logout
         return redirect('/oauth2/sign_out?rd=/')
     else:
         # Development: Redirect to home page after logout
