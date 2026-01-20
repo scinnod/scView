@@ -20,6 +20,7 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth import login, authenticate
 from django.db import connection
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from functools import wraps
 
 from django.http import HttpResponse
 from django_tex.shortcuts import render_to_pdf
@@ -105,6 +106,101 @@ def logout_view(request):
 from django.conf import settings
 
 logger = logging.getLogger(__name__)
+
+
+# =============================================================================
+# Conditional Authentication Utilities
+# =============================================================================
+# These utilities allow views to conditionally require authentication based
+# on settings, enabling organizations to customize the public/protected boundary.
+
+class ConditionalLoginRequiredMixin(LoginRequiredMixin):
+    """
+    A mixin that conditionally requires login based on a setting.
+    
+    Subclasses should set `login_required_setting` to the name of the setting
+    that controls whether login is required. If the setting is True, login is
+    required; if False, the view is public.
+    
+    Example:
+        class MyView(ConditionalLoginRequiredMixin, ListView):
+            login_required_setting = 'SERVICES_LISTED_REQUIRE_LOGIN'
+    """
+    login_required_setting = None  # Subclasses must set this
+    
+    def dispatch(self, request, *args, **kwargs):
+        # Check if login is required based on the setting
+        if self.login_required_setting:
+            require_login = getattr(settings, self.login_required_setting, True)
+        else:
+            require_login = True  # Default to requiring login if no setting specified
+        
+        if require_login and not request.user.is_authenticated:
+            return self.handle_no_permission()
+        return super(LoginRequiredMixin, self).dispatch(request, *args, **kwargs)
+
+
+def conditional_login_required(setting_name):
+    """
+    A decorator that conditionally requires login based on a setting.
+    
+    Args:
+        setting_name: The name of the Django setting that controls whether
+                     login is required. If True, login is required.
+    
+    Example:
+        @conditional_login_required('AI_SEARCH_REQUIRE_LOGIN')
+        def my_view(request):
+            ...
+    """
+    def decorator(view_func):
+        @wraps(view_func)
+        def wrapped_view(request, *args, **kwargs):
+            require_login = getattr(settings, setting_name, True)
+            if require_login and not request.user.is_authenticated:
+                from django.contrib.auth.views import redirect_to_login
+                return redirect_to_login(
+                    request.get_full_path(),
+                    settings.LOGIN_URL,
+                    'next'
+                )
+            return view_func(request, *args, **kwargs)
+        return wrapped_view
+    return decorator
+
+
+def ai_search_login_required(view_func):
+    """
+    Decorator for AI search views that enforces access control.
+    
+    AI search requires login if EITHER:
+    - AI_SEARCH_REQUIRE_LOGIN is True, OR
+    - SERVICE_CATALOGUE_REQUIRE_LOGIN is True
+    
+    This prevents information leakage: if the service catalogue is protected,
+    AI search (which searches the catalogue) must also be protected, regardless
+    of the AI_SEARCH_REQUIRE_LOGIN setting.
+    
+    The AI_SEARCH_REQUIRE_LOGIN setting can only make access MORE restrictive,
+    not less restrictive than the catalogue itself.
+    """
+    @wraps(view_func)
+    def wrapped_view(request, *args, **kwargs):
+        # AI search requires login if EITHER setting is True
+        require_login = (
+            getattr(settings, 'AI_SEARCH_REQUIRE_LOGIN', True) or
+            getattr(settings, 'SERVICE_CATALOGUE_REQUIRE_LOGIN', True)
+        )
+        if require_login and not request.user.is_authenticated:
+            from django.contrib.auth.views import redirect_to_login
+            return redirect_to_login(
+                request.get_full_path(),
+                settings.LOGIN_URL,
+                'next'
+            )
+        return view_func(request, *args, **kwargs)
+    return wrapped_view
+
 
 ## Set variables
 # set caching time for template fragments and generated files
@@ -215,6 +311,14 @@ class ServiceBaseView(ListView):
         context["show_service_level"] = settings.SERVICECATALOGUE_FIELD_SERVICE_LEVEL
         # AI Search availability
         context["AI_SEARCH_ENABLED"] = settings.AI_SEARCH_ENABLED
+        # View access control settings (for lock icons in templates)
+        context["ONLINE_SERVICES_REQUIRE_LOGIN"] = settings.ONLINE_SERVICES_REQUIRE_LOGIN
+        context["SERVICE_CATALOGUE_REQUIRE_LOGIN"] = settings.SERVICE_CATALOGUE_REQUIRE_LOGIN
+        context["AI_SEARCH_REQUIRE_LOGIN"] = settings.AI_SEARCH_REQUIRE_LOGIN
+        # AI search effective login requirement (inherits from catalogue protection)
+        context["AI_SEARCH_REQUIRES_LOGIN_EFFECTIVE"] = (
+            settings.AI_SEARCH_REQUIRE_LOGIN or settings.SERVICE_CATALOGUE_REQUIRE_LOGIN
+        )
         return context
 
     def get_queryset(self):
@@ -296,8 +400,9 @@ class ServiceBaseView(ListView):
         return queryset
 
 
-class ServiceListedView(LoginRequiredMixin, ServiceBaseView):
+class ServiceListedView(ConditionalLoginRequiredMixin, ServiceBaseView):
     # all services, which are currently listed (listed from, listed until), no matter for their availability
+    login_required_setting = 'SERVICE_CATALOGUE_REQUIRE_LOGIN'
     template_name = "ServiceCatalogue/services_listed.html"
     fulltextsearch_fields = fulltextsearch_fields_public
 
@@ -457,8 +562,9 @@ class ServiceUpcomingView(UserPassesTestMixin, ServiceBaseView):
         return context
 
 
-class ServiceJumpView(ServiceBaseView):
+class ServiceJumpView(ConditionalLoginRequiredMixin, ServiceBaseView):
     # all services, which are currently listed and available, if a valid URL is available for direct link
+    login_required_setting = 'ONLINE_SERVICES_REQUIRE_LOGIN'
     template_name = "ServiceCatalogue/services_jump.html"
     fulltextsearch_fields = fulltextsearch_fields_public
 
@@ -715,7 +821,7 @@ def export_xlsx(request):
     return response
 
 
-class ServiceDetailView(LoginRequiredMixin, DetailView):
+class ServiceDetailView(ConditionalLoginRequiredMixin, DetailView):
     """
     Detail view for a single service. 
     Shows different templates based on user permissions:
@@ -723,6 +829,7 @@ class ServiceDetailView(LoginRequiredMixin, DetailView):
     - Regular users see public details (service_detail.html)
     Non-staff users can only view listed services.
     """
+    login_required_setting = 'SERVICE_CATALOGUE_REQUIRE_LOGIN'
     model = ServiceRevision
     context_object_name = 'sr'
     
@@ -803,6 +910,14 @@ class ServiceDetailView(LoginRequiredMixin, DetailView):
         context['is_production'] = settings.IS_PRODUCTION
         # Login configuration
         context['LOGIN_URL'] = settings.LOGIN_URL
+        # View access control settings (for lock icons in templates)
+        context['ONLINE_SERVICES_REQUIRE_LOGIN'] = settings.ONLINE_SERVICES_REQUIRE_LOGIN
+        context['SERVICE_CATALOGUE_REQUIRE_LOGIN'] = settings.SERVICE_CATALOGUE_REQUIRE_LOGIN
+        context['AI_SEARCH_REQUIRE_LOGIN'] = settings.AI_SEARCH_REQUIRE_LOGIN
+        # AI search effective login requirement (inherits from catalogue protection)
+        context['AI_SEARCH_REQUIRES_LOGIN_EFFECTIVE'] = (
+            settings.AI_SEARCH_REQUIRE_LOGIN or settings.SERVICE_CATALOGUE_REQUIRE_LOGIN
+        )
         
         # Edit permissions
         context['user_can_edit_services'] = (
@@ -816,7 +931,7 @@ class ServiceDetailView(LoginRequiredMixin, DetailView):
         
         return context
 
-@login_required
+@conditional_login_required('SERVICE_CATALOGUE_REQUIRE_LOGIN')
 def service_detail_by_key(request, service_key):
     """
     Redirect to service detail view by service revision key.
@@ -865,7 +980,7 @@ import uuid
 from ServiceCatalogue.ai_service import AISearchService
 
 
-@login_required
+@ai_search_login_required
 def ai_search_view(request):
     """
     Main AI search page view.
@@ -911,6 +1026,14 @@ def ai_search_view(request):
         "show_service_level": settings.SERVICECATALOGUE_FIELD_SERVICE_LEVEL,
         # AI Search availability
         "AI_SEARCH_ENABLED": settings.AI_SEARCH_ENABLED,
+        # View access control settings (for lock icons in templates)
+        "ONLINE_SERVICES_REQUIRE_LOGIN": settings.ONLINE_SERVICES_REQUIRE_LOGIN,
+        "SERVICE_CATALOGUE_REQUIRE_LOGIN": settings.SERVICE_CATALOGUE_REQUIRE_LOGIN,
+        "AI_SEARCH_REQUIRE_LOGIN": settings.AI_SEARCH_REQUIRE_LOGIN,
+        # AI search effective login requirement (inherits from catalogue protection)
+        "AI_SEARCH_REQUIRES_LOGIN_EFFECTIVE": (
+            settings.AI_SEARCH_REQUIRE_LOGIN or settings.SERVICE_CATALOGUE_REQUIRE_LOGIN
+        ),
     }
     
     if not ai_enabled:
@@ -950,7 +1073,7 @@ def ai_search_view(request):
     )
 
 
-@login_required
+@ai_search_login_required
 def ai_search_initiate(request):
     """
     Initiate an AI search request (AJAX endpoint).
@@ -1048,7 +1171,7 @@ def ai_search_initiate(request):
         return JsonResponse({'error': str(e)}, status=500)
 
 
-@login_required
+@ai_search_login_required
 def ai_search_status(request, request_id):
     """
     Poll for AI search status and results (AJAX endpoint).
@@ -1094,7 +1217,7 @@ def ai_search_status(request, request_id):
         return JsonResponse({'error': f'Server error: {str(e)}'}, status=500)
 
 
-@login_required
+@ai_search_login_required
 def ai_search_clear(request, request_id):
     """
     Clear an AI search request from the session (AJAX endpoint).

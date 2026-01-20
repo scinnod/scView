@@ -244,4 +244,4 @@ This is a university infrastructure project with limited external support capaci
 
 ---
 
-*Built with ❤️ for the higher education community*
+*Built with ❤️ for everyone who values clear service documentation and open source*

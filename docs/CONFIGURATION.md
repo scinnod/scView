@@ -99,14 +99,64 @@ Create users via Django admin at `/admin/`.
 
 ### Access Control
 
-**Public pages (no authentication required):**
-- Online Services landing page: `/sc/`
+The application allows flexible configuration of which views require authentication.
 
-**Protected pages (authentication required):**
-- Service Catalogue: `/sc/services/`
-- AI-assisted search: `/sc/ai-search/` (if enabled)
-- Service details (internal view): `/sc/service/<id>/internal/`
-- All Django admin pages: `/admin/`
+#### View Access Control Settings
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `ONLINE_SERVICES_REQUIRE_LOGIN` | Online Services landing page (`/sc/`) | `False` (public) |
+| `SERVICE_CATALOGUE_REQUIRE_LOGIN` | Service Catalogue (`/sc/services/`) and Service Details (`/sc/service/<id>/`) | `True` (protected) |
+| `AI_SEARCH_REQUIRE_LOGIN` | AI-Assisted Search (`/sc/ai-search/`) | `True` (protected) |
+
+**Important:** AI search **always requires login if the service catalogue requires login**, regardless of the `AI_SEARCH_REQUIRE_LOGIN` setting. This prevents information leakage - if services are protected, searching through them must also be protected. The `AI_SEARCH_REQUIRE_LOGIN` setting can only make access MORE restrictive, not less.
+
+#### Default Configuration
+
+With default settings:
+- **Public:** Online Services landing page (`/sc/`)
+- **Protected:** Service Catalogue, Service Details, AI Search, Admin
+
+#### Examples
+
+Make the full catalogue and service details publicly accessible:
+```bash
+SERVICE_CATALOGUE_REQUIRE_LOGIN=False
+# AI search will also become available to unauthenticated users
+# (assuming AI_SEARCH_REQUIRE_LOGIN=False as well)
+```
+
+Require login for everything (including landing page):
+```bash
+ONLINE_SERVICES_REQUIRE_LOGIN=True
+```
+
+Keep catalogue protected but make AI search more restrictive:
+```bash
+SERVICE_CATALOGUE_REQUIRE_LOGIN=True
+AI_SEARCH_REQUIRE_LOGIN=True
+# Both settings must be True for AI search to require login
+# If catalogue is public, AI search can still require login
+```
+
+> ⚠️ **Security Warning:** Opening AI search to unauthenticated users requires careful consideration:
+> 
+> **API Abuse Risks:**
+> - Each search consumes API tokens and costs money
+> - No rate limiting on unauthenticated requests by default
+> - Potential denial of service through excessive requests
+> - No user accountability for searches (anonymous usage)
+> 
+> **Information Leakage Prevention:**
+> - AI search automatically requires login if `SERVICE_CATALOGUE_REQUIRE_LOGIN=True`
+> - This prevents unauthenticated users from searching protected services
+> - To make AI search public, you must ALSO set `SERVICE_CATALOGUE_REQUIRE_LOGIN=False`
+>
+> **Recommendation:** If you enable public AI search, implement additional rate limiting at the nginx or network level.
+
+#### Visual Indicators
+
+Menu items requiring login show a lock icon (🔒) when users are not authenticated. The lock icon automatically disappears after login, and only appears if the corresponding view actually requires authentication based on the settings.
 
 ## Customization
 

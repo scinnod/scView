@@ -56,24 +56,28 @@ Comprehensive guide for deploying the ITSM Service Catalogue with Docker and an 
 
 ### Access Control
 
-The application uses Django-based authorization (not proxy-level authentication).
+The application uses Django-based authorization (not proxy-level authentication). Which views require authentication is configurable via environment variables.
 
-**Public pages (no authentication required):**
-- Online Services landing page: `/sc/`
-  - Displays quick links to external online services
-  - Search box visible but requires login to use
+**Configurable views:**
 
-**Protected pages (authentication required):**
-- Service Catalogue: `/sc/services/`
-  - Full service catalogue with search
-  - All catalogue views (available, upcoming, retired, etc.)
-- AI-assisted search: `/sc/ai-search/` (if enabled)
+| View | Environment Variable | Default |
+|------|---------------------|---------|
+| Online Services (`/sc/`) | `ONLINE_SERVICES_REQUIRE_LOGIN` | `False` (public) |
+| Service Catalogue (`/sc/services/`) | `SERVICE_CATALOGUE_REQUIRE_LOGIN` | `True` (protected) |
+| Service Details (`/sc/service/<id>/`) | `SERVICE_CATALOGUE_REQUIRE_LOGIN` | `True` (protected) |
+| AI Search (`/sc/ai-search/`) | `AI_SEARCH_REQUIRE_LOGIN` | `True` (protected) |
+
+**Always protected (not configurable):**
+- Internal views: Available, Upcoming, Retired, Under Revision
 - Service details (internal view): `/sc/service/<id>/internal/`
 - All Django admin pages: `/admin/`
 
 **Visual indicators:**
 - Menu items requiring login show a lock icon (🔒) when users are not authenticated
 - The lock icon disappears after successful login
+- Lock icons only appear if the view actually requires authentication based on settings
+
+See [CONFIGURATION.md](CONFIGURATION.md#access-control) for detailed configuration options.
 
 ## Setup Instructions
 

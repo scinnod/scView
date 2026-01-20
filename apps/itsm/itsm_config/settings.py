@@ -341,3 +341,31 @@ AI_SEARCH_TIMEOUT = int(os.getenv('AI_SEARCH_TIMEOUT', '180'))
 # Inform users about AI provider, model, data handling, etc.
 AI_SEARCH_DATA_PROTECTION_STATEMENT_EN = os.getenv('AI_SEARCH_DATA_PROTECTION_STATEMENT_EN', '')
 AI_SEARCH_DATA_PROTECTION_STATEMENT_DE = os.getenv('AI_SEARCH_DATA_PROTECTION_STATEMENT_DE', '')
+
+
+# =============================================================================
+# View Access Control Configuration
+# =============================================================================
+# Control which views require authentication. This allows organizations to
+# customize the public/protected boundary of their service catalogue.
+#
+# Note: Internal views (available, upcoming, retired, under revision) and
+# Django admin always require authentication regardless of these settings.
+#
+# ONLINE_SERVICES_REQUIRE_LOGIN: Online Services landing page (/sc/)
+#   Default: False (public) - Quick links to online services are publicly accessible
+#   Set to True if you want to require login even for the landing page
+#
+# SERVICE_CATALOGUE_REQUIRE_LOGIN: Service Catalogue and Service Details
+#   Applies to: /sc/services/ (list view) and /sc/service/<id>/ (detail view)
+#   Default: True (protected) - Users must login to browse the catalogue and view details
+#   Set to False if you want the catalogue and service details to be publicly accessible
+#
+# AI_SEARCH_REQUIRE_LOGIN: AI-Assisted Search (/sc/ai-search/)
+#   Default: True (protected) - Users must login to use AI search
+#   Set to False if you want AI search to be publicly accessible
+#   Note: This only applies if AI_SEARCH_ENABLED is True
+
+ONLINE_SERVICES_REQUIRE_LOGIN = os.getenv('ONLINE_SERVICES_REQUIRE_LOGIN', 'False').lower() in ('true', '1', 'yes')
+SERVICE_CATALOGUE_REQUIRE_LOGIN = os.getenv('SERVICE_CATALOGUE_REQUIRE_LOGIN', 'True').lower() in ('true', '1', 'yes')
+AI_SEARCH_REQUIRE_LOGIN = os.getenv('AI_SEARCH_REQUIRE_LOGIN', 'True').lower() in ('true', '1', 'yes')
