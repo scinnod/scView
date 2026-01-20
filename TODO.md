@@ -1,5 +1,5 @@
 <!--
-SPDX-License-Identifier: AGPL-3.0-or-later
+SPDX-License-Identifier: Apache-2.0
 SPDX-FileCopyrightText: 2024-2026 David Kleinhans, Jade University of Applied Sciences
 -->
 
@@ -27,7 +27,8 @@ This checklist helps prepare the ITSM Service Catalogue for GitHub publication.
 ### Documentation
 
 - [ ] **README.md complete**: Features, installation, authentication, license
-- [ ] **LICENSE file present**: AGPL-3.0-or-later with copyright notice
+- [ ] **LICENSE file present**: Apache-2.0 with copyright notice
+- [ ] **NOTICE file present**: Attribution and third-party licenses
 - [ ] **CONTRIBUTING.md updated**: University project notice, guidelines
 - [ ] **SECURITY.md created**: Vulnerability reporting contact
 - [ ] **SPDX headers added**: Key Python files have license identifiers
@@ -63,7 +64,7 @@ This checklist helps prepare the ITSM Service Catalogue for GitHub publication.
 - [ ] **Repository visibility**: Public (or Private if needed)
 - [ ] **Description**: "Django-based IT Service Management service catalogue"
 - [ ] **Topics**: django, itsm, service-catalogue, keycloak, docker
-- [ ] **License**: AGPL-3.0
+- [ ] **License**: Apache-2.0
 
 ### Branch Protection (Recommended)
 

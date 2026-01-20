@@ -1,0 +1,92 @@
+scView - IT Service Catalogue
+Copyright 2024-2026 David Kleinhans, Jade University of Applied Sciences
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+================================================================================
+ATTRIBUTION NOTICE
+================================================================================
+
+This product was originally developed at:
+  Jade University of Applied Sciences
+  Wilhelmshaven, Germany
+  https://www.jade-hs.de/
+
+Original Author:
+  David Kleinhans <david.kleinhans@jade-hs.de>
+
+Project Repository:
+  <!-- TODO: Update with actual GitHub repository URL when published -->
+  https://github.com/YOURUSERNAME/scView
+
+================================================================================
+ATTRIBUTION REQUEST (Not legally required, but appreciated)
+================================================================================
+
+While the Apache-2.0 license does not require visible attribution in web
+deployments, we kindly request that you:
+
+  1. Keep "Powered by scView" in the application footer with a link to
+     the project repository (this is the default configuration)
+
+  2. Consider contributing improvements back to the project to help
+     the open source community
+
+  3. Let us know about your deployment - we'd love to hear how scView
+     is being used!
+
+Thank you for supporting open source software!
+
+================================================================================
+THIRD-PARTY COMPONENTS
+================================================================================
+
+This project includes or depends on the following third-party components:
+
+Django (BSD-3-Clause)
+  https://www.djangoproject.com/
+  Copyright Django Software Foundation and individual contributors
+
+Bootstrap 5 (MIT License)
+  https://getbootstrap.com/
+  Copyright The Bootstrap Authors
+
+Bootstrap Icons (MIT License)
+  https://icons.getbootstrap.com/
+  Copyright The Bootstrap Authors
+
+django-modeltranslation (BSD-3-Clause)
+  https://github.com/deschler/django-modeltranslation
+  Copyright Peter Cicman, Dirk Eschler, et al.
+
+django-simple-history (BSD-3-Clause)
+  https://github.com/jazzband/django-simple-history
+  Copyright Corey Bertram, et al.
+
+django-tex (MIT License)
+  https://github.com/weinbusch/django-tex
+  Copyright Martin Bierbaum
+
+<!-- TODO: Verify all third-party licenses are correctly listed -->
+<!-- TODO: Add any additional dependencies used in production -->
+
+================================================================================
+FONTS AND ICONS
+================================================================================
+
+Bootstrap Icons are used under the MIT License.
+No custom fonts are bundled; system fonts are used by default.
+
+<!-- TODO: If custom fonts are added, document their licenses here -->
+
+================================================================================

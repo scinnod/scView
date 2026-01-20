@@ -1,5 +1,5 @@
 <!--
-SPDX-License-Identifier: AGPL-3.0-or-later
+SPDX-License-Identifier: Apache-2.0
 SPDX-FileCopyrightText: 2024-2026 David Kleinhans, Jade University of Applied Sciences
 -->
 
@@ -13,7 +13,7 @@ This is a **university infrastructure project** developed at [Jade University of
 
 - **Limited Support**: This project is maintained by a small team with limited capacity for external support
 - **University Focus**: Features and priorities are driven by our institutional needs
-- **AGPL-3.0 License**: All contributions must be compatible with the GNU Affero General Public License v3.0
+- **Apache-2.0 License**: All contributions must be compatible with the Apache License 2.0
 
 ### How to Contribute
 

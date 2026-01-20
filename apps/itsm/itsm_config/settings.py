@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-License-Identifier: Apache-2.0
 # SPDX-FileCopyrightText: 2024-2026 David Kleinhans, Jade University of Applied Sciences
 """
 Django settings for ITSM Service Catalogue project.
@@ -177,19 +177,38 @@ ORGANIZATION_ACRONYM = os.getenv('ORGANIZATION_ACRONYM', 'ORG')
 HELPDESK_EMAIL = os.getenv('HELPDESK_EMAIL', 'helpdesk@example.com')
 HELPDESK_PHONE = os.getenv('HELPDESK_PHONE', '')
 
-# Application metadata
-APP_NAME = 'scView'  # Service Catalogue Viewer
+# =============================================================================
+# Application Metadata & Licensing (Apache-2.0)
+# =============================================================================
+# This project is licensed under the Apache License, Version 2.0.
+# See LICENSE and NOTICE files for details.
+#
+# ATTRIBUTION REQUEST (Not legally required, but greatly appreciated):
+# -----------------------------------------------------------------------
+# While Apache-2.0 does not require visible attribution in web deployments,
+# we kindly ask that you:
+#
+#   1. Keep "Powered by scView" visible in the footer with a link to the
+#      project repository. This helps others discover the project!
+#
+#   2. Consider contributing improvements back to the project. Your changes
+#      could benefit many other organizations.
+#
+#   3. Let us know about your deployment - we'd love to hear how scView
+#      is being used and learn from your experience!
+#
+# These values are intentionally hardcoded (not configurable via environment)
+# to preserve attribution. We appreciate you keeping them intact!
+#
+# Thank you for supporting open source software!
+# -----------------------------------------------------------------------
+
+# TODO: Update APP_URL with actual GitHub repository URL when published
+APP_NAME = 'scView'  # Service Catalogue Viewer - please keep this name
 APP_VERSION = '0.4'
-APP_COPYRIGHT = os.getenv('APP_COPYRIGHT', 'Jade Hochschule, David Kleinhans')
-APP_URL = os.getenv('APP_URL', None)  # Optional URL to project page/repository
-# License/rights notice displayed in footer
-# Defaults to "All rights reserved" (though legally redundant since Berne Convention)
-# For open source projects, set to license name, e.g.:
-#   - "Licensed under MIT License"
-#   - "Licensed under GPL-3.0"
-#   - "Licensed under Apache-2.0"
-# Set to empty string to omit this text from footer
-APP_LICENSE = os.getenv('APP_LICENSE', '')
+APP_COPYRIGHT = 'Jade Hochschule, David Kleinhans'  # Please preserve attribution
+APP_URL = 'https://github.com/YOURUSERNAME/scView'  # TODO: Update repository URL
+APP_LICENSE = 'Apache-2.0'  # License displayed in footer
 
 # Corporate Identity
 PRIMARY_COLOR = os.getenv('PRIMARY_COLOR', '0d6efd')  # Default Bootstrap blue

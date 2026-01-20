@@ -1,5 +1,5 @@
 <!--
-SPDX-License-Identifier: AGPL-3.0-or-later
+SPDX-License-Identifier: Apache-2.0
 SPDX-FileCopyrightText: 2024-2026 David Kleinhans, Jade University of Applied Sciences
 -->
 
@@ -10,7 +10,7 @@ SPDX-FileCopyrightText: 2024-2026 David Kleinhans, Jade University of Applied Sc
 Present your IT services professionally. Help users find what they need. Keep your documentation in one place.
 
 **Author:** David Kleinhans, [Jade University of Applied Sciences](https://www.jade-hs.de/)  
-**License:** [AGPL-3.0-or-later](LICENSE)  
+**License:** [Apache-2.0](LICENSE)  
 **Contact:** david.kleinhans@jade-hs.de
 
 ---
@@ -222,15 +222,19 @@ This is a university infrastructure project developed with limited resources. We
 
 ## 📄 License
 
-This project is licensed under the **GNU Affero General Public License v3.0 or later** (AGPL-3.0-or-later).
+This project is licensed under the **Apache License 2.0**.
 
 This means:
-- ✅ Free to use, modify, and distribute
-- ✅ Must provide source code when deploying as a service
-- ✅ Modifications must use the same license
-- ✅ Perfect for universities and public institutions
+- ✅ Free to use, modify, and distribute (including commercial use)
+- ✅ Patent protection for contributors and users
+- ✅ No requirement to share modifications (even for SaaS deployments)
+- ✅ Must preserve copyright notices when redistributing source code
 
-See [LICENSE](LICENSE) for the full license text.
+**Attribution appreciated:** While not legally required for web deployments, 
+we'd love it if you keep "Powered by scView" in the footer with a link to 
+this repository. It helps others discover this project and grow the community!
+
+See [LICENSE](LICENSE) and [NOTICE](NOTICE) for the full license text and attributions.
 
 ---
 

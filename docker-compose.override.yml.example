@@ -1,6 +1,6 @@
 # docker-compose.override.yml.example
 #
-# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-License-Identifier: Apache-2.0
 # SPDX-FileCopyrightText: 2024-2026 David Kleinhans, Jade University of Applied Sciences
 #
 # This file demonstrates how to override the default user_files location
