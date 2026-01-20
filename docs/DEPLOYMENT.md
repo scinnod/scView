@@ -1,3 +1,8 @@
+<!--
+SPDX-License-Identifier: AGPL-3.0-or-later
+SPDX-FileCopyrightText: 2024-2026 David Kleinhans, Jade University of Applied Sciences
+-->
+
 # Deployment Guide
 
 Comprehensive guide for deploying the ITSM Service Catalogue with Docker and an upstream proxy.
@@ -261,7 +266,6 @@ postgres:
 ```bash
 # Set ownership
 chown -R 1000:1000 apps/itsm
-chown -R 1000:1000 env/itsm_saml2
 
 # Protect secrets
 chmod 600 env/itsm.env
@@ -388,7 +392,7 @@ Before deploying to production:
 - [ ] Configure upstream proxy (SSL/TLS)
 - [ ] Set up database backup cron job
 - [ ] Configure monitoring/alerts
-- [ ] Test SAML2 authentication
+- [ ] Test Keycloak SSO authentication
 - [ ] Adjust `GUNICORN_WORKERS`
 - [ ] Set up log rotation
 - [ ] Document recovery procedures
@@ -419,13 +423,13 @@ git commit -m "ServiceCatalogue backup"
 
 ## Request Flow
 
-### Production (SAML2)
+### Production (Keycloak SSO)
 
 ```
-User → HTTPS → Upstream Proxy (SSL termination)
+User → HTTPS → Edge-Auth Stack (SSL + OAuth2-proxy + Keycloak)
               → HTTP → nginx (static or proxy?)
                      → Static: Serve from volume
-                     → Dynamic: HTTP → Django (SAML2 check)
+                     → Dynamic: HTTP → Django (RemoteUser auth)
                                      → PostgreSQL
                                      → Render response
 ```

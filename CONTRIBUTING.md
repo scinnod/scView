@@ -1,6 +1,33 @@
+<!--
+SPDX-License-Identifier: AGPL-3.0-or-later
+SPDX-FileCopyrightText: 2024-2026 David Kleinhans, Jade University of Applied Sciences
+-->
+
 # Contributing Guide
 
-This document outlines development guidelines and design principles for this Django project.
+Thank you for your interest in this project!
+
+## Important Notice
+
+This is a **university infrastructure project** developed at [Jade University of Applied Sciences](https://www.jade-hs.de/). While we welcome contributions, please note:
+
+- **Limited Support**: This project is maintained by a small team with limited capacity for external support
+- **University Focus**: Features and priorities are driven by our institutional needs
+- **AGPL-3.0 License**: All contributions must be compatible with the GNU Affero General Public License v3.0
+
+### How to Contribute
+
+1. **Issues**: Report bugs or suggest features via GitHub Issues
+2. **Pull Requests**: Fork the repository and submit PRs for review
+3. **Documentation**: Improvements to documentation are always welcome
+
+### Before Submitting
+
+- Ensure your code follows the development guidelines below
+- Test your changes in a Docker environment
+- Update documentation if applicable
+
+---
 
 ## Development Philosophy
 

@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-FileCopyrightText: 2024-2026 David Kleinhans, Jade University of Applied Sciences
 """
 Django settings for ITSM Service Catalogue project.
 
@@ -231,7 +233,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # RemoteUserMiddleware reads these headers and authenticates the user.
 # KeycloakRemoteUserBackend automatically creates users and populates email.
 #
-# See: DJANGO_INTEGRATION.md for detailed documentation
+# See: docs/LOGIN_FLOW.md for detailed documentation
 
 if IS_PRODUCTION:
     # Production uses RemoteUserBackend (trust upstream proxy authentication)

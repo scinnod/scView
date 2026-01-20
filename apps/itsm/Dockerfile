@@ -1,9 +1,9 @@
 FROM python:3.11-slim
 
 # Install system dependencies in a single layer to reduce image size
-# - texlive packages for LaTeX document generation
+# - texlive packages for LaTeX document generation (PDF exports)
 # - build-essential and libpq-dev for PostgreSQL driver compilation
-# - xmlsec1 for SAML2 authentication
+# - xmlsec1 for XML security operations
 # - netcat-openbsd for database health checks in entrypoint
 RUN apt-get update && apt-get install -y --no-install-recommends \
     texlive-base \

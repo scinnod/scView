@@ -1,6 +1,15 @@
+<!--
+SPDX-License-Identifier: AGPL-3.0-or-later
+SPDX-FileCopyrightText: 2024-2026 David Kleinhans, Jade University of Applied Sciences
+-->
+
 # ITSM Service Catalogue
 
 A Django-based IT Service Management (ITSM) service catalogue application with multilingual support, Keycloak SSO authentication, and PDF export capabilities.
+
+**Author:** David Kleinhans, [Jade University of Applied Sciences](https://www.jade-hs.de/)  
+**License:** [AGPL-3.0-or-later](LICENSE)  
+**Contact:** david.kleinhans@jade-hs.de
 
 ## Features
 
@@ -17,8 +26,8 @@ A Django-based IT Service Management (ITSM) service catalogue application with m
 ### Prerequisites
 
 - Docker and Docker Compose
-- Upstream authentication stack (nginx + OAuth2-proxy + Keycloak)
-  - See [DJANGO_INTEGRATION.md](DJANGO_INTEGRATION.md) for authentication setup
+- [Edge-Auth Stack](https://github.com/YOUR_USERNAME/edge-auth-stack) for production (Keycloak SSO)
+  - See [docs/LOGIN_FLOW.md](docs/LOGIN_FLOW.md) for authentication details
 
 ### Installation
 
@@ -29,7 +38,7 @@ A Django-based IT Service Management (ITSM) service catalogue application with m
 
 2. **Configure environment:**
    ```bash
-   cp env/itsm.env.production.example env/itsm.env
+   cp env/itsm.env.example env/itsm.env
    # Edit env/itsm.env with your settings
    ```
 
@@ -61,7 +70,7 @@ A Django-based IT Service Management (ITSM) service catalogue application with m
 
 6. **Configure upstream proxy** to route your domain to `itsm_nginx:80`
    - In production, configure OAuth2-proxy to pass `X-Remote-User` and `X-Remote-Email` headers
-   - See [DJANGO_INTEGRATION.md](DJANGO_INTEGRATION.md) for detailed authentication configuration
+   - See the [Edge-Auth Stack documentation](https://github.com/YOUR_USERNAME/edge-auth-stack) for configuration
 
 ### Development Mode
 
@@ -96,9 +105,22 @@ PostgreSQL 15
 
 ## Authentication
 
-### Overview
+This service is designed to work behind the [Edge-Auth Stack](https://github.com/YOUR_USERNAME/edge-auth-stack) - a production-ready authentication gateway combining nginx, Keycloak SSO, and OAuth2-proxy.
 
-The application uses different login endpoints based on the environment to avoid proxy interference in development.
+### Prerequisites
+
+1. Deploy the Edge-Auth Stack first
+2. Configure Keycloak realm and client
+3. Set up nginx virtual host (see edge-auth-stack documentation)
+
+### Authentication Pattern
+
+This service uses **Pattern A** (Django-controlled) authentication:
+- Django decides which pages require authentication via `@login_required` decorator
+- Public pages are accessible without authentication
+- Protected pages trigger Keycloak login via `/sso-login/` endpoint
+
+See the [Edge-Auth Stack Django Integration Guide](https://github.com/YOUR_USERNAME/edge-auth-stack/blob/main/docs/django-integration.md) for detailed configuration.
 
 ### Production Mode
 - **Keycloak SSO** via OAuth2-proxy (upstream authentication)
@@ -133,7 +155,7 @@ The application uses different login endpoints based on the environment to avoid
 | `/sc/login_required` | Login landing page (info messages) | Both (optional) |
 | `/sso-logout/` | Logout endpoint | Both |
 
-For detailed authentication configuration, see [DJANGO_INTEGRATION.md](DJANGO_INTEGRATION.md)
+For detailed authentication configuration, see [docs/LOGIN_FLOW.md](docs/LOGIN_FLOW.md).
 
 ## Project Structure
 
@@ -142,15 +164,17 @@ For detailed authentication configuration, see [DJANGO_INTEGRATION.md](DJANGO_IN
 ├── apps/itsm/               # Django application
 │   ├── itsm_config/        # Settings and custom auth backend
 │   ├── ServiceCatalogue/   # Main app
-│   └── user_files/         # Customization files
-│       ├── static/logos/   # Your logos
-│       └── latex_templates/
+│   └── user_files/         # Customization files (logos, LaTeX templates)
+├── docs/                    # Documentation
+│   ├── DEPLOYMENT.md       # Comprehensive deployment guide
+│   ├── LOGIN_FLOW.md       # Authentication flow documentation
+│   └── LOGOUT_KEYCLOAK.md  # Keycloak logout configuration
 ├── env/
-│   └── itsm.env           # Configuration
-├── nginx/                  # nginx config
+│   ├── itsm.env            # Configuration (create from example)
+│   └── itsm.env.example    # Example configuration
+├── nginx/                   # nginx config
 ├── postgres/
-│   └── dumps/             # Database backups
-├── DJANGO_INTEGRATION.md   # Authentication documentation
+│   └── init/               # Database initialization
 └── docker-compose.yml
 ```
 
@@ -209,9 +233,20 @@ Key environment variables in `env/itsm.env`:
 | `PRIMARY_COLOR` | Brand color (hex) | `0d6efd` |
 | `LOGO_FILENAME` | Logo file | `logo.png` |
 
-See `env/itsm.env.production.example` for complete list.
+See `env/itsm.env.example` for complete list.
 
 ## Customization
+
+### User Files
+
+The project has two `user_files/` directories:
+
+| Location | Purpose | Git Status |
+|----------|---------|------------|
+| `user_files/` (project root) | Organization-specific files | **Gitignored** |
+| `apps/itsm/user_files/` | Templates and examples | **Tracked** |
+
+For production deployments, use `docker-compose.override.yml` to mount your organization's files. See [apps/itsm/user_files/README.md](apps/itsm/user_files/README.md) for details.
 
 ### Brand Colors
 
@@ -261,10 +296,11 @@ All data is generic with localhost URLs. Customize via Django admin after loadin
 
 ## Documentation
 
-- **[DJANGO_INTEGRATION.md](DJANGO_INTEGRATION.md)** - Authentication setup and configuration
-- **[DJANGO_QUICKREF.md](DJANGO_QUICKREF.md)** - Quick reference for Django + Keycloak
-- **[CONTRIBUTING.md](CONTRIBUTING.md)** - Development guidelines and design principles
 - **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** - Comprehensive deployment guide
+- **[docs/LOGIN_FLOW.md](docs/LOGIN_FLOW.md)** - Authentication flow documentation
+- **[docs/LOGOUT_KEYCLOAK.md](docs/LOGOUT_KEYCLOAK.md)** - Keycloak logout configuration
+- **[CONTRIBUTING.md](CONTRIBUTING.md)** - Development guidelines and design principles
+- **[SECURITY.md](SECURITY.md)** - Security policy and vulnerability reporting
 
 ## Troubleshooting
 
@@ -295,11 +331,22 @@ docker-compose up -d
 
 ## License
 
-[Add your license here]
+This project is licensed under the **GNU Affero General Public License v3.0 or later** (AGPL-3.0-or-later).
 
-## Support
+See [LICENSE](LICENSE) for the full license text.
+
+## Author & Support
+
+**Author:** David Kleinhans  
+**Affiliation:** [Jade University of Applied Sciences](https://www.jade-hs.de/)  
+**Contact:** david.kleinhans@jade-hs.de
+
+This is a university infrastructure project with limited external support capacity.
 
 For issues or questions:
 - Check logs: `docker-compose logs -f`
 - Verify config: `docker-compose config`
 - Review documentation in this repository
+- Report issues via GitHub Issues
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines and [SECURITY.md](SECURITY.md) for security policy.

@@ -1,0 +1,102 @@
+name: Django Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_itsm
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    strategy:
+      matrix:
+        python-version: ['3.10', '3.11', '3.12']
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          libpq-dev \
+          libldap2-dev \
+          libsasl2-dev \
+          libssl-dev \
+          xmlsec1
+    
+    - name: Cache pip packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+    
+    - name: Install Python dependencies
+      working-directory: ./apps/itsm
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-django pytest-cov
+    
+    - name: Set up test environment
+      run: |
+        echo "DB_HOST=localhost" >> $GITHUB_ENV
+        echo "DB_PORT=5432" >> $GITHUB_ENV
+        echo "POSTGRES_DATABASE=test_itsm" >> $GITHUB_ENV
+        echo "POSTGRES_USER=postgres" >> $GITHUB_ENV
+        echo "POSTGRES_PASSWORD=postgres" >> $GITHUB_ENV
+        echo "DJANGO_SECRET_KEY=test-secret-key-for-ci-cd" >> $GITHUB_ENV
+        echo "DJANGO_SETTINGS_MODULE=itsm_config.settings_test" >> $GITHUB_ENV
+    
+    - name: Run Django system checks
+      working-directory: ./apps/itsm
+      run: |
+        python manage.py check --settings=itsm_config.settings_test
+    
+    - name: Run migrations
+      working-directory: ./apps/itsm
+      run: |
+        python manage.py migrate --settings=itsm_config.settings_test
+    
+    - name: Run tests with pytest
+      working-directory: ./apps/itsm
+      run: |
+        pytest --cov=ServiceCatalogue --cov-report=xml --cov-report=term
+    
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        files: ./apps/itsm/coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: false
+
+    - name: Run Django tests (fallback)
+      if: failure()
+      working-directory: ./apps/itsm
+      run: |
+        python manage.py test ServiceCatalogue --settings=itsm_config.settings_test --verbosity=2

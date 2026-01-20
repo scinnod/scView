@@ -1,3 +1,11 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-FileCopyrightText: 2024-2026 David Kleinhans, Jade University of Applied Sciences
+"""
+Service Catalogue Views
+
+Views for the ITSM Service Catalogue application.
+"""
+
 from django.shortcuts import render, redirect
 from django.views.generic import ListView, DetailView
 from ServiceCatalogue.models import *

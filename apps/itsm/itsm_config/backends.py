@@ -1,3 +1,12 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-FileCopyrightText: 2024-2026 David Kleinhans, Jade University of Applied Sciences
+"""
+Keycloak Remote User Backend
+
+Custom authentication backend for Keycloak SSO via OAuth2-proxy.
+Handles user creation and email population from upstream headers.
+"""
+
 from django.contrib.auth.backends import RemoteUserBackend
 from django.contrib.auth import get_user_model
 

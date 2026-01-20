@@ -1,5 +1,8 @@
 # docker-compose.override.yml.example
 #
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-FileCopyrightText: 2024-2026 David Kleinhans, Jade University of Applied Sciences
+#
 # This file demonstrates how to override the default user_files location
 # with your own organization-specific files.
 #
@@ -19,26 +22,21 @@
 services:
   itsm:
     volumes:
-      # Mount your SAML2 certificates for production
-      # These will override the default /app/user_files/saml2/ directory
-      - /path/to/your/saml2:/app/user_files/saml2:ro
-      
-      # Mount your custom LaTeX templates (optional)
-      # These will override the default /app/user_files/latex_templates/ directory
-      # - /path/to/your/latex_templates:/app/user_files/latex_templates:ro
-      
       # Mount your custom static files (logos, CSS, JS, images, fonts)
       # These will override the default /app/user_files/static/ directory
       # Note: Logos should be placed in a 'logos/' subdirectory within your static path
       - /path/to/your/static:/app/user_files/static:ro
+      
+      # Mount your custom LaTeX templates (optional)
+      # These will override the default /app/user_files/latex_templates/ directory
+      # - /path/to/your/latex_templates:/app/user_files/latex_templates:ro
 
 # Example with actual paths (commented out):
 # services:
 #   itsm:
 #     volumes:
-#       - /opt/organization/itsm/saml2:/app/user_files/saml2:ro
-#       - /opt/organization/itsm/latex_templates:/app/user_files/latex_templates:ro
 #       - /opt/organization/itsm/static:/app/user_files/static:ro
+#       - /opt/organization/itsm/latex_templates:/app/user_files/latex_templates:ro
 #
 # Your static directory structure should be:
 # /opt/organization/itsm/static/
