@@ -8,7 +8,6 @@ from . import views
 # app_name = "servicecatalogue"
 
 urlpatterns = [
-    path("login_required", views.landing, name="login_required"),
     path(
         "", lambda request: redirect("services_jump", permanent=False), name="index"
     ),

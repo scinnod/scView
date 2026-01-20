@@ -396,22 +396,6 @@ class SearchFunctionalityTest(ViewTestCase):
         self.assertNotContains(response, "COMP-HPC")
 
 
-class AuthenticationTest(ViewTestCase):
-    """Test authentication and permissions"""
-
-    def test_landing_page_redirects_authenticated(self):
-        """Test that authenticated users are redirected from landing"""
-        self.client.login(username='testuser', password='testpass123')
-        response = self.client.get(reverse('landing'))
-        self.assertEqual(response.status_code, 302)  # Redirect
-
-    def test_landing_page_shows_for_anonymous(self):
-        """Test that anonymous users see the landing page"""
-        response = self.client.get(reverse('landing'))
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'ServiceCatalogue/login_landing.html')
-
-
 # ============================================================================
 # Business Logic Tests
 # ============================================================================

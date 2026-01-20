@@ -256,7 +256,9 @@ else:
         'django.contrib.auth.backends.ModelBackend',
     ]
     
-    LOGIN_URL = '/sc/login_required'
+    # Use Django admin login directly in development
+    # Avoids /sso-login/ which may be intercepted by proxy
+    LOGIN_URL = '/admin/login/'
     LOGIN_REDIRECT_URL = '/'
     LOGOUT_REDIRECT_URL = '/'
 

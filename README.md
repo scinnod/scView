@@ -96,15 +96,42 @@ PostgreSQL 15
 
 ## Authentication
 
+### Overview
+
+The application uses different login endpoints based on the environment to avoid proxy interference in development.
+
 ### Production Mode
 - **Keycloak SSO** via OAuth2-proxy (upstream authentication)
+- **Login URL:** `/sso-login/`
 - Users automatically created from Keycloak on first login
 - Email addresses populated from Keycloak
 - Username from Keycloak used as unique identifier
+- Login flow:
+  1. User accesses protected page → redirected to `/sso-login/`
+  2. nginx intercepts and checks OAuth2-proxy session
+  3. If not authenticated, OAuth2-proxy redirects to Keycloak
+  4. After Keycloak login, user returns with session headers
+  5. Django creates/updates user and redirects to original page
 
 ### Development Mode
 - Django's built-in authentication (username/password)
-- Create users via Django admin
+- **Login URL:** `/admin/login/` (Django admin login)
+- Create users via Django admin (`/admin/`)
+- Login flow:
+  1. User accesses protected page → redirected to `/admin/login/`
+  2. User enters username/password
+  3. Django authenticates and redirects to original page
+
+**Important:** The `/sso-login/` endpoint is **not used in development mode** to avoid interference from the downstream proxy server, which may intercept this path for external authentication.
+
+### Login URLs Reference
+
+| URL | Purpose | Environment |
+|-----|---------|-------------|
+| `/sso-login/` | SSO login endpoint | Production only |
+| `/admin/login/` | Django admin login | Development (and production fallback) |
+| `/sc/login_required` | Login landing page (info messages) | Both (optional) |
+| `/sso-logout/` | Logout endpoint | Both |
 
 For detailed authentication configuration, see [DJANGO_INTEGRATION.md](DJANGO_INTEGRATION.md)
 

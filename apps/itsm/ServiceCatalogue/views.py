@@ -36,29 +36,25 @@ def sso_login(request):
     """
     SSO login endpoint for production Keycloak authentication.
     
-    This view is called after the user authenticates via Keycloak.
-    nginx adds the X-Remote-User header here after successful authentication.
-    RemoteUserMiddleware creates/updates the Django session from the header.
-    Then we redirect to the page that triggered the login.
+    This endpoint should ONLY be used in production mode.
+    In development, LOGIN_URL points directly to /admin/login/ to avoid
+    this endpoint being intercepted by the proxy server.
     
-    Flow:
+    Production Flow:
     1. User accesses protected page without authentication
     2. @login_required redirects to /sso-login/?next=/protected/
     3. nginx intercepts /sso-login/ and checks OAuth2-proxy
     4. If not authenticated, OAuth2-proxy redirects to Keycloak
     5. After Keycloak login, request comes back here with X-Remote-User header
     6. RemoteUserMiddleware authenticates the user
-    7. This view redirects to originally requested page
+    7. This view creates Django session and redirects to originally requested page
     """
     if not settings.IS_PRODUCTION:
-        # Django admin login in development
-        # Get the page user was trying to access
-        next_url = request.GET.get('next', request.path)        
-        login_url = reverse('admin:login')
-
-        # Add next parameter to redirect back after login
+        # This shouldn't be called in development (LOGIN_URL points to /admin/login/)
+        # But if it is, redirect to admin login as fallback
+        next_url = request.GET.get('next', '/')        
         from urllib.parse import urlencode
-        redirect_url = f"{login_url}?{urlencode({'next': next_url})}"
+        redirect_url = f"{settings.LOGIN_URL}?{urlencode({'next': next_url})}"
         return redirect(redirect_url)
     
     # Middleware hat request.user bereits gesetzt, falls Header da war
@@ -160,73 +156,6 @@ def _build_fulltextsearch_fields():
 fulltextsearch_fields_key_only, fulltextsearch_fields_public, fulltextsearch_fields_staff = _build_fulltextsearch_fields()
 
 
-def landing(request, **kwargs):
-    """Redirects unauthenticated users to login with return URL."""
-    if request.user.is_authenticated:
-        return redirect("services_listed")
-    
-    # Get the page user was trying to access
-    next_url = request.GET.get('next', request.path)
-    
-    # Build login URL with next parameter
-    if settings.IS_PRODUCTION:
-        # Keycloak SSO login via OAuth2-proxy in production
-        login_url = '/sso-login/'
-    else:
-        # Django admin login in development
-        login_url = reverse('admin:login')
-    
-    # Add next parameter to redirect back after login
-    from urllib.parse import urlencode
-    redirect_url = f"{login_url}?{urlencode({'next': next_url})}"
-    
-    return redirect(redirect_url)
-
-
-def login_failure(request, exception=None, status=403, **kwargs):
-    """Renders error message for failed authentication/authorization."""
-    # Get the page user was trying to access
-    next_url = request.GET.get('next', '/')
-    
-    # Build login URL for retry
-    if settings.IS_PRODUCTION:
-        # Keycloak SSO login via OAuth2-proxy in production
-        login_url = '/sso-login/'
-    else:
-        # Django admin login in development
-        login_url = reverse('admin:login')
-    
-    from urllib.parse import urlencode
-    login_retry_url = f"{login_url}?{urlencode({'next': next_url})}"
-    
-    return render(
-        request,
-        "ServiceCatalogue/login_landing.html",
-        {
-            "base_name": "login_required",
-            "login_failure": True,
-            "branding": branding,
-            "caching_time_seconds": caching_time_seconds,
-            "kwargs": kwargs,
-            "title": _("Login not successful"),
-            "info": _(
-                "Currently you unfortunately do not seem to have access to restricted features and to the backend. Please contact {email} for assistance if you think you should."
-            ).format(email=settings.HELPDESK_EMAIL),
-            "login_retry_url": login_retry_url,
-            "organization_name": settings.ORGANIZATION_NAME,
-            "app_name": settings.APP_NAME,
-            "app_version": settings.APP_VERSION,
-            "app_copyright": settings.APP_COPYRIGHT,
-            "app_url": settings.APP_URL,
-            "app_license": settings.APP_LICENSE,
-            "logo_filename": settings.LOGO_FILENAME,
-            "helpdesk_email": settings.HELPDESK_EMAIL,
-            "helpdesk_phone": settings.HELPDESK_PHONE,
-            "is_production": settings.IS_PRODUCTION,
-        },
-    )
-
-
 # ancestor of views
 class ServiceBaseView(ListView):
     model = ServiceRevision
@@ -266,6 +195,8 @@ class ServiceBaseView(ListView):
         context["secondary_color"] = settings.SECONDARY_COLOR
         context["logo_filename"] = settings.LOGO_FILENAME
         context["is_production"] = settings.IS_PRODUCTION
+        # Login configuration
+        context["LOGIN_URL"] = settings.LOGIN_URL
         # Field visibility settings for templates
         context["show_keywords"] = settings.SERVICECATALOGUE_FIELD_KEYWORDS
         context["show_requirements"] = settings.SERVICECATALOGUE_FIELD_REQUIREMENTS
@@ -589,6 +520,9 @@ def export_pdf(request):
     context["helpdesk_email"] = settings.HELPDESK_EMAIL
     context["logo_filename"] = settings.LOGO_FILENAME
     
+    # Login configuration
+    context["LOGIN_URL"] = settings.LOGIN_URL
+    
     # Field visibility settings for PDF template
     context["show_keywords"] = settings.SERVICECATALOGUE_FIELD_KEYWORDS
     context["show_requirements"] = settings.SERVICECATALOGUE_FIELD_REQUIREMENTS
@@ -858,6 +792,8 @@ class ServiceDetailView(LoginRequiredMixin, DetailView):
         context['secondary_color'] = settings.SECONDARY_COLOR
         context['logo_filename'] = settings.LOGO_FILENAME
         context['is_production'] = settings.IS_PRODUCTION
+        # Login configuration
+        context['LOGIN_URL'] = settings.LOGIN_URL
         
         # Edit permissions
         context['user_can_edit_services'] = (
@@ -955,6 +891,8 @@ def ai_search_view(request):
         "secondary_color": settings.SECONDARY_COLOR,
         "logo_filename": settings.LOGO_FILENAME,
         "is_production": settings.IS_PRODUCTION,
+        # Login configuration
+        "LOGIN_URL": settings.LOGIN_URL,
         # Field visibility settings
         "show_keywords": settings.SERVICECATALOGUE_FIELD_KEYWORDS,
         "show_requirements": settings.SERVICECATALOGUE_FIELD_REQUIREMENTS,
