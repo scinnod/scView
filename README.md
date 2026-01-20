@@ -120,6 +120,15 @@ This service uses **Pattern A** (Django-controlled) authentication:
 - Public pages are accessible without authentication
 - Protected pages trigger Keycloak login via `/sso-login/` endpoint
 
+**Public pages (no login required):**
+- Online Services landing page (`/sc/`)
+
+**Protected pages (login required):**
+- Service Catalogue (`/sc/services/`)
+- AI-assisted search (`/sc/ai-search/`)
+- Service details (internal view)
+- All administrative functions
+
 See the [Edge-Auth Stack Django Integration Guide](https://github.com/YOUR_USERNAME/edge-auth-stack/blob/main/docs/django-integration.md) for detailed configuration.
 
 ### Production Mode

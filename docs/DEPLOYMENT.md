@@ -54,6 +54,27 @@ Comprehensive guide for deploying the ITSM Service Catalogue with Docker and an 
    - Django ↔ PostgreSQL only
    - No access from nginx or proxy
 
+### Access Control
+
+The application uses Django-based authorization (not proxy-level authentication).
+
+**Public pages (no authentication required):**
+- Online Services landing page: `/sc/`
+  - Displays quick links to external online services
+  - Search box visible but requires login to use
+
+**Protected pages (authentication required):**
+- Service Catalogue: `/sc/services/`
+  - Full service catalogue with search
+  - All catalogue views (available, upcoming, retired, etc.)
+- AI-assisted search: `/sc/ai-search/` (if enabled)
+- Service details (internal view): `/sc/service/<id>/internal/`
+- All Django admin pages: `/admin/`
+
+**Visual indicators:**
+- Menu items requiring login show a lock icon (🔒) when users are not authenticated
+- The lock icon disappears after successful login
+
 ## Setup Instructions
 
 ### 1. Create Proxy Network

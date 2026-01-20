@@ -52,7 +52,7 @@
 	{% else %}
 	<li class="nav-item">
           <a class="nav-link{% if base_name == 'services_listed' %} active{% endif %}" href="{% if kwargs.clientele_id %}{% url 'services_listed_clientele' kwargs.clientele_id %}{% else %}{% url 'services_listed' %}{% endif %}" title="{% translate 'Browse complete service catalogue' %} [{% translate 'Ctrl' %}+2]">
-            <i class="bi bi-book me-1"></i>{% translate "Service Catalogue" %}
+            <i class="bi bi-book me-1"></i>{% translate "Service Catalogue" %}{% if not user.is_authenticated %} <i class="bi bi-lock-fill ms-1 text-muted" title="{% translate 'Login required' %}"></i>{% endif %}
           </a>
 	</li>
 	{% endif %}
