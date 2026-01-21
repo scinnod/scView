@@ -7,6 +7,15 @@ set -e
 
 echo "Initializing PostgreSQL database for Django..."
 
+# Install extensions in template1 so all new databases (including test databases) inherit them
+echo "Installing PostgreSQL extensions in template1..."
+psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "template1" <<-EOSQL
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";      -- UUID generation
+CREATE EXTENSION IF NOT EXISTS "pg_trgm";        -- Trigram matching for full-text search
+CREATE EXTENSION IF NOT EXISTS "btree_gin";      -- Index support for JSONB fields
+CREATE EXTENSION IF NOT EXISTS "btree_gist";     -- Index support for range fields
+EOSQL
+
 # Database credentials from environment variables
 DB_NAME="${POSTGRES_DB:-itsm}"
 DB_USER="${POSTGRES_APP_USER:-itsm_user}"
@@ -51,11 +60,11 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO $DB_USER;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO $DB_USER;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON FUNCTIONS TO $DB_USER;
 
--- Enable common PostgreSQL extensions useful for Django
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";      -- UUID generation
-CREATE EXTENSION IF NOT EXISTS "pg_trgm";        -- Trigram matching for full-text search
-CREATE EXTENSION IF NOT EXISTS "btree_gin";      -- Index support for JSONB fields
-CREATE EXTENSION IF NOT EXISTS "btree_gist";     -- Index support for range fields
+-- Extensions are inherited from template1, but we can verify they exist
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "pg_trgm";
+CREATE EXTENSION IF NOT EXISTS "btree_gin";
+CREATE EXTENSION IF NOT EXISTS "btree_gist";
 EOSQL
 
 echo "PostgreSQL database '$DB_NAME' initialized successfully for user '$DB_USER'."

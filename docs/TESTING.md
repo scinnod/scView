@@ -22,13 +22,40 @@ docker-compose exec itsm python -m pytest -v
 
 ## Running Tests Locally
 
-### Option 1: With Docker (Recommended)
+### Option 1: With Docker Compose Test Configuration (Recommended)
 
-This is the easiest and most reliable way since Docker handles all dependencies:
+The easiest and most reliable way - uses a dedicated test database with proper permissions:
+
+```bash
+# Run all tests with coverage
+docker-compose -f docker-compose.test.yml run --rm test
+
+# Run tests and keep containers for inspection
+docker-compose -f docker-compose.test.yml up
+
+# Clean up test containers and volumes
+docker-compose -f docker-compose.test.yml down -v
+```
+
+This test configuration:
+- Uses `postgres` superuser (can create test databases)
+- Installs test dependencies automatically
+- Runs pytest with coverage reporting
+- Uses tmpfs for faster database operations
+
+### Option 2: With Production Docker Containers
+
+If you want to run tests in the production containers (requires manual setup):
 
 ```bash
 # Make sure containers are running
 docker-compose up -d
+
+# Install test dependencies (temporary, lost on container restart)
+docker-compose exec itsm pip install -r requirements-test.txt
+
+# Grant database creation permission (needed for Django test database)
+docker-compose exec postgres psql -U postgres -c "ALTER USER itsm_user CREATEDB;"
 
 # Run all tests
 docker-compose exec itsm python -m pytest
@@ -47,9 +74,14 @@ docker-compose exec itsm python -m pytest ServiceCatalogue/tests.py::ServiceMode
 
 # Run specific test method
 docker-compose exec itsm python -m pytest ServiceCatalogue/tests.py::ServiceModelTest::test_service_creation
+
+# Run with verbose output and stop on first failure
+docker-compose exec itsm python -m pytest -vx
 ```
 
-**Quick test without running containers:**
+**Important**: Production containers use `itsm_user` which doesn't have CREATEDB permission by default. You'll get "permission denied to create database" errors unless you grant it (see above).
+
+### Option 3: Local Python Environment (Advanced)
 
 ```bash
 docker-compose run --rm itsm python -m pytest -v
@@ -87,8 +119,7 @@ python3 -m venv venv
 source venv/bin/activate
 
 # Install Python dependencies
-pip install -r requirements.txt
-pip install pytest pytest-django pytest-cov
+pip install -r requirements.txt -r requirements-test.txt
 
 # Set environment variables
 export DB_HOST=localhost

@@ -11,6 +11,8 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: test_itsm
+    volumes:
+      - ./postgres/init:/docker-entrypoint-initdb.d
     tmpfs:
       - /var/lib/postgresql/data
     networks:
@@ -26,6 +28,7 @@ services:
       context: ./apps/itsm
       dockerfile: Dockerfile
     container_name: itsm_test
+    entrypoint: []  # Override the entrypoint to skip gunicorn startup
     environment:
       - DJANGO_SETTINGS_MODULE=itsm_config.settings_test
       - DB_HOST=postgres_test
@@ -34,8 +37,6 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
       - DJANGO_SECRET_KEY=test-secret-key-for-testing-only
-    volumes:
-      - ./apps/itsm:/app
     depends_on:
       postgres_test:
         condition: service_healthy
@@ -43,12 +44,14 @@ services:
       - test_network
     command: >
       sh -c "
+        echo 'Installing test dependencies...' &&
+        pip install --no-cache-dir -r requirements-test.txt &&
         echo 'Waiting for database...' &&
         python manage.py check &&
         echo 'Running migrations...' &&
         python manage.py migrate --noinput &&
-        echo 'Running tests...' &&
-        python manage.py test ServiceCatalogue --verbosity=2
+        echo 'Running tests with pytest...' &&
+        python -m pytest -v --cov=ServiceCatalogue --cov-report=term-missing
       "
 
 networks:

@@ -859,12 +859,17 @@ class ServiceCatalogueIntegrationTest(TestCase):
 
     def test_service_history_tracking(self):
         """Test that changes are tracked in history"""
+        # Get initial history count (fixture data already has history)
+        initial_count = self.revision.history.count()
+        
+        # Make a change
         original_desc = self.revision.description
         self.revision.description = "Updated description"
         self.revision.save()
         
+        # History should increase
         history = self.revision.history.all()
-        self.assertGreaterEqual(history.count(), 2)
+        self.assertGreater(history.count(), initial_count)
 
 
 # ============================================================================
