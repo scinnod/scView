@@ -75,6 +75,10 @@ jobs:
     
     - name: Enable PostgreSQL extensions
       run: |
+        # Enable extensions on template1 so all new databases (including pytest test db) inherit them
+        PGPASSWORD=postgres psql -h localhost -U postgres -d template1 -c "CREATE EXTENSION IF NOT EXISTS pg_trgm;"
+        PGPASSWORD=postgres psql -h localhost -U postgres -d template1 -c "CREATE EXTENSION IF NOT EXISTS btree_gin;"
+        # Also enable on test_itsm for Django's manage.py commands
         PGPASSWORD=postgres psql -h localhost -U postgres -d test_itsm -c "CREATE EXTENSION IF NOT EXISTS pg_trgm;"
         PGPASSWORD=postgres psql -h localhost -U postgres -d test_itsm -c "CREATE EXTENSION IF NOT EXISTS btree_gin;"
 
