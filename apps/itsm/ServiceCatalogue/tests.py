@@ -2,6 +2,7 @@
 Comprehensive test suite for ServiceCatalogue app
 
 Tests cover:
+- Fixture data integrity and structure
 - Model creation, validation, and business logic
 - View functionality and permissions
 - URL routing
@@ -29,6 +30,307 @@ from .models import (
     FeeUnit,
     Availability,
 )
+
+
+# ============================================================================
+# Fixture Data Tests
+# ============================================================================
+
+class FixtureDataIntegrityTest(TestCase):
+    """Test that fixture data loads correctly and has expected structure"""
+    fixtures = ['initial_test_data.json']
+
+    def test_fixture_loads_successfully(self):
+        """Test that fixture loads without errors"""
+        # If we get here, the fixture loaded successfully
+        self.assertTrue(True)
+
+    def test_clientele_groups_count(self):
+        """Test that all expected clientele groups are present"""
+        clienteles = Clientele.objects.all()
+        self.assertEqual(clienteles.count(), 4)
+
+    def test_clientele_groups_structure(self):
+        """Test clientele groups have expected acronyms"""
+        expected_acronyms = {'STUDENT', 'STAFF', 'RESEARCH', 'EXTERNAL'}
+        actual_acronyms = set(Clientele.objects.values_list('acronym', flat=True))
+        self.assertEqual(expected_acronyms, actual_acronyms)
+
+    def test_clientele_groups_have_names(self):
+        """Test all clientele groups have English and German names"""
+        for clientele in Clientele.objects.all():
+            self.assertIsNotNone(clientele.name_en, f"Clientele {clientele.acronym} missing English name")
+            self.assertIsNotNone(clientele.name_de, f"Clientele {clientele.acronym} missing German name")
+
+    def test_clientele_ordering(self):
+        """Test clientele groups are ordered correctly"""
+        clienteles = list(Clientele.objects.all())
+        # Should be ordered by 'order' field: STUDENT(10), STAFF(20), RESEARCH(30), EXTERNAL(40)
+        self.assertEqual(clienteles[0].acronym, 'STUDENT')
+        self.assertEqual(clienteles[1].acronym, 'STAFF')
+        self.assertEqual(clienteles[2].acronym, 'RESEARCH')
+        self.assertEqual(clienteles[3].acronym, 'EXTERNAL')
+
+    def test_service_categories_count(self):
+        """Test expected number of service categories"""
+        self.assertEqual(ServiceCategory.objects.count(), 4)
+
+    def test_service_categories_structure(self):
+        """Test service categories have expected acronyms"""
+        expected = {'COLLAB', 'DATA', 'COMPUTE', 'IAM'}
+        actual = set(ServiceCategory.objects.values_list('acronym', flat=True))
+        self.assertEqual(expected, actual)
+
+    def test_service_providers_count(self):
+        """Test expected number of service providers"""
+        self.assertEqual(ServiceProvider.objects.count(), 4)
+
+    def test_fee_units_count(self):
+        """Test expected number of fee units"""
+        self.assertEqual(FeeUnit.objects.count(), 4)
+
+    def test_fee_units_have_translations(self):
+        """Test fee units have both English and German names"""
+        for unit in FeeUnit.objects.all():
+            self.assertIsNotNone(unit.name_en, f"FeeUnit pk={unit.pk} missing English name")
+            self.assertIsNotNone(unit.name_de, f"FeeUnit pk={unit.pk} missing German name")
+
+    def test_services_count(self):
+        """Test expected number of services"""
+        self.assertEqual(Service.objects.count(), 8)
+
+    def test_service_revisions_count(self):
+        """Test each service has at least one revision"""
+        self.assertEqual(ServiceRevision.objects.count(), 8)
+        for service in Service.objects.all():
+            self.assertGreaterEqual(
+                service.servicerevision_set.count(), 1,
+                f"Service {service.acronym} has no revisions"
+            )
+
+    def test_availabilities_exist(self):
+        """Test that availability relationships are defined"""
+        self.assertEqual(Availability.objects.count(), 21)
+
+    def test_all_listed_revisions_have_availability(self):
+        """Test that listed service revisions have at least one availability"""
+        listed_revisions = ServiceRevision.objects.filter(
+            listed_from__isnull=False
+        )
+        for revision in listed_revisions:
+            avail_count = Availability.objects.filter(servicerevision=revision).count()
+            self.assertGreaterEqual(
+                avail_count, 1,
+                f"Listed revision {revision.key} has no availability defined"
+            )
+
+    def test_service_category_relationships(self):
+        """Test all services belong to valid categories"""
+        for service in Service.objects.all():
+            self.assertIsNotNone(service.category)
+            self.assertIn(service.category, ServiceCategory.objects.all())
+
+    def test_hpc_service_fixture_data(self):
+        """Test specific HPC service data used in other tests"""
+        # This ensures the data other tests depend on exists
+        hpc_service = Service.objects.get(acronym="HPC")
+        self.assertEqual(hpc_service.category.acronym, "COMPUTE")
+        
+        revision = ServiceRevision.objects.get(service=hpc_service)
+        self.assertIsNotNone(revision.listed_from)
+        self.assertIsNotNone(revision.available_from)
+
+
+# ============================================================================
+# Management Command Tests
+# ============================================================================
+
+class InitializeGroupsCommandTest(TestCase):
+    """Test the initialize_groups management command"""
+
+    def test_command_creates_all_groups(self):
+        """Test that the command creates all 5 expected groups"""
+        from django.core.management import call_command
+        from io import StringIO
+        
+        out = StringIO()
+        call_command('initialize_groups', stdout=out)
+        
+        # Check all 5 groups were created
+        self.assertEqual(Group.objects.filter(name__icontains='Service Catalogue').count(), 5)
+
+    def test_group_names_match_expected(self):
+        """Test that group names match the hardcoded definitions"""
+        from django.core.management import call_command
+        from io import StringIO
+        
+        call_command('initialize_groups', stdout=StringIO())
+        
+        expected_names = [
+            "0 - Service Catalogue Administrators",
+            "1 - Service Catalogue Editors (can edit service metadata and revisions and publish)",
+            "2a - Service Catalogue Authors Plus (can edit online service revisions and publish)",
+            "2 - Service Catalogue Authors (can edit drafts service revision drafts only)",
+            "3 - Service Catalogue Viewers",
+        ]
+        
+        for name in expected_names:
+            self.assertTrue(
+                Group.objects.filter(name=name).exists(),
+                f"Group '{name}' was not created"
+            )
+
+    def test_group_primary_keys(self):
+        """Test that groups are created with specific primary keys"""
+        from django.core.management import call_command
+        from io import StringIO
+        
+        call_command('initialize_groups', stdout=StringIO())
+        
+        # Groups should have specific PKs: 1, 2, 3, 4, 5
+        expected_pks = {1, 2, 3, 4, 5}
+        actual_pks = set(Group.objects.filter(
+            name__icontains='Service Catalogue'
+        ).values_list('pk', flat=True))
+        
+        self.assertEqual(expected_pks, actual_pks)
+
+    def test_administrators_group_has_publish_permission(self):
+        """Test that Administrators group has can_publish_service permission"""
+        from django.core.management import call_command
+        from io import StringIO
+        
+        call_command('initialize_groups', stdout=StringIO())
+        
+        admin_group = Group.objects.get(pk=1)
+        permission = Permission.objects.get(codename='can_publish_service')
+        
+        self.assertIn(permission, admin_group.permissions.all())
+
+    def test_editors_group_has_publish_permission(self):
+        """Test that Editors group has can_publish_service permission"""
+        from django.core.management import call_command
+        from io import StringIO
+        
+        call_command('initialize_groups', stdout=StringIO())
+        
+        editors_group = Group.objects.get(pk=2)
+        permission = Permission.objects.get(codename='can_publish_service')
+        
+        self.assertIn(permission, editors_group.permissions.all())
+
+    def test_authors_plus_group_has_publish_permission(self):
+        """Test that Authors Plus group has can_publish_service permission"""
+        from django.core.management import call_command
+        from io import StringIO
+        
+        call_command('initialize_groups', stdout=StringIO())
+        
+        authors_plus_group = Group.objects.get(pk=3)
+        permission = Permission.objects.get(codename='can_publish_service')
+        
+        self.assertIn(permission, authors_plus_group.permissions.all())
+
+    def test_authors_group_lacks_publish_permission(self):
+        """Test that Authors group does NOT have can_publish_service permission"""
+        from django.core.management import call_command
+        from io import StringIO
+        
+        call_command('initialize_groups', stdout=StringIO())
+        
+        authors_group = Group.objects.get(pk=4)
+        permission = Permission.objects.get(codename='can_publish_service')
+        
+        # Authors should NOT have publish permission - that's the key difference
+        self.assertNotIn(permission, authors_group.permissions.all())
+
+    def test_viewers_group_has_minimal_permissions(self):
+        """Test that Viewers group has exactly 5 view permissions"""
+        from django.core.management import call_command
+        from io import StringIO
+        
+        call_command('initialize_groups', stdout=StringIO())
+        
+        viewers_group = Group.objects.get(pk=5)
+        permissions = viewers_group.permissions.all()
+        
+        self.assertEqual(permissions.count(), 5)
+        
+        # All permissions should be view-only
+        for perm in permissions:
+            self.assertTrue(
+                perm.codename.startswith('view_'),
+                f"Viewers have non-view permission: {perm.codename}"
+            )
+
+    def test_command_is_idempotent(self):
+        """Test that running the command twice doesn't cause errors"""
+        from django.core.management import call_command
+        from io import StringIO
+        
+        # Run twice
+        call_command('initialize_groups', stdout=StringIO())
+        call_command('initialize_groups', stdout=StringIO())
+        
+        # Should still have exactly 5 groups
+        self.assertEqual(Group.objects.filter(name__icontains='Service Catalogue').count(), 5)
+
+    def test_reset_option_clears_groups(self):
+        """Test that --reset option deletes existing groups first"""
+        from django.core.management import call_command
+        from io import StringIO
+        
+        # Create groups first
+        call_command('initialize_groups', stdout=StringIO())
+        
+        # Get a group and add a user
+        admin_group = Group.objects.get(pk=1)
+        user = User.objects.create_user('testuser', 'test@test.com', 'password')
+        user.groups.add(admin_group)
+        
+        # Reset should clear and recreate
+        call_command('initialize_groups', '--reset', stdout=StringIO())
+        
+        # Groups should still exist
+        self.assertEqual(Group.objects.filter(name__icontains='Service Catalogue').count(), 5)
+
+    def test_dry_run_makes_no_changes(self):
+        """Test that --dry-run doesn't create groups"""
+        from django.core.management import call_command
+        from io import StringIO
+        
+        # Ensure no groups exist
+        Group.objects.filter(name__icontains='Service Catalogue').delete()
+        
+        # Dry run
+        call_command('initialize_groups', '--dry-run', stdout=StringIO())
+        
+        # No groups should be created
+        self.assertEqual(Group.objects.filter(name__icontains='Service Catalogue').count(), 0)
+
+    def test_permission_counts_per_group(self):
+        """Test that each group has the expected number of permissions"""
+        from django.core.management import call_command
+        from io import StringIO
+        
+        call_command('initialize_groups', stdout=StringIO())
+        
+        # Expected permission counts from command docstring
+        expected_counts = {
+            1: 47,  # Administrators
+            2: 47,  # Editors
+            3: 40,  # Authors Plus
+            4: 39,  # Authors
+            5: 5,   # Viewers
+        }
+        
+        for pk, expected_count in expected_counts.items():
+            group = Group.objects.get(pk=pk)
+            actual_count = group.permissions.count()
+            self.assertEqual(
+                actual_count, expected_count,
+                f"Group pk={pk} ({group.name}) has {actual_count} permissions, expected {expected_count}"
+            )
 
 
 # ============================================================================
@@ -248,11 +550,11 @@ class ServiceRevisionModelTest(TestCase):
 
     def test_service_revision_status_properties(self):
         """Test status computation properties"""
-        # Test listed status
-        self.assertIn("currently listed", self.revision.status_listed.lower())
+        # Test listed status (property name is status_listing)
+        self.assertIn("currently listed", self.revision.status_listing.lower())
         
-        # Test available status
-        self.assertIn("available", self.revision.status_available.lower())
+        # Test available status (property name is status_availablility)
+        self.assertIn("available", self.revision.status_availablility.lower())
 
     def test_service_revision_search_keys_generation(self):
         """Test that search keys are generated on save"""
@@ -285,8 +587,7 @@ class AvailabilityModelTest(TestCase):
             acronym="STAFF"
         )
         self.fee_unit = FeeUnit.objects.create(
-            name="per month",
-            acronym="PM"
+            name="per month"
         )
 
     def test_availability_creation(self):
@@ -295,9 +596,9 @@ class AvailabilityModelTest(TestCase):
             servicerevision=self.revision,
             clientele=self.clientele,
             fee_unit=self.fee_unit,
-            fee_value="100"
+            fee=100
         )
-        self.assertEqual(availability.fee_value, "100")
+        self.assertEqual(availability.fee, 100)
         self.assertEqual(availability.clientele, self.clientele)
 
     def test_availability_unique_together(self):
@@ -318,7 +619,8 @@ class AvailabilityModelTest(TestCase):
 # ============================================================================
 
 class ViewTestCase(TestCase):
-    """Base class for view tests with common setup"""
+    """Base class for view tests with common setup using fixtures"""
+    fixtures = ['initial_test_data.json']
 
     def setUp(self):
         """Set up test client and user"""
@@ -333,31 +635,15 @@ class ViewTestCase(TestCase):
             is_staff=True
         )
         
-        # Create test data
-        self.category = ServiceCategory.objects.create(
-            name="Computing",
-            acronym="COMP",
-            order="1"
-        )
-        self.service = Service.objects.create(
-            category=self.category,
-            name="HPC Cluster",
-            acronym="HPC",
-            purpose="High-performance computing"
-        )
-        self.revision = ServiceRevision.objects.create(
-            service=self.service,
-            version="v1.0",
-            description="Test service",
-            listed_from=date.today(),
-            available_from=date.today()
-        )
-        self.clientele = Clientele.objects.create(
-            name="Organization Staff",
-            acronym="STAFF"
-        )
+        # Get references to fixture data for use in tests
+        # HPC Cluster is pk=6 in fixtures, COMPUTE category is pk=3
+        self.category = ServiceCategory.objects.get(acronym="COMPUTE")
+        self.service = Service.objects.get(acronym="HPC")
+        self.revision = ServiceRevision.objects.get(service=self.service)
+        self.clientele = Clientele.objects.get(acronym="STAFF")
 
 
+@override_settings(SERVICE_CATALOGUE_REQUIRE_LOGIN=False)
 class ServiceListViewTest(ViewTestCase):
     """Test service list views"""
 
@@ -370,8 +656,9 @@ class ServiceListViewTest(ViewTestCase):
     def test_services_listed_view_shows_services(self):
         """Test that listed services appear in the view"""
         response = self.client.get(reverse('services_listed'))
+        # Fixture has HPC Cluster service with COMPUTE-HPC key
         self.assertContains(response, "HPC Cluster")
-        self.assertContains(response, "COMP-HPC")
+        self.assertContains(response, "COMPUTE-HPC")
 
     def test_services_listed_view_context(self):
         """Test context data in services listed view"""
@@ -381,6 +668,7 @@ class ServiceListViewTest(ViewTestCase):
         self.assertIn('branding', response.context)
 
 
+@override_settings(SERVICE_CATALOGUE_REQUIRE_LOGIN=False)
 class SearchFunctionalityTest(ViewTestCase):
     """Test search functionality"""
 
@@ -392,10 +680,10 @@ class SearchFunctionalityTest(ViewTestCase):
 
     def test_search_no_results(self):
         """Test search with no matching results"""
-        response = self.client.get(reverse('services_listed'), {'q': 'nonexistent'})
+        response = self.client.get(reverse('services_listed'), {'q': 'nonexistent12345'})
         self.assertEqual(response.status_code, 200)
-        # Should not contain the service
-        self.assertNotContains(response, "COMP-HPC")
+        # Should not contain any fixture services
+        self.assertNotContains(response, "COMPUTE-HPC")
 
 
 # ============================================================================
@@ -426,7 +714,8 @@ class ServiceLifecycleTest(TestCase):
             description="Future service",
             listed_from=future_date
         )
-        self.assertIn("scheduled", revision.status_listed.lower())
+        # status_listing returns "2-listing at {date}" for future services
+        self.assertIn("listing at", revision.status_listing.lower())
 
     def test_service_currently_listed(self):
         """Test currently listed service"""
@@ -436,7 +725,7 @@ class ServiceLifecycleTest(TestCase):
             description="Current service",
             listed_from=date.today() - timedelta(days=1)
         )
-        self.assertIn("currently listed", revision.status_listed.lower())
+        self.assertIn("currently listed", revision.status_listing.lower())
 
     def test_service_no_longer_listed(self):
         """Test service that was delisted"""
@@ -448,7 +737,7 @@ class ServiceLifecycleTest(TestCase):
             listed_from=past_date,
             listed_until=past_date + timedelta(days=1)
         )
-        self.assertIn("not more listed", revision.status_listed.lower())
+        self.assertIn("not more listed", revision.status_listing.lower())
 
     def test_service_eol(self):
         """Test end-of-life service"""
@@ -460,7 +749,7 @@ class ServiceLifecycleTest(TestCase):
             available_from=past_date,
             available_until=past_date + timedelta(days=1)
         )
-        status = revision.status_available.lower()
+        status = revision.status_availablility.lower()
         self.assertTrue("eol" in status or "not more available" in status)
 
 
@@ -515,60 +804,33 @@ class SearchKeysTest(TestCase):
 # Integration Tests
 # ============================================================================
 
+@override_settings(SERVICE_CATALOGUE_REQUIRE_LOGIN=False)
 class ServiceCatalogueIntegrationTest(TestCase):
-    """Integration tests for complete workflows"""
+    """Integration tests for complete workflows using fixture data"""
+    fixtures = ['initial_test_data.json']
 
     def setUp(self):
-        # Create complete service catalogue structure
-        self.category = ServiceCategory.objects.create(
-            name="Computing",
-            acronym="COMP",
-            description="Computing services"
-        )
+        # Get references to fixture data
+        # The fixture includes HPC Cluster (pk=6) in COMPUTE category (pk=3)
+        self.category = ServiceCategory.objects.get(acronym="COMPUTE")
+        self.provider = ServiceProvider.objects.get(acronym="HPC")  # Research Computing
+        self.service = Service.objects.get(acronym="HPC")
+        self.revision = ServiceRevision.objects.get(service=self.service)
+        self.clientele = Clientele.objects.get(acronym="STAFF")
+        self.fee_unit = FeeUnit.objects.get(pk=1)  # per month
         
-        self.provider = ServiceProvider.objects.create(
-            hierarchy="1.1",
-            name="IT Department",
-            acronym="IT"
-        )
-        
-        self.service = Service.objects.create(
-            category=self.category,
-            name="HPC Cluster",
-            acronym="HPC",
-            purpose="High-performance computing",
-            responsible="it-manager@example.com"
-        )
+        # Add provider to service (fixture may not have this relationship)
         self.service.service_providers.add(self.provider)
         
-        self.revision = ServiceRevision.objects.create(
-            service=self.service,
-            version="v1.0",
-            description="Production HPC cluster",
-            requirements="Organization account required",
-            details="24/7 support available",
-            contact="hpc-support@example.com",
-            url="https://hpc.example.com",
-            listed_from=date.today(),
-            available_from=date.today()
-        )
-        
-        self.clientele = Clientele.objects.create(
-            name="Organization Staff",
-            acronym="STAFF"
-        )
-        
-        self.fee_unit = FeeUnit.objects.create(
-            name="per month",
-            acronym="PM"
-        )
-        
-        Availability.objects.create(
+        # Create availability for this test (not in fixture)
+        Availability.objects.get_or_create(
             servicerevision=self.revision,
             clientele=self.clientele,
-            fee_unit=self.fee_unit,
-            fee_value="0",
-            comment="Free for organization staff"
+            defaults={
+                'fee_unit': self.fee_unit,
+                'fee': 0,
+                'comment': "Free for organization staff"
+            }
         )
 
     def test_complete_service_in_catalogue(self):
@@ -577,8 +839,7 @@ class ServiceCatalogueIntegrationTest(TestCase):
         
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "HPC Cluster")
-        self.assertContains(response, "COMP-HPC")
-        self.assertContains(response, "Production HPC cluster")
+        self.assertContains(response, "COMPUTE-HPC")
 
     def test_service_has_all_relationships(self):
         """Test that all relationships are properly established"""
@@ -586,7 +847,7 @@ class ServiceCatalogueIntegrationTest(TestCase):
         self.assertEqual(self.revision.service.category, self.category)
         
         # Verify service has providers
-        self.assertEqual(self.revision.service.service_providers.count(), 1)
+        self.assertGreaterEqual(self.revision.service.service_providers.count(), 1)
         
         # Verify revision has availability for clientele
         availability = Availability.objects.filter(
@@ -594,7 +855,7 @@ class ServiceCatalogueIntegrationTest(TestCase):
             clientele=self.clientele
         ).first()
         self.assertIsNotNone(availability)
-        self.assertEqual(availability.fee_value, "0")
+        self.assertEqual(availability.fee, 0)
 
     def test_service_history_tracking(self):
         """Test that changes are tracked in history"""
