@@ -281,8 +281,8 @@ class AvailabilityModelTest(TestCase):
             description="Test"
         )
         self.clientele = Clientele.objects.create(
-            name=\"Organization Staff\",
-            acronym=\"STAFF\"
+            name="Organization Staff",
+            acronym="STAFF"
         )
         self.fee_unit = FeeUnit.objects.create(
             name="per month",
@@ -353,8 +353,8 @@ class ViewTestCase(TestCase):
             available_from=date.today()
         )
         self.clientele = Clientele.objects.create(
-            name=\"Organization Staff\",
-            acronym=\"STAFF\"
+            name="Organization Staff",
+            acronym="STAFF"
         )
 
 
