@@ -203,11 +203,10 @@ HELPDESK_PHONE = os.getenv('HELPDESK_PHONE', '')
 # Thank you for supporting open source software!
 # -----------------------------------------------------------------------
 
-# TODO: Update APP_URL with actual GitHub repository URL when published
 APP_NAME = 'scView'  # Service Catalogue Viewer - please keep this name
 APP_VERSION = '0.4'
 APP_COPYRIGHT = 'Jade Hochschule, David Kleinhans'  # Please preserve attribution
-APP_URL = 'https://github.com/YOURUSERNAME/scView'  # TODO: Update repository URL
+APP_URL = 'https://github.com/YOURUSERNAME/scView'  # Update when repository is published
 APP_LICENSE = 'Apache-2.0'  # License displayed in footer
 
 # Corporate Identity

@@ -19,15 +19,20 @@ ATTRIBUTION NOTICE
 
 This product was originally developed at:
   Jade University of Applied Sciences
-  Wilhelmshaven, Germany
+  Wilhelmshaven Oldenburg Elsfleth, Germany
   https://www.jade-hs.de/
 
 Original Author:
   David Kleinhans <david.kleinhans@jade-hs.de>
 
+Development History:
+  Parts of this project were developed while the author was affiliated with
+  the Alfred Wegener Institute Helmholtz Centre for Polar and Marine Research
+  (AWI), Bremerhaven, Germany.
+
 Project Repository:
-  <!-- TODO: Update with actual GitHub repository URL when published -->
   https://github.com/YOURUSERNAME/scView
+  (Update this URL when the repository is published)
 
 ================================================================================
 ATTRIBUTION REQUEST (Not legally required, but appreciated)
@@ -51,19 +56,30 @@ Thank you for supporting open source software!
 THIRD-PARTY COMPONENTS
 ================================================================================
 
-This project includes or depends on the following third-party components:
+This project bundles the following third-party components:
 
-Django (BSD-3-Clause)
-  https://www.djangoproject.com/
-  Copyright Django Software Foundation and individual contributors
-
-Bootstrap 5 (MIT License)
+Bootstrap v5.3.3 (MIT License)
   https://getbootstrap.com/
-  Copyright The Bootstrap Authors
+  Copyright 2011-2024 The Bootstrap Authors
+  Bundled files: static/css/bootstrap.min.css, static/js/bootstrap.bundle.min.js
 
 Bootstrap Icons (MIT License)
   https://icons.getbootstrap.com/
   Copyright The Bootstrap Authors
+  Bundled files: static/css/bootstrap-icons.min.css, static/fonts/*
+
+Mark.js v8.11.1 (MIT License)
+  https://markjs.io/
+  Copyright 2014-2018 Julian Kühnel
+  Bundled files: static/js/mark.min.js
+
+--------------------------------------------------------------------------------
+The following components are not bundled but required via requirements.txt:
+(Users must install these separately; they are not included in this distribution)
+
+Django (BSD-3-Clause)
+  https://www.djangoproject.com/
+  Copyright Django Software Foundation and individual contributors
 
 django-modeltranslation (BSD-3-Clause)
   https://github.com/deschler/django-modeltranslation
@@ -77,16 +93,11 @@ django-tex (MIT License)
   https://github.com/weinbusch/django-tex
   Copyright Martin Bierbaum
 
-<!-- TODO: Verify all third-party licenses are correctly listed -->
-<!-- TODO: Add any additional dependencies used in production -->
-
 ================================================================================
 FONTS AND ICONS
 ================================================================================
 
-Bootstrap Icons are used under the MIT License.
-No custom fonts are bundled; system fonts are used by default.
-
-<!-- TODO: If custom fonts are added, document their licenses here -->
+Bootstrap Icons font files are bundled under the MIT License.
+No other custom fonts are bundled; system fonts are used by default.
 
 ================================================================================
