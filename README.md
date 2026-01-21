@@ -152,6 +152,7 @@ Configure your reverse proxy to route traffic to `itsm_nginx:80`.
 |----------|-------------|
 | [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | Comprehensive deployment guide |
 | [docs/CONFIGURATION.md](docs/CONFIGURATION.md) | Environment variables and customization |
+| [docs/TESTING.md](docs/TESTING.md) | Testing guide and CI/CD setup |
 | [docs/LOGIN_FLOW.md](docs/LOGIN_FLOW.md) | Authentication flow documentation |
 | [docs/LOGOUT_KEYCLOAK.md](docs/LOGOUT_KEYCLOAK.md) | Keycloak logout configuration |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Development guidelines |

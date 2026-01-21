@@ -9,6 +9,7 @@ Data models for the ITSM Service Catalogue application.
 import re
 from datetime import date
 
+from django.conf import settings
 from django.contrib.postgres.indexes import GinIndex
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -20,6 +21,11 @@ from simple_history.models import HistoricalRecords
 # define seperators characters for key hierarchy:
 keysep = "-"
 keysep_order = ":"
+
+
+def get_default_helpdesk_email():
+    """Get default helpdesk email from settings"""
+    return settings.HELPDESK_EMAIL
 
 
 class ServiceProvider(models.Model):
@@ -298,7 +304,7 @@ class ServiceRevision(models.Model):
         max_length=80,
         blank=True,
         null=True,
-        default="helpdesk@awi.de",
+        default=get_default_helpdesk_email,
         verbose_name=_("Contact Email"),
         help_text=_(
             "Email address which should be used for service requests. If possible helpdesk or other institutional email address, if not applicable also personal email adresses can be used (but might require effort in maintenance)."

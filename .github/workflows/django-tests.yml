@@ -26,6 +26,7 @@ jobs:
           --health-retries 5
 
     strategy:
+      fail-fast: false
       matrix:
         python-version: ['3.10', '3.11', '3.12']
 
@@ -72,6 +73,11 @@ jobs:
         echo "DJANGO_SECRET_KEY=test-secret-key-for-ci-cd" >> $GITHUB_ENV
         echo "DJANGO_SETTINGS_MODULE=itsm_config.settings_test" >> $GITHUB_ENV
     
+    - name: Enable PostgreSQL extensions
+      run: |
+        PGPASSWORD=postgres psql -h localhost -U postgres -d test_itsm -c "CREATE EXTENSION IF NOT EXISTS pg_trgm;"
+        PGPASSWORD=postgres psql -h localhost -U postgres -d test_itsm -c "CREATE EXTENSION IF NOT EXISTS btree_gin;"
+
     - name: Run Django system checks
       working-directory: ./apps/itsm
       run: |

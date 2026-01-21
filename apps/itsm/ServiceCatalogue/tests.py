@@ -84,7 +84,7 @@ class ClienteleModelTest(TestCase):
 
     def setUp(self):
         self.clientele = Clientele.objects.create(
-            name="AWI Staff",
+            name="Organization Staff",
             acronym="STAFF",
             order="1"
         )
@@ -93,7 +93,7 @@ class ClienteleModelTest(TestCase):
         """Test creating a clientele"""
         self.assertEqual(self.clientele.name, "Organization Staff")
         self.assertEqual(self.clientele.acronym, "STAFF")
-        self.assertEqual(str(self.clientele), "STAFF: AWI Staff")
+        self.assertEqual(str(self.clientele), "STAFF: Organization Staff")
 
     def test_clientele_unique_acronym(self):
         """Test that acronym must be unique"""
@@ -281,8 +281,8 @@ class AvailabilityModelTest(TestCase):
             description="Test"
         )
         self.clientele = Clientele.objects.create(
-            name="AWI Staff",
-            acronym="STAFF"
+            name=\"Organization Staff\",
+            acronym=\"STAFF\"
         )
         self.fee_unit = FeeUnit.objects.create(
             name="per month",
@@ -353,8 +353,8 @@ class ViewTestCase(TestCase):
             available_from=date.today()
         )
         self.clientele = Clientele.objects.create(
-            name="AWI Staff",
-            acronym="STAFF"
+            name=\"Organization Staff\",
+            acronym=\"STAFF\"
         )
 
 
@@ -537,7 +537,7 @@ class ServiceCatalogueIntegrationTest(TestCase):
             name="HPC Cluster",
             acronym="HPC",
             purpose="High-performance computing",
-            responsible="it-manager@awi.de"
+            responsible="it-manager@example.com"
         )
         self.service.service_providers.add(self.provider)
         
@@ -545,16 +545,16 @@ class ServiceCatalogueIntegrationTest(TestCase):
             service=self.service,
             version="v1.0",
             description="Production HPC cluster",
-            requirements="AWI account required",
+            requirements="Organization account required",
             details="24/7 support available",
-            contact="hpc-support@awi.de",
-            url="https://hpc.awi.de",
+            contact="hpc-support@example.com",
+            url="https://hpc.example.com",
             listed_from=date.today(),
             available_from=date.today()
         )
         
         self.clientele = Clientele.objects.create(
-            name="AWI Staff",
+            name="Organization Staff",
             acronym="STAFF"
         )
         
@@ -568,7 +568,7 @@ class ServiceCatalogueIntegrationTest(TestCase):
             clientele=self.clientele,
             fee_unit=self.fee_unit,
             fee_value="0",
-            comment="Free for AWI staff"
+            comment="Free for organization staff"
         )
 
     def test_complete_service_in_catalogue(self):
