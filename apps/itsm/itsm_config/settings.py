@@ -206,8 +206,8 @@ HELPDESK_PHONE = os.getenv('HELPDESK_PHONE', '')
 
 APP_NAME = 'scView'  # Service Catalogue Viewer - please keep this name
 APP_VERSION = '0.4'
-APP_COPYRIGHT = 'Jade Hochschule, David Kleinhans'  # Please preserve attribution
-APP_URL = 'https://github.com/YOURUSERNAME/scView'  # Update when repository is published
+APP_COPYRIGHT = 'David Kleinhans, Jade Hochschule'  # Please preserve attribution
+APP_URL = 'https://github.com/javidkl/jade-django-2-itsm'  # Update when repository is published
 APP_LICENSE = 'Apache-2.0'  # License displayed in footer
 
 # Corporate Identity

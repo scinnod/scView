@@ -6,7 +6,7 @@ and assigns the appropriate permissions based on the recovered permission
 structure from the previous implementation.
 
 Group Hierarchy:
-  0 - Administrators (47 perms)   - Full access to everything
+  0 - Administrators (50 perms)   - Full access to everything + user management
   1 - Editors (47 perms)          - Can edit service metadata + revisions + publish
   2a - Authors Plus (40 perms)    - Can edit revisions + publish (no service metadata)
   2 - Authors (39 perms)          - Can edit draft revisions only (no publish)
@@ -31,7 +31,7 @@ class Command(BaseCommand):
     Use --reset to delete existing groups first, or --dry-run to preview changes.
     
     Groups created:
-      Group 1: Administrators (47 permissions) - Full access
+      Group 1: Administrators (50 permissions) - Full access + user management
       Group 2: Editors (47 permissions) - Can edit services + publish
       Group 3: Authors Plus (40 permissions) - Can edit revisions + publish
       Group 4: Authors (39 permissions) - Can edit draft revisions only
@@ -68,7 +68,7 @@ class Command(BaseCommand):
                 "ServiceCatalogue.view_historicalserviceprovider", "ServiceCatalogue.view_historicalservicerevision",
                 "ServiceCatalogue.view_service", "ServiceCatalogue.view_servicecategory",
                 "ServiceCatalogue.view_serviceprovider", "ServiceCatalogue.view_servicerevision",
-                "auth.view_user"
+                "auth.add_user", "auth.change_user", "auth.delete_user", "auth.view_user"
             ]
         },
         2: {
@@ -98,8 +98,7 @@ class Command(BaseCommand):
                 "ServiceCatalogue.view_historicalservice", "ServiceCatalogue.view_historicalservicecategory",
                 "ServiceCatalogue.view_historicalserviceprovider", "ServiceCatalogue.view_historicalservicerevision",
                 "ServiceCatalogue.view_service", "ServiceCatalogue.view_servicecategory",
-                "ServiceCatalogue.view_serviceprovider", "ServiceCatalogue.view_servicerevision",
-                "auth.view_user"
+                "ServiceCatalogue.view_serviceprovider", "ServiceCatalogue.view_servicerevision"
             ]
         },
         3: {
