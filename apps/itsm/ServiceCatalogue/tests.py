@@ -945,14 +945,22 @@ class UserAccessControlTest(TestCase):
     
     @override_settings(AUTO_CREATE_USERS=False)
     def test_auto_create_users_disabled_blocks_new_user(self):
-        """Test that AUTO_CREATE_USERS=False prevents new user creation"""
-        from itsm_config.backends import KeycloakRemoteUserBackend, UserCreationDisabledError
+        """Test that AUTO_CREATE_USERS=False prevents new user creation via middleware"""
+        from itsm_config.backends import CustomRemoteUserMiddleware
+        from django.test import RequestFactory
         
-        backend = KeycloakRemoteUserBackend()
+        factory = RequestFactory()
+        request = factory.get('/sso-login/', HTTP_X_REMOTE_USER='newuser_that_does_not_exist')
         
-        # Attempting to create a new user should raise an error
-        with self.assertRaises(UserCreationDisabledError):
-            backend.create_user('newuser_that_does_not_exist')
+        middleware = CustomRemoteUserMiddleware(lambda r: None)
+        response = middleware(request)
+        
+        # Should return error page response (not raise exception)
+        self.assertEqual(response.status_code, 403)
+        content = response.content.decode().lower()
+        # Check for key elements of the user creation disabled page
+        self.assertIn('user not found', content)
+        self.assertIn('automatic user creation is currently disabled', content)
     
     @override_settings(AUTO_CREATE_USERS=True)
     def test_auto_create_users_enabled_allows_new_user(self):
@@ -973,7 +981,7 @@ class UserAccessControlTest(TestCase):
     @override_settings(STAFF_ONLY_MODE=True)
     def test_staff_only_mode_blocks_non_staff(self):
         """Test that STAFF_ONLY_MODE=True blocks non-staff users via middleware"""
-        from itsm_config.backends import StaffOnlyModeMiddleware, StaffOnlyModeError
+        from itsm_config.backends import StaffOnlyModeMiddleware
         from django.test import RequestFactory
         
         factory = RequestFactory()
@@ -982,9 +990,10 @@ class UserAccessControlTest(TestCase):
         
         middleware = StaffOnlyModeMiddleware(lambda r: None)
         
-        # Non-staff user should be blocked
-        with self.assertRaises(StaffOnlyModeError):
-            middleware(request)
+        # Non-staff user should receive 403 response (not raise exception)
+        response = middleware(request)
+        self.assertEqual(response.status_code, 403)
+        self.assertIn('insufficient', response.content.decode().lower())
     
     @override_settings(STAFF_ONLY_MODE=True)
     def test_staff_only_mode_allows_staff(self):
