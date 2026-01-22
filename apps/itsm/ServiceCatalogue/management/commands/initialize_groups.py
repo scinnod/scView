@@ -7,7 +7,7 @@ structure from the previous implementation.
 
 Group Hierarchy:
   0 - Administrators (50 perms)   - Full access to everything + user management
-  1 - Editors (47 perms)          - Can edit service metadata + revisions + publish
+  1 - Editors (46 perms)          - Can edit service metadata + revisions + publish
   2a - Authors Plus (40 perms)    - Can edit revisions + publish (no service metadata)
   2 - Authors (39 perms)          - Can edit draft revisions only (no publish)
   3 - Viewers (5 perms)           - Read-only access

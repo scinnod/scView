@@ -317,8 +317,8 @@ class InitializeGroupsCommandTest(TestCase):
         
         # Expected permission counts from command docstring
         expected_counts = {
-            1: 47,  # Administrators
-            2: 47,  # Editors
+            1: 50,  # Administrators (includes user management permissions)
+            2: 46,  # Editors (no user permissions)
             3: 40,  # Authors Plus
             4: 39,  # Authors
             5: 5,   # Viewers
