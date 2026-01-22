@@ -20,6 +20,16 @@ All configuration is managed through `env/itsm.env`. Copy from `env/itsm.env.exa
 | `ALLOWED_HOSTS` | Allowed domains (comma-separated) | `localhost` | `your-domain.com,www.your-domain.com` |
 | `CSRF_TRUSTED_ORIGINS` | Trusted origins for CSRF | - | `https://your-domain.com` |
 
+### Access Control Settings
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `AUTO_CREATE_USERS` | Auto-create users on SSO login | `True` |
+| `STAFF_ONLY_MODE` | Restrict access to staff users | `False` |
+| `ONLINE_SERVICES_REQUIRE_LOGIN` | Landing page requires login | `False` |
+| `SERVICE_CATALOGUE_REQUIRE_LOGIN` | Catalogue requires login | `True` |
+| `AI_SEARCH_REQUIRE_LOGIN` | AI search requires login | `True` |
+
 ### Database Settings
 
 | Variable | Description | Default | Example |
@@ -99,7 +109,40 @@ Create users via Django admin at `/admin/`.
 
 ### Access Control
 
-The application allows flexible configuration of which views require authentication.
+The application provides flexible access control at two levels:
+1. **User-level:** Control who can access the system at all
+2. **View-level:** Control which views require authentication
+
+#### User Access Control (Initial Setup / Restricted Access)
+
+These settings are useful during initial setup, maintenance periods, or when access should be restricted to a controlled group of users.
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `AUTO_CREATE_USERS` | Automatically create users on first SSO login | `True` |
+| `STAFF_ONLY_MODE` | Restrict all access to staff users only | `False` |
+
+**AUTO_CREATE_USERS:**
+- When `True` (default): Users are automatically created in Django when they first authenticate via Keycloak/SSO
+- When `False`: Only pre-existing users (created manually via Django admin) can log in. New users will see a 403 "Insufficient Privileges" page explaining that their account does not exist
+
+**STAFF_ONLY_MODE:**
+- When `False` (default): All authenticated users can access non-staff views
+- When `True`: Only users with `is_staff=True` can access the application. Non-staff users see a 403 "Insufficient Privileges" page with their username, options to log out and try a different account, or request privileges from administrators
+
+**Example: Restricted Initial Setup**
+```bash
+# During initial setup, only allow specific pre-created staff users
+AUTO_CREATE_USERS=False
+STAFF_ONLY_MODE=True
+```
+
+**Example: Staff-Only Maintenance Mode**
+```bash
+# Allow automatic user creation but restrict access to staff
+AUTO_CREATE_USERS=True
+STAFF_ONLY_MODE=True
+```
 
 #### View Access Control Settings
 

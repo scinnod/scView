@@ -82,13 +82,14 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.locale.LocaleMiddleware',  # Early in stack for proper i18n
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
 #    'django.contrib.auth.middleware.RemoteUserMiddleware',  # Must come after AuthenticationMiddleware
     'itsm_config.backends.CustomRemoteUserMiddleware',
+    'itsm_config.backends.StaffOnlyModeMiddleware',  # Must come after authentication middlewares
     'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.locale.LocaleMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'simple_history.middleware.HistoryRequestMiddleware',
 ]
@@ -360,6 +361,26 @@ AI_SEARCH_TIMEOUT = int(os.getenv('AI_SEARCH_TIMEOUT', '180'))
 AI_SEARCH_DATA_PROTECTION_STATEMENT_EN = os.getenv('AI_SEARCH_DATA_PROTECTION_STATEMENT_EN', '')
 AI_SEARCH_DATA_PROTECTION_STATEMENT_DE = os.getenv('AI_SEARCH_DATA_PROTECTION_STATEMENT_DE', '')
 
+
+# =============================================================================
+# User Access Control Configuration
+# =============================================================================
+# Control user creation and access restrictions. Useful for initial setup,
+# testing, or restricting access to a controlled group of users.
+#
+# AUTO_CREATE_USERS: Automatically create users on first login via SSO
+#   Default: True - Users are created when they authenticate via Keycloak
+#   Set to False to prevent automatic user creation (only pre-existing users can login)
+#   Useful during initial setup when access should be restricted to specific users
+#
+# STAFF_ONLY_MODE: Restrict all access to staff users only
+#   Default: False - All authenticated users can access non-staff views
+#   Set to True to require is_staff=True for all authenticated access
+#   Users without staff status will see an "insufficient privileges" page
+#   Useful during initial setup, maintenance, or restricted access periods
+
+AUTO_CREATE_USERS = os.getenv('AUTO_CREATE_USERS', 'True').lower() in ('true', '1', 'yes')
+STAFF_ONLY_MODE = os.getenv('STAFF_ONLY_MODE', 'False').lower() in ('true', '1', 'yes')
 
 # =============================================================================
 # View Access Control Configuration

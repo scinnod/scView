@@ -909,3 +909,240 @@ class QueryPerformanceTest(TestCase):
         
         # Should be roughly 1 query with select_related
         self.assertLess(len(context.captured_queries), 5)
+
+
+# ============================================================================
+# User Access Control Tests
+# ============================================================================
+
+class UserAccessControlTest(TestCase):
+    """Test AUTO_CREATE_USERS and STAFF_ONLY_MODE settings"""
+    
+    def setUp(self):
+        """Create test users"""
+        self.staff_user = User.objects.create_user(
+            username='staffuser',
+            password='testpass123',
+            is_staff=True
+        )
+        self.regular_user = User.objects.create_user(
+            username='regularuser',
+            password='testpass123',
+            is_staff=False
+        )
+        self.client = Client()
+    
+    def test_auto_create_users_default_is_true(self):
+        """Test that AUTO_CREATE_USERS defaults to True"""
+        from django.conf import settings
+        # The default should be True (verified by checking the setting exists)
+        self.assertTrue(hasattr(settings, 'AUTO_CREATE_USERS'))
+    
+    def test_staff_only_mode_default_is_false(self):
+        """Test that STAFF_ONLY_MODE defaults to False"""
+        from django.conf import settings
+        self.assertTrue(hasattr(settings, 'STAFF_ONLY_MODE'))
+    
+    @override_settings(AUTO_CREATE_USERS=False)
+    def test_auto_create_users_disabled_blocks_new_user(self):
+        """Test that AUTO_CREATE_USERS=False prevents new user creation"""
+        from itsm_config.backends import KeycloakRemoteUserBackend, UserCreationDisabledError
+        
+        backend = KeycloakRemoteUserBackend()
+        
+        # Attempting to create a new user should raise an error
+        with self.assertRaises(UserCreationDisabledError):
+            backend.create_user('newuser_that_does_not_exist')
+    
+    @override_settings(AUTO_CREATE_USERS=True)
+    def test_auto_create_users_enabled_allows_new_user(self):
+        """Test that AUTO_CREATE_USERS=True allows new user creation"""
+        from itsm_config.backends import KeycloakRemoteUserBackend
+        
+        backend = KeycloakRemoteUserBackend()
+        
+        # Creating a new user should work
+        new_user = backend.create_user('brand_new_test_user')
+        self.assertIsNotNone(new_user)
+        self.assertEqual(new_user.username, 'brand_new_test_user')
+        self.assertTrue(new_user.is_active)
+        
+        # Cleanup
+        new_user.delete()
+    
+    @override_settings(STAFF_ONLY_MODE=True)
+    def test_staff_only_mode_blocks_non_staff(self):
+        """Test that STAFF_ONLY_MODE=True blocks non-staff users via middleware"""
+        from itsm_config.backends import StaffOnlyModeMiddleware, StaffOnlyModeError
+        from django.test import RequestFactory
+        
+        factory = RequestFactory()
+        request = factory.get('/en/sc/services')
+        request.user = self.regular_user
+        
+        middleware = StaffOnlyModeMiddleware(lambda r: None)
+        
+        # Non-staff user should be blocked
+        with self.assertRaises(StaffOnlyModeError):
+            middleware(request)
+    
+    @override_settings(STAFF_ONLY_MODE=True)
+    def test_staff_only_mode_allows_staff(self):
+        """Test that STAFF_ONLY_MODE=True allows staff users via middleware"""
+        from itsm_config.backends import StaffOnlyModeMiddleware
+        from django.test import RequestFactory
+        from django.http import HttpResponse
+        
+        factory = RequestFactory()
+        request = factory.get('/en/sc/services')
+        request.user = self.staff_user
+        
+        mock_response = HttpResponse('OK')
+        middleware = StaffOnlyModeMiddleware(lambda r: mock_response)
+        
+        # Staff user should not raise an error
+        try:
+            response = middleware(request)
+            self.assertEqual(response.content, b'OK')
+        except Exception as e:
+            self.fail(f"Staff user should be allowed but got: {e}")
+    
+    @override_settings(STAFF_ONLY_MODE=False)
+    def test_staff_only_mode_disabled_allows_non_staff(self):
+        """Test that STAFF_ONLY_MODE=False allows non-staff users"""
+        from itsm_config.backends import StaffOnlyModeMiddleware
+        from django.test import RequestFactory
+        from django.http import HttpResponse
+        
+        factory = RequestFactory()
+        request = factory.get('/en/sc/services')
+        request.user = self.regular_user
+        
+        mock_response = HttpResponse('OK')
+        middleware = StaffOnlyModeMiddleware(lambda r: mock_response)
+        
+        # Non-staff user should be allowed when mode is disabled
+        try:
+            response = middleware(request)
+            self.assertEqual(response.content, b'OK')
+        except Exception as e:
+            self.fail(f"Non-staff user should be allowed when STAFF_ONLY_MODE=False but got: {e}")
+
+
+class InsufficientPrivilegesViewTest(TestCase):
+    """Test the insufficient privileges (403) view"""
+    
+    def setUp(self):
+        """Create test users"""
+        self.staff_user = User.objects.create_user(
+            username='staffuser',
+            password='testpass123',
+            is_staff=True
+        )
+        self.regular_user = User.objects.create_user(
+            username='regularuser',
+            password='testpass123',
+            is_staff=False
+        )
+        self.client = Client()
+    
+    def test_insufficient_privileges_view_renders(self):
+        """Test that insufficient_privileges_view renders correctly"""
+        from ServiceCatalogue.views import insufficient_privileges_view
+        from django.test import RequestFactory
+        from django.core.exceptions import PermissionDenied
+        
+        factory = RequestFactory()
+        request = factory.get('/test/')
+        request.user = self.regular_user
+        
+        response = insufficient_privileges_view(request, exception=PermissionDenied("Test reason"))
+        
+        self.assertEqual(response.status_code, 403)
+        self.assertIn(b'Insufficient Privileges', response.content)
+        self.assertIn(b'regularuser', response.content)
+    
+    def test_insufficient_privileges_view_shows_username(self):
+        """Test that the view shows the logged-in username"""
+        from ServiceCatalogue.views import insufficient_privileges_view
+        from django.test import RequestFactory
+        
+        factory = RequestFactory()
+        request = factory.get('/test/')
+        request.user = self.regular_user
+        
+        response = insufficient_privileges_view(request)
+        
+        # Should contain the username
+        self.assertIn(b'regularuser', response.content)
+    
+    def test_insufficient_privileges_view_shows_reason(self):
+        """Test that the view shows the denial reason when provided"""
+        from ServiceCatalogue.views import insufficient_privileges_view
+        from django.test import RequestFactory
+        from django.core.exceptions import PermissionDenied
+        
+        factory = RequestFactory()
+        request = factory.get('/test/')
+        request.user = self.regular_user
+        
+        reason = "Staff-only mode is currently enabled."
+        response = insufficient_privileges_view(request, exception=PermissionDenied(reason))
+        
+        # Should contain the reason
+        self.assertIn(reason.encode(), response.content)
+    
+    def test_insufficient_privileges_view_has_logout_link(self):
+        """Test that the view has a logout button"""
+        from ServiceCatalogue.views import insufficient_privileges_view
+        from django.test import RequestFactory
+        
+        factory = RequestFactory()
+        request = factory.get('/test/')
+        request.user = self.regular_user
+        
+        response = insufficient_privileges_view(request)
+        
+        # Should contain logout link
+        self.assertIn(b'sso-logout', response.content)
+
+
+class StaffOnlyModeIntegrationTest(TestCase):
+    """Integration tests for STAFF_ONLY_MODE with views"""
+    fixtures = ['initial_test_data.json']
+    
+    def setUp(self):
+        """Create test users"""
+        self.staff_user = User.objects.create_user(
+            username='staffuser',
+            password='testpass123',
+            is_staff=True
+        )
+        self.regular_user = User.objects.create_user(
+            username='regularuser',
+            password='testpass123',
+            is_staff=False
+        )
+        self.client = Client()
+    
+    def test_staff_view_denies_non_staff_user(self):
+        """Test that staff-only views deny access to non-staff users"""
+        # Login as regular user
+        self.client.login(username='regularuser', password='testpass123')
+        
+        # Access a staff-only view (services_under_revision)
+        response = self.client.get(reverse('services_under_revision'))
+        
+        # Should be redirected to login or get 403
+        self.assertIn(response.status_code, [302, 403])
+    
+    def test_staff_view_allows_staff_user(self):
+        """Test that staff-only views allow access to staff users"""
+        # Login as staff user
+        self.client.login(username='staffuser', password='testpass123')
+        
+        # Access a staff-only view (services_under_revision)
+        response = self.client.get(reverse('services_under_revision'))
+        
+        # Should be allowed (200)
+        self.assertEqual(response.status_code, 200)

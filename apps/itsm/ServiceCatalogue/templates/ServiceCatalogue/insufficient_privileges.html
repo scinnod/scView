@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{% translate "Insufficient Privileges" %} - {{ organization_name }}{% endblock %}
+
+{% block content %}
+<nav class="navbar navbar-expand-lg navbar-light bg-white fixed-top shadow-sm">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="{% url 'index' %}">
+      <img src="{% static 'logos/' %}{{ logo_filename|default:'logo.png' }}" alt="{{ organization_name }} Logo" onerror="this.style.display='none'">
+      <span>{{ organization_name }}</span>
+    </a>
+    <div class="navbar-nav ms-auto">
+      {% get_available_languages as LANGUAGES %}
+      {% if LANGUAGES|length > 1 %}
+      {% get_current_language as CURRENT_LANGUAGE %}
+      <div class="nav-item dropdown me-2">
+        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownLanguage" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+          <i class="bi bi-translate me-1"></i>{{ CURRENT_LANGUAGE|upper }}
+        </a>
+        <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="navbarDropdownLanguage">
+          {% for lang_code, lang_name in LANGUAGES %}
+          {% if lang_code != CURRENT_LANGUAGE %}
+          {% language lang_code %}
+          <li>
+            <form action="{% url 'set_language' %}" method="post" style="margin: 0;">
+              {% csrf_token %}
+              <input name="next" type="hidden" value="{{ request.get_full_path }}">
+              <input name="language" type="hidden" value="{{ lang_code }}">
+              <button type="submit" class="dropdown-item">
+                <i class="bi bi-flag me-2"></i>{{ lang_code|upper }}
+              </button>
+            </form>
+          </li>
+          {% endlanguage %}
+          {% endif %}
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+      
+      {% if user.is_authenticated %}
+      <div class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownUser" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+          <i class="bi bi-person-circle me-1"></i>{{ user.email|default:user.username }}{% if user.is_staff %} <span class="badge bg-secondary">Staff</span>{% endif %}
+        </a>
+        <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="navbarDropdownUser">
+          <li>
+            <a href="{% url 'sso_logout' %}" class="dropdown-item"><i class="bi bi-box-arrow-right me-2"></i>{% translate "Logout" %}</a>
+          </li>
+        </ul>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</nav>
+
+<div class="content">
+  <div class="row justify-content-center">
+    <div class="col-12 col-md-8 col-lg-6">
+      <div class="card shadow-sm border-0 mt-5">
+        <div class="card-header bg-warning text-dark">
+          <h4 class="mb-0">
+            <i class="bi bi-shield-exclamation me-2"></i>
+            {% translate "Insufficient Privileges" %}
+          </h4>
+        </div>
+        <div class="card-body">
+          <div class="alert alert-warning mb-4" role="alert">
+            <i class="bi bi-person-lock me-2"></i>
+            {% blocktranslate with username=user.email|default:user.username trimmed %}
+              You are logged in as <strong>{{ username }}</strong>, but this account does not have sufficient privileges to access the requested page.
+            {% endblocktranslate %}
+          </div>
+          
+          <div class="mb-4">
+            <h5 class="text-muted mb-3">{% translate "What can you do?" %}</h5>
+            <ul class="list-unstyled">
+              <li class="mb-3 d-flex align-items-start">
+                <i class="bi bi-arrow-repeat text-primary me-3 mt-1"></i>
+                <div>
+                  <strong>{% translate "Log in with a different account" %}</strong>
+                  <p class="text-muted mb-0 small">
+                    {% translate "If you have another account with the required privileges, log out and log in again with that account." %}
+                  </p>
+                </div>
+              </li>
+              <li class="mb-3 d-flex align-items-start">
+                <i class="bi bi-envelope text-primary me-3 mt-1"></i>
+                <div>
+                  <strong>{% translate "Request access privileges" %}</strong>
+                  <p class="text-muted mb-0 small">
+                    {% blocktranslate with helpdesk_email=helpdesk_email trimmed %}
+                      If you believe you should have access, please contact the administrator at <a href="mailto:{{ helpdesk_email }}">{{ helpdesk_email }}</a> to request the necessary privileges.
+                    {% endblocktranslate %}
+                  </p>
+                </div>
+              </li>
+            </ul>
+          </div>
+          
+          {% if reason %}
+          <div class="alert alert-secondary small mb-4" role="alert">
+            <i class="bi bi-info-circle me-2"></i>
+            <strong>{% translate "Details:" %}</strong> {{ reason }}
+          </div>
+          {% endif %}
+          
+          {% if staff_only_mode_active %}
+          <div class="alert alert-info small mb-4" role="alert">
+            <i class="bi bi-info-circle me-2"></i>
+            <strong>{% translate "Note:" %}</strong> {% translate "Staff-only mode is currently active. This is a system-wide setting that may be temporary." %}
+          </div>
+          {% endif %}
+          
+          <hr class="my-4">
+          
+          <div class="d-flex gap-2 flex-wrap">
+            <a href="{% url 'sso_logout' %}" class="btn btn-primary">
+              <i class="bi bi-box-arrow-right me-1"></i>
+              {% translate "Logout" %}
+            </a>
+            <a href="{% url 'index' %}" class="btn btn-outline-secondary">
+              <i class="bi bi-house me-1"></i>
+              {% translate "Go to Home" %}
+            </a>
+          </div>
+        </div>
+        <div class="card-footer text-muted small">
+          <i class="bi bi-clock me-1"></i>
+          {% translate "If you just received new privileges, you may need to log out and log back in for them to take effect." %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block footer %}
+<footer class="bg-white border-top mt-5 py-4 rounded">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-6 text-center text-md-start mb-3 mb-md-0">
+                <p class="mb-1 text-muted">
+                    {% if app_url %}<a href="{{ app_url }}" class="text-muted footer-app-link" target="_blank" rel="noopener noreferrer">{{ app_name|default:"scView" }} {% if app_version %}{{ app_version }}{% endif %}</a>{% else %}{{ app_name|default:"scView" }} {% if app_version %}{{ app_version }}{% endif %}{% endif %} | 
+                    © {% now "Y" %} {{ app_copyright|default:organization_name }}{% if app_license %}. {{ app_license }}{% endif %}
+                </p>
+            </div>
+            <div class="col-md-6 text-center text-md-end">
+                <p class="mb-1 text-muted">
+                    <i class="bi bi-envelope me-1"></i> <a href="mailto:{{ helpdesk_email }}" class="text-muted text-decoration-none">{{ helpdesk_email }}</a>
+                    {% if helpdesk_phone %}<span class="mx-2">|</span>
+                    <i class="bi bi-telephone me-1"></i> {{ helpdesk_phone }}{% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+{% endblock %}

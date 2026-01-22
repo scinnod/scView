@@ -78,7 +78,8 @@ def sso_login(request):
     
     if user and user.is_authenticated:
         # Session anlegen – das ist der entscheidende Schritt (auch wichtig, sonst wird die Session nicht gespeichert)
-        login(request, user)
+        backend_path = 'itsm_config.backends.KeycloakRemoteUserBackend'
+        login(request, user, backend=backend_path)
         
     next_url = request.GET.get('next', '/')
     return redirect(next_url)
@@ -103,6 +104,80 @@ def logout_view(request):
     response['Pragma'] = 'no-cache'
     response['Expires'] = '0'
     
+    return response
+
+
+def insufficient_privileges_view(request, exception=None):
+    """
+    Custom 403 Forbidden handler for permission denied errors.
+    
+    Displays a user-friendly page explaining that the authenticated user
+    lacks sufficient privileges to access the requested resource. Provides
+    options to:
+    - Log out and try with a different account
+    - Request access privileges from administrators
+    
+    This is used for:
+    - STAFF_ONLY_MODE: When enabled and user is not staff
+    - AUTO_CREATE_USERS=False: When user doesn't exist and cannot be created
+    - Staff-required views: When non-staff user accesses staff-only pages
+    """
+    # Extract reason from exception if available
+    reason = str(exception) if exception else None
+    
+    context = {
+        'reason': reason,
+        'staff_only_mode_active': getattr(settings, 'STAFF_ONLY_MODE', False),
+        'organization_name': settings.ORGANIZATION_NAME,
+        'organization_acronym': settings.ORGANIZATION_ACRONYM,
+        'helpdesk_email': settings.HELPDESK_EMAIL,
+        'helpdesk_phone': settings.HELPDESK_PHONE,
+        'logo_filename': settings.LOGO_FILENAME,
+        'primary_color': settings.PRIMARY_COLOR,
+        'secondary_color': settings.SECONDARY_COLOR,
+        'app_name': settings.APP_NAME,
+        'app_version': settings.APP_VERSION,
+        'app_copyright': settings.APP_COPYRIGHT,
+        'app_url': settings.APP_URL,
+        'app_license': settings.APP_LICENSE,
+    }
+    
+    response = render(request, 'ServiceCatalogue/insufficient_privileges.html', context)
+    response.status_code = 403
+    return response
+
+
+def user_creation_disabled_view(request, exception=None):
+    """
+    Custom 403 error handler for when automatic user creation is disabled.
+    
+    Displays a user-friendly page explaining that the login failed because:
+    - The user account does not exist in the system
+    - Automatic user creation is disabled
+    
+    This helps users understand why they cannot access the system and
+    provides guidance on how to proceed (logout from SSO, contact admin).
+    """
+    reason = str(exception) if exception else None
+    
+    context = {
+        'reason': reason,
+        'organization_name': settings.ORGANIZATION_NAME,
+        'organization_acronym': settings.ORGANIZATION_ACRONYM,
+        'helpdesk_email': settings.HELPDESK_EMAIL,
+        'helpdesk_phone': settings.HELPDESK_PHONE,
+        'logo_filename': settings.LOGO_FILENAME,
+        'primary_color': settings.PRIMARY_COLOR,
+        'secondary_color': settings.SECONDARY_COLOR,
+        'app_name': settings.APP_NAME,
+        'app_version': settings.APP_VERSION,
+        'app_copyright': settings.APP_COPYRIGHT,
+        'app_url': settings.APP_URL,
+        'app_license': settings.APP_LICENSE,
+    }
+    
+    response = render(request, 'ServiceCatalogue/user_creation_disabled.html', context)
+    response.status_code = 403
     return response
 
 

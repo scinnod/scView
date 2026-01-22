@@ -18,11 +18,16 @@ from django.contrib import admin
 from django.shortcuts import redirect
 from django.urls import path, include, reverse
 from django.contrib.auth import views as auth_views
-from ServiceCatalogue.views import sso_login, logout_view
+from django.views.i18n import set_language
+from ServiceCatalogue.views import sso_login, logout_view, insufficient_privileges_view
+
+# Custom error handlers
+handler403 = insufficient_privileges_view
 
 urlpatterns = [
     path('sso-login/', sso_login, name='sso_login'),  # SSO login endpoint for Keycloak
     path('sso-logout/', logout_view, name='sso_logout'),  # Unified logout for production and development
+    path('i18n/setlang/', set_language, name='set_language'),  # Language switching
     path('', lambda request: redirect(reverse("index"), permanent=False)),
     ]
 

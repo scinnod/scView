@@ -1515,6 +1515,144 @@ msgstr "Vollständigen Servicekatalog durchsuchen"
 msgid "Ctrl"
 msgstr "Strg"
 
+#: ServiceCatalogue/templates/ServiceCatalogue/insufficient_privileges.html
+msgid "Insufficient Privileges"
+msgstr "Unzureichende Berechtigungen"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/insufficient_privileges.html
+#, python-format
+msgid ""
+"You are logged in as <strong>%(username)s</strong>, but this account does "
+"not have sufficient privileges to access the requested page."
+msgstr ""
+"Sie sind als <strong>%(username)s</strong> angemeldet, aber dieses Konto "
+"verfügt nicht über ausreichende Berechtigungen, um auf die angeforderte "
+"Seite zuzugreifen."
+
+#: ServiceCatalogue/templates/ServiceCatalogue/insufficient_privileges.html
+msgid "What can you do?"
+msgstr "Was können Sie tun?"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/insufficient_privileges.html
+msgid "Log in with a different account"
+msgstr "Mit einem anderen Konto anmelden"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/insufficient_privileges.html
+msgid ""
+"If you have another account with the required privileges, log out and log "
+"in again with that account."
+msgstr ""
+"Wenn Sie ein anderes Konto mit den erforderlichen Berechtigungen haben, "
+"melden Sie sich ab und melden Sie sich mit diesem Konto erneut an."
+
+#: ServiceCatalogue/templates/ServiceCatalogue/insufficient_privileges.html
+msgid "Request access privileges"
+msgstr "Zugriffsberechtigungen anfordern"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/insufficient_privileges.html
+#, python-format
+msgid ""
+"If you believe you should have access, please contact the administrator at "
+"<a href=\"mailto:%(helpdesk_email)s\">%(helpdesk_email)s</a> to request the "
+"necessary privileges."
+msgstr ""
+"Wenn Sie der Meinung sind, dass Sie Zugriff haben sollten, wenden Sie sich "
+"bitte an den Administrator unter <a href=\"mailto:%(helpdesk_email)s\">"
+"%(helpdesk_email)s</a>, um die erforderlichen Berechtigungen anzufordern."
+
+#: ServiceCatalogue/templates/ServiceCatalogue/insufficient_privileges.html
+msgid "Details:"
+msgstr "Details:"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/insufficient_privileges.html
+msgid "Go to Home"
+msgstr "Zur Startseite"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/insufficient_privileges.html
+msgid ""
+"If you just received new privileges, you may need to log out and log back "
+"in for them to take effect."
+msgstr ""
+"Wenn Sie gerade neue Berechtigungen erhalten haben, müssen Sie sich "
+"möglicherweise ab- und wieder anmelden, damit diese wirksam werden."
+
+#: ServiceCatalogue/templates/ServiceCatalogue/insufficient_privileges.html
+msgid "View ITSM Service Catalogue project on GitHub"
+msgstr "ITSM-Servicekatalog-Projekt auf GitHub anzeigen"
+
+#: itsm_config/backends.py
+#, python-format
+msgid ""
+"User '%(username)s' does not have staff privileges. Staff-only mode is "
+"currently enabled."
+msgstr ""
+"Benutzer '%(username)s' verfügt nicht über Administratorrechte. Der "
+"Nur-Mitarbeiter-Modus ist derzeit aktiviert."
+
+#: ServiceCatalogue/templates/ServiceCatalogue/insufficient_privileges.html
+msgid "Note:"
+msgstr "Hinweis:"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/insufficient_privileges.html
+msgid ""
+"Staff-only mode is currently active. This is a system-wide setting that may "
+"be temporary."
+msgstr ""
+"Der Nur-Mitarbeiter-Modus ist derzeit aktiv. Dies ist eine systemweite "
+"Einstellung, die möglicherweise temporär ist."
+
+#: ServiceCatalogue/templates/ServiceCatalogue/user_creation_disabled.html
+msgid "User Not Found"
+msgstr "Benutzer nicht gefunden"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/user_creation_disabled.html
+msgid ""
+"Your login attempt was unsuccessful because your user account does not "
+"exist in this application and automatic user creation is currently disabled."
+msgstr ""
+"Ihr Anmeldeversuch war nicht erfolgreich, da Ihr Benutzerkonto in dieser "
+"Anwendung nicht existiert und die automatische Benutzererstellung derzeit "
+"deaktiviert ist."
+
+#: ServiceCatalogue/templates/ServiceCatalogue/user_creation_disabled.html
+msgid "Log out from the authentication system"
+msgstr "Vom Authentifizierungssystem abmelden"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/user_creation_disabled.html
+msgid ""
+"To try logging in with a different account or to fully clear your session, "
+"please log out from the authentication system."
+msgstr ""
+"Um es mit einem anderen Konto zu versuchen oder Ihre Sitzung vollständig zu "
+"löschen, melden Sie sich bitte vom Authentifizierungssystem ab."
+
+#: ServiceCatalogue/templates/ServiceCatalogue/user_creation_disabled.html
+msgid "Request account creation"
+msgstr "Kontoerstellung anfordern"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/user_creation_disabled.html
+#, python-format
+msgid ""
+"If you need access to this application, please contact the administrator at "
+"<a href=\"mailto:%(helpdesk_email)s\">%(helpdesk_email)s</a> to request "
+"that an account be created for you."
+msgstr ""
+"Wenn Sie Zugriff auf diese Anwendung benötigen, wenden Sie sich bitte an "
+"den Administrator unter <a href=\"mailto:%(helpdesk_email)s\">"
+"%(helpdesk_email)s</a>, um die Erstellung eines Kontos für Sie anzufordern."
+
+#: ServiceCatalogue/templates/ServiceCatalogue/user_creation_disabled.html
+msgid "Contact Support"
+msgstr "Support kontaktieren"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/user_creation_disabled.html
+msgid ""
+"Once your account has been created by an administrator, you will be able to "
+"log in successfully."
+msgstr ""
+"Sobald Ihr Konto von einem Administrator erstellt wurde, können Sie sich "
+"erfolgreich anmelden."
+
 #~ msgid "Published"
 #~ msgstr "Veröffentlicht"
 
