@@ -167,11 +167,12 @@ Internet
     │
     ▼
 ┌─────────────────────────────────────┐
-│  Reverse Proxy (SSL termination)   │
-│  + OAuth2-proxy + Keycloak (SSO)   │
+│  Reverse Proxy (SSL termination)   │  ← NOT included in this stack
+│  + OAuth2-proxy + Keycloak (SSO)   │  ← See: github.com/javidkl/jade-django-0-nginx-auth-stack
 └─────────────────────────────────────┘
     │
     ▼
+═══════════════════════════════════════  ← THIS STACK STARTS HERE
 ┌─────────────────────────────────────┐
 │  nginx (static files, routing)     │
 └─────────────────────────────────────┘
