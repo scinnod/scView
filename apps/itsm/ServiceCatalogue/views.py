@@ -976,6 +976,11 @@ class ServiceDetailView(ConditionalLoginRequiredMixin, DetailView):
         # Corporate identity
         context['organization_name'] = settings.ORGANIZATION_NAME
         context['organization_acronym'] = settings.ORGANIZATION_ACRONYM
+        context['app_name'] = settings.APP_NAME
+        context['app_version'] = settings.APP_VERSION
+        context['app_copyright'] = settings.APP_COPYRIGHT
+        context['app_url'] = settings.APP_URL
+        context['app_license'] = settings.APP_LICENSE
         context['helpdesk_email'] = settings.HELPDESK_EMAIL
         context['helpdesk_phone'] = settings.HELPDESK_PHONE
         context['primary_color'] = settings.PRIMARY_COLOR
