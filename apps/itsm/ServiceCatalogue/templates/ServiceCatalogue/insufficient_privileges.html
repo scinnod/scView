@@ -144,7 +144,7 @@
             <div class="col-md-6 text-center text-md-start mb-3 mb-md-0">
                 <p class="mb-1 text-muted">
                     {% if app_url %}<a href="{{ app_url }}" class="text-muted footer-app-link" target="_blank" rel="noopener noreferrer">{{ app_name|default:"scView" }} {% if app_version %}{{ app_version }}{% endif %}</a>{% else %}{{ app_name|default:"scView" }} {% if app_version %}{{ app_version }}{% endif %}{% endif %} | 
-                    © {% now "Y" %} {{ app_copyright|default:organization_name }}{% if app_license %}. {{ app_license }}{% endif %}
+                    © {% now "Y" %} {{ app_copyright|default:organization_name }}{% if app_license %} ({{ app_license }}){% endif %}
                 </p>
             </div>
             <div class="col-md-6 text-center text-md-end">
