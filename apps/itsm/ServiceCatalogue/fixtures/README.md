@@ -23,6 +23,12 @@ Fixtures are JSON files that contain serialized database records. They are used 
 - Share sample data between installations
 - Backup and restore specific datasets
 
+**LLM/AI Tip:** This README is designed to serve as comprehensive instructions for LLMs generating fixture files. Point an AI assistant to this file when generating service catalogue data from institutional documentation. Always validate generated fixtures before loading:
+
+```bash
+docker-compose exec itsm python manage.py validate_fixtures <path_to_fixture.json>
+```
+
 ## Data Model and Relationships
 
 The Service Catalogue uses a hierarchical relational model:

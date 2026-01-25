@@ -46,7 +46,8 @@ Built by a university IT department, for university IT departments—but works g
 
 ### 🤖 AI-Assisted Search
 - Natural language queries: *"How do I get more storage?"* or *"I need to host a website"*
-- Powered by OpenAI GPT models
+- Uses OpenAI-compatible API—works with OpenAI, GWDG chat-ai, KISSKI, and other compatible services
+- Two-stage approach: first identifies relevant services, then analyzes details to recommend the best matches
 - Understands context and recommends relevant services
 - Optional feature—works without AI configuration
 
@@ -152,6 +153,7 @@ Configure your reverse proxy to route traffic to `itsm_nginx:80`.
 |----------|-------------|
 | [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | Comprehensive deployment guide |
 | [docs/CONFIGURATION.md](docs/CONFIGURATION.md) | Environment variables and customization |
+| [docs/SERVICE_MANAGEMENT.md](docs/SERVICE_MANAGEMENT.md) | Content model, roles, and publishing workflow |
 | [docs/TESTING.md](docs/TESTING.md) | Testing guide and CI/CD setup |
 | [docs/LOGIN_FLOW.md](docs/LOGIN_FLOW.md) | Authentication flow documentation |
 | [docs/LOGOUT_KEYCLOAK.md](docs/LOGOUT_KEYCLOAK.md) | Keycloak logout configuration |
@@ -204,7 +206,7 @@ Internet
 | Server | Gunicorn + nginx |
 | Translations | django-modeltranslation |
 | PDF Generation | django-tex (LaTeX) |
-| AI Search | OpenAI GPT API |
+| AI Search | OpenAI-compatible API (GWDG chat-ai, KISSKI, OpenAI, etc.) |
 | Authentication | Keycloak via OAuth2-proxy |
 | Containerization | Docker, Docker Compose |
 

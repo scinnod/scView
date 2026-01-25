@@ -14,6 +14,8 @@ The AI evaluates:
 - Which services might be relevant for detailed evaluation
 - Returns service keys for further inspection
 
+**Technical Note:** In this first stage, only the **Service** fields are provided to the AI—specifically the service name and purpose. This allows efficient initial filtering before retrieving detailed revision data. The purpose field is particularly important for matching user needs to service offerings.
+
 ### Step 2: Detailed Service Evaluation (if needed)
 The AI receives:
 - The conversation history from Step 1
@@ -55,3 +57,5 @@ The prompts are written in English but instruct the AI to respond in the user's 
 - User input and AI responses are NOT logged for privacy reasons
 - Only metadata (requested services, recommended services, token usage) is logged for analytics
 - The process is designed to be transparent through progress updates, not detailed AI communication logs
+
+**Language Handling:** The AI search retrieves service data in the user's interface language. Django's modeltranslation system provides automatic fallback (`MODELTRANSLATION_FALLBACK_LANGUAGES = ('de', 'en')`) if a field in the user's language is empty. The AI is instructed to respond in the user's language via the `{language_name}` parameter in the prompts.

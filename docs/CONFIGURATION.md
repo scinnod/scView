@@ -363,4 +363,4 @@ docker-compose config  # Validate configuration
 - **nginx** - Reverse proxy and static file serving
 - **django-modeltranslation** - Database-level translations
 - **django-tex** - LaTeX PDF generation
-- **OpenAI GPT** - AI-assisted search (optional)
+- **OpenAI-compatible API** - AI-assisted search (GWDG chat-ai, KISSKI, OpenAI, etc.)

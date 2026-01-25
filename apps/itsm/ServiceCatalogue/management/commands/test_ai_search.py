@@ -21,9 +21,16 @@ class Command(BaseCommand):
             action='store_true',
             help='Show detailed request/response information',
         )
+        parser.add_argument(
+            '--language',
+            type=str,
+            default='en',
+            help='Language for AI search test (default: en)',
+        )
 
     def handle(self, *args, **options):
         verbose = options['verbose']
+        language = options['language']
         
         self.stdout.write(self.style.MIGRATE_HEADING('\n=== AI Search Configuration Test ===\n'))
         
@@ -281,13 +288,14 @@ class Command(BaseCommand):
                     test_query = "I need help with email problems"
                     
                     self.stdout.write(f'   Testing with query: "{test_query}"')
+                    self.stdout.write(f'   Using language: {language}')
                     if verbose:
                         self.stdout.write('   This will perform the full two-step AI search process...')
                         self.stdout.write('')
                     
                     # Run the search (this will actually call the API)
                     # In verbose mode, request the full conversation
-                    result = ai_service.perform_search(test_query, 'en', None, return_conversation=verbose)
+                    result = ai_service.perform_search(test_query, language, None, return_conversation=verbose)
                     
                     if verbose and 'conversation' in result:
                         self.stdout.write('')
