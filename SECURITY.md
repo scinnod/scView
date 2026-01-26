@@ -45,7 +45,7 @@ When deploying this application:
 
 1. **Never enable DEBUG in production** - exposes sensitive information
 2. **Use environment variables** for all secrets (SECRET_KEY, database passwords, API keys)
-3. **Deploy behind the Edge-Auth Stack** for proper authentication
+3. **Deploy behind the Django Auth Stack** for proper authentication
 4. **Keep dependencies updated** - run `pip list --outdated` regularly
 5. **Use HTTPS** - SSL/TLS should be terminated at the edge proxy
 6. **Configure ALLOWED_HOSTS** - list only your actual domains
@@ -53,10 +53,12 @@ When deploying this application:
 
 ## Authentication Security
 
-This application is designed to work with the [Edge-Auth Stack](https://github.com/YOUR_USERNAME/edge-auth-stack) which provides:
+This application is designed to work with the [Django Auth Stack](https://github.com/scinnod/django-auth-stack) which provides:
 
 - Keycloak SSO authentication
 - OAuth2-proxy session management
 - nginx-based request filtering
 
-See the Edge-Auth Stack documentation for security configuration details.
+**Type A Service:** This is a Type A upstream service, meaning Django handles authentication and access control for individual views. The auth stack passes user identity headers, but does not enforce access restrictions at the nginx level. This allows for flexible permission management within the application (e.g., public pages, staff-only areas, editor permissions).
+
+See the Django Auth Stack documentation for security configuration details.

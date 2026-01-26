@@ -85,7 +85,35 @@ Built by a university IT department, for university IT departments—but works g
 
 ## 🖼️ Screenshots
 
-*Coming soon*
+### Service Catalogue Overview
+Browse all services in a clean, organized list with categories, status indicators, and quick actions.
+
+![Full Services List](docs/images/screenshot-full-services-list.png)
+
+### Service Details - Public View
+User-facing service information with availability, contacts, and related documentation.
+
+![Service Detail Public](docs/images/screenshot-service-detail-public.png)
+
+### Service Details - Internal View
+Additional internal documentation visible only to staff members, including cost centers, responsible teams, and technical details.
+
+![Service Detail Internal](docs/images/screenshot-service-detail-internal.png)
+
+### Online Services Portal (German)
+Quick-access landing page for frequently used online services - perfect for homepage integration.
+
+![Online Services German](docs/images/screenshot-online-services-de.png)
+
+### Online Services Portal (English)
+Multilingual support with automatic language switching based on user preferences.
+
+![Online Services English](docs/images/screenshot-online-services-en.png)
+
+### AI-Powered Search
+Natural language queries help users find the right service. Ask questions like "How do I get more storage?" or "I need to host a website".
+
+![AI Search](docs/images/screenshot-ai-search.png)
 
 ---
 
@@ -95,14 +123,14 @@ Built by a university IT department, for university IT departments—but works g
 
 - Docker and Docker Compose
 - A reverse proxy for SSL termination (nginx Proxy Manager, Traefik, Caddy, etc.)
-- Optional: [Edge-Auth Stack](https://github.com/YOUR_USERNAME/edge-auth-stack) for Keycloak SSO
+- Optional: [Django Auth Stack](https://github.com/scinnod/django-auth-stack) for Keycloak SSO
 
 ### Installation
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/YOUR_USERNAME/itsm-service-catalogue.git
-cd itsm-service-catalogue
+git clone https://github.com/scinnod/scview.git
+cd scview
 
 # 2. Create proxy network (once per host)
 docker network create proxy
@@ -164,13 +192,15 @@ Configure your reverse proxy to route traffic to `itsm_nginx:80`.
 
 ## 🏗️ Architecture
 
+scView is a **Type A** upstream service: Django handles authentication and access control, allowing mixed public/authenticated content.
+
 ```
 Internet
     │
     ▼
 ┌─────────────────────────────────────┐
 │  Reverse Proxy (SSL termination)   │  ← NOT included in this stack
-│  + OAuth2-proxy + Keycloak (SSO)   │  ← See: github.com/javidkl/jade-django-0-nginx-auth-stack
+│  + OAuth2-proxy + Keycloak (SSO)   │  ← See: github.com/scinnod/django-auth-stack
 └─────────────────────────────────────┘
     │
     ▼

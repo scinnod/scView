@@ -450,8 +450,10 @@ git commit -m "ServiceCatalogue backup"
 
 ### Production (Keycloak SSO)
 
+scView is a **Type A** upstream service: Django handles authentication and access control, allowing mixed public/authenticated content.
+
 ```
-User → HTTPS → Edge-Auth Stack (SSL + OAuth2-proxy + Keycloak)
+User → HTTPS → Django Auth Stack (SSL + OAuth2-proxy + Keycloak)
               → HTTP → nginx (static or proxy?)
                      → Static: Serve from volume
                      → Dynamic: HTTP → Django (RemoteUser auth)

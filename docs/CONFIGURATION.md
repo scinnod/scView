@@ -76,7 +76,12 @@ All configuration is managed through `env/itsm.env`. Copy from `env/itsm.env.exa
 
 ### Production Mode (Keycloak SSO)
 
-When `DJANGO_ENV=production`, the application expects to run behind the Edge-Auth Stack with OAuth2-proxy providing authentication headers.
+When `DJANGO_ENV=production`, the application expects to run behind the [Django Auth Stack](https://github.com/scinnod/django-auth-stack) with OAuth2-proxy providing authentication headers.
+
+**Type A Service:** scView is a Type A upstream service. This means:
+- Django handles authentication and per-view access control
+- nginx does not enforce authentication (unlike Type B services where nginx requires authorization for all requests)
+- Allows mixed public/authenticated content and fine-grained permissions
 
 **Required headers from OAuth2-proxy:**
 - `X-Remote-User` - Username from Keycloak

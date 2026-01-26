@@ -196,7 +196,7 @@ The CI workflow:
 **Status Badge:** Add this to your README to show test status:
 
 ```markdown
-[![Django Tests](https://github.com/YOUR_USERNAME/REPO_NAME/actions/workflows/django-tests.yml/badge.svg)](https://github.com/YOUR_USERNAME/REPO_NAME/actions/workflows/django-tests.yml)
+[![Django Tests](https://github.com/scinnod/scview/actions/workflows/django-tests.yml/badge.svg)](https://github.com/scinnod/scview/actions/workflows/django-tests.yml)
 ```
 
 ## Writing Tests
