@@ -51,6 +51,8 @@ User accesses protected page (e.g., /sc/services)
 
 ### Production Mode Flow
 
+In production, scView runs behind the [Django Auth Stack](https://github.com/scinnod/django-auth-stack), which provides SSL termination, OAuth2-proxy, and Keycloak integration. See [DEPLOYMENT.md](DEPLOYMENT.md#django-auth-stack-recommended-for-production-sso) for setup instructions.
+
 ```
 User accesses protected page (e.g., /sc/services)
                 ↓

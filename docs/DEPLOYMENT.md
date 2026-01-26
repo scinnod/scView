@@ -56,7 +56,9 @@ Comprehensive guide for deploying the ITSM Service Catalogue with Docker and an 
 
 ### Access Control
 
-The application uses Django-based authorization (not proxy-level authentication). Which views require authentication is configurable via environment variables.
+The application uses Django-based authorization (not proxy-level authentication). In production with the [Django Auth Stack](https://github.com/scinnod/django-auth-stack), OAuth2-proxy provides authenticated user headers, and Django decides per-view whether authentication is required. This allows public and protected content to coexist on the same site.
+
+Which views require authentication is configurable via environment variables.
 
 **Configurable views:**
 
@@ -160,6 +162,39 @@ your-domain.com {
     reverse_proxy itsm_nginx:80
 }
 ```
+
+#### Django Auth Stack (Recommended for Production SSO)
+
+For production environments with Keycloak SSO, we recommend the [Django Auth Stack](https://github.com/scinnod/django-auth-stack)—a pre-configured Docker stack providing:
+
+- **SSL termination** via nginx Proxy Manager
+- **OAuth2-proxy** for Keycloak authentication
+- **Header-based authentication** with `X-Remote-User` and `X-Remote-Email`
+- **Unified logout** that terminates both application and Keycloak sessions
+
+**Why Django Auth Stack?**
+
+scView is a **Type A** upstream service: Django handles authentication and per-view access control, allowing mixed public/authenticated content. The Django Auth Stack is specifically designed for this architecture.
+
+**Integration:**
+
+1. Deploy the Django Auth Stack on your Docker host
+2. Create a Keycloak client for scView
+3. Configure OAuth2-proxy to pass user headers
+4. Add scView's nginx to the shared `proxy` network
+5. Create a Proxy Host in nginx Proxy Manager pointing to `itsm_nginx:80`
+
+**Request flow with Django Auth Stack:**
+
+```
+User → HTTPS → nginx Proxy Manager (SSL)
+             → OAuth2-proxy (authentication check)
+             → HTTP → itsm_nginx (static files / Django proxy)
+                    → Django (receives X-Remote-User header)
+                    → PostgreSQL
+```
+
+See the [Django Auth Stack documentation](https://github.com/scinnod/django-auth-stack) for complete setup instructions and [LOGOUT_KEYCLOAK.md](LOGOUT_KEYCLOAK.md) for logout configuration.
 
 ## Service Management
 
