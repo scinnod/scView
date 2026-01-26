@@ -3,123 +3,101 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 SPDX-FileCopyrightText: 2024-2026 David Kleinhans, Jade University of Applied Sciences
 -->
 
-# User Files Directory (App-Level)
+# User Files Directory
 
-This directory (`apps/itsm/user_files/`) contains **template and example files** for customization.
+This directory contains **customizable files** for organization-specific branding.
 
 ## Directory Structure
 
 ```
 apps/itsm/user_files/
-├── static/              # Static files collected by Django
-│   └── logos/           # Logo files for web and PDF
-├── latex_templates/     # LaTeX template fragments
-└── README.md            # This file
+├── README.md              # This file
+├── static/
+│   ├── logos/             # Organization logo for web and PDF
+│   ├── css/               # Custom stylesheets
+│   └── images/            # Additional images
+└── latex_templates/       # LaTeX templates for PDF export
 ```
 
-## Purpose
+## How Customization Works
 
-This directory provides:
-1. **Template files** - Example structure for customization
-2. **Development files** - Quick testing without external mounts
-3. **Fallback content** - Used when no external files are mounted
+The repository ships with empty placeholder directories. To add your organization's files:
 
-## Two Ways to Customize
+### Option 1: Direct Override via Docker (Recommended)
 
-### Option 1: Edit Files Directly (Development)
-
-Edit files in this directory for immediate use:
-
-```bash
-# Add your logo
-cp /path/to/logo.png apps/itsm/user_files/static/logos/logo.png
-
-# Set in env/itsm.env:
-LOGO_FILENAME=logo.png
-
-# Restart to apply
-docker-compose restart itsm
-```
-
-### Option 2: Mount External Files (Production)
-
-Use `docker-compose.override.yml` to mount organization-specific files:
+Use `docker-compose.override.yml` to mount your files:
 
 ```yaml
-services:
-  itsm:
-    volumes:
-      - /opt/organization/logos:/app/user_files/static/logos:ro
-      - /opt/organization/latex:/app/user_files/latex_templates:ro
+# Your files in overrides/static/logos/ replace user_files/static/logos/
+- ./overrides/static/logos:/app/user_files/static/logos:ro
 ```
 
-This keeps organization-specific content separate from the application code.
+**Benefits:**
+- Organization files stay separate from the repository
+- `overrides/` is gitignored, so your files are never committed
+- Easy to update the repository without conflicts
+- Explicit: the mount shows exactly what's replaced
 
-## Logos
+See [docker-compose.override.yml.example](../../../docker-compose.override.yml.example) for details.
 
-Place your organization's logo files here for use in:
+### Option 2: Edit Directly (Development Only)
+
+For quick testing, you can add files directly here:
+
+```bash
+cp /path/to/logo.png apps/itsm/user_files/static/logos/logo.png
+```
+
+⚠️ **Warning:** These files will be tracked by git unless you add them to `.gitignore`.
+
+## Available Customizations
+
+### Logos (`static/logos/`)
+
+| Setting | Description |
+|---------|-------------|
+| **Location** | `static/logos/logo.png` |
+| **Format** | PNG (with transparency), JPG, or EPS (for LaTeX) |
+| **Size** | ~400×80px recommended for web header |
+| **Config** | Set `LOGO_FILENAME=logo.png` in `env/itsm.env` |
+
+Used in:
+- Web interface navigation header
 - PDF exports (via LaTeX)
-- Web interface header
 
-**Supported formats:**
-- PNG (recommended for web, supports transparency)
-- JPG (good for photos/complex images)
-- EPS (vector format for LaTeX, best print quality)
+### Custom CSS (`static/css/`)
 
-**Recommended specifications:**
-- Resolution: 300 DPI for print, 150 DPI for web
-- Width: 2000-3000 pixels for flexibility
-- Maintain high-resolution source files elsewhere
+Override default styles with your branding colors:
 
-**Configuration:**
-```bash
-# In env/itsm.env:
-LOGO_FILENAME=your_logo.png
+```css
+/* custom.css */
+:root {
+  --primary-color: #0066cc;
+  --secondary-color: #ff6600;
+}
 ```
 
-## LaTeX Templates
+### LaTeX Templates (`latex_templates/`)
 
-Custom LaTeX fragments for PDF generation:
+Custom fragments for PDF export styling:
+- `header.tex` - Page headers
+- `footer.tex` - Page footers
+- `colors.tex` - Color definitions
+- `titlepage.tex` - Title page layout
 
-- Header/footer layouts
-- Title page design  
-- Font selections
-- Color schemes
-
-Place `.tex` files here to customize PDF output.
-
-## Static Files
-
-Additional static files for the web interface:
-
-- Custom CSS for branding
-- Organization-specific images
-- Custom JavaScript
-- Favicon/app icons
-
-Files are served via Django's static file system.
-
-## Version Control
-
-This directory IS tracked in git (unlike `user_files/` at project root).
-
-Files here serve as:
-- Examples and templates
-- Development placeholders
-- Default fallbacks
-
-For production, mount your organization's files externally.
-
-## After Changes
-
-Restart the application to pick up changes:
+## After Making Changes
 
 ```bash
-docker-compose restart itsm
-```
-
-For static files, also run:
-
-```bash
+# Collect static files
 docker-compose exec itsm python manage.py collectstatic --noinput
+
+# Restart services
+docker-compose restart itsm nginx
 ```
+
+## See Also
+
+- [overrides/README.md](../../../overrides/README.md) - Override directory documentation
+- [docker-compose.override.yml.example](../../../docker-compose.override.yml.example) - Mount configuration
+- [static/README.md](static/README.md) - Static files details
+- [latex_templates/README.md](latex_templates/README.md) - LaTeX template details

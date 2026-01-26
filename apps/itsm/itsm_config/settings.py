@@ -167,10 +167,11 @@ STATIC_URL = '/static/'
 # Static files are collected outside the app directory to avoid clutter
 STATIC_ROOT = '/var/www/staticfiles'
 # Additional directories to collect static files from
-# Note: /app/overrides/static can be mounted via docker-compose.override.yml
+# - user_files/static: Contains defaults, can be overwritten via docker-compose.override.yml
+#   (see docker-compose.override.yml.example for mounting custom files)
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
-    '/app/overrides/static',  # Organization-specific customizations
+    os.path.join(BASE_DIR, 'user_files', 'static'),
 ]
 
 # Organization branding and contact
@@ -219,10 +220,11 @@ LOGO_FILENAME = os.getenv('LOGO_FILENAME', '')
 # LaTeX configuration
 LATEX_INTERPRETER = 'latexmk -pdf'
 # LaTeX graphics paths for logos and templates
-# These paths can be customized via docker-compose.override.yml
+# These paths can be overwritten via docker-compose.override.yml
+# (see docker-compose.override.yml.example for mounting custom files)
 LATEX_GRAPHICSPATH = [
-    '/app/overrides/static/logos',     # Organization logo for PDF exports
-    '/app/overrides/latex_templates',  # Custom LaTeX templates and graphics
+    '/app/user_files/static/logos',        # Organization logos
+    '/app/user_files/latex_templates',     # LaTeX template fragments
 ]
 
 # Logging

@@ -5,114 +5,89 @@ SPDX-FileCopyrightText: 2024-2026 David Kleinhans, Jade University of Applied Sc
 
 # Overrides Directory
 
-This directory contains your organization-specific customizations that override the default files shipped with scView.
+This directory contains your **organization-specific files** that replace the defaults in `apps/itsm/user_files/`.
+
+## ⚠️ Not Version Controlled
+
+**This directory's contents are gitignored.** Only the structure (`.gitkeep` files and this README) is tracked. Your organization's files stay local and are never committed to the repository.
 
 ## How It Works
 
-When you run the application with Docker, files placed here automatically override the defaults:
+```
+overrides/                          →  Mounted into  →  user_files/
+├── static/logos/logo.png                              /app/user_files/static/logos/
+├── static/css/custom.css                              /app/user_files/static/css/
+└── latex_templates/header.tex                         /app/user_files/latex_templates/
+```
 
-1. **Docker Compose automatically merges** `docker-compose.override.yml` with `docker-compose.yml`
-2. **Your custom files are mounted** into the container, replacing the built-in defaults
-3. **No code changes needed** — just add your files and restart
+The `docker-compose.override.yml` file mounts your files **directly into** the `user_files/` directory, replacing the defaults. This makes it explicit what gets overwritten.
 
 ## Directory Structure
 
+Mirror the structure of `apps/itsm/user_files/`:
+
 ```
 overrides/
-├── README.md              # This file
+├── README.md              # This file (tracked)
 ├── static/
 │   ├── logos/
-│   │   └── logo.png       # Your organization's logo
+│   │   ├── .gitkeep       # Tracked (preserves directory structure)
+│   │   └── logo.png       # YOUR logo (not tracked)
 │   ├── css/
-│   │   └── custom.css     # Custom stylesheets (optional)
+│   │   ├── .gitkeep
+│   │   └── custom.css     # YOUR styles (not tracked)
 │   └── images/
-│       └── banner.jpg     # Additional images (optional)
+│       ├── .gitkeep
+│       └── banner.jpg     # YOUR images (not tracked)
 └── latex_templates/
-    └── custom_header.tex  # Custom LaTeX templates for PDF export (optional)
+    ├── .gitkeep
+    └── header.tex         # YOUR PDF templates (not tracked)
 ```
 
 ## Quick Start
 
-### 1. Add Your Logo
+### 1. Set up the override file
 
 ```bash
-# Create the logos directory
-mkdir -p overrides/static/logos
+cp docker-compose.override.yml.example docker-compose.override.yml
+```
 
-# Copy your logo (recommended: PNG with transparency, ~400x80px)
+### 2. Add your logo
+
+```bash
 cp /path/to/your-logo.png overrides/static/logos/logo.png
 ```
 
-### 2. Enable the Override
-
-```bash
-# Copy the example override file
-cp docker-compose.override.yml.example docker-compose.override.yml
-
-# Edit and uncomment the volume mounts you need
-# (The file contains detailed instructions)
-```
-
-### 3. Configure the Environment
+### 3. Configure the logo filename
 
 Edit `env/itsm.env`:
-
 ```bash
-# If your logo has a different filename:
-LOGO_FILENAME=your-logo.png
+LOGO_FILENAME=logo.png
 ```
 
-### 4. Restart the Application
+### 4. Start the application
 
 ```bash
-docker-compose down
 docker-compose up -d
 ```
 
-## Available Customizations
+## What Can Be Overridden
 
-### Logo
+| Override Location | Replaces | Purpose |
+|-------------------|----------|---------|
+| `overrides/static/logos/` | `user_files/static/logos/` | Organization logo |
+| `overrides/static/css/` | `user_files/static/css/` | Custom stylesheets |
+| `overrides/static/images/` | `user_files/static/images/` | Additional images |
+| `overrides/latex_templates/` | `user_files/latex_templates/` | PDF export templates |
 
-- **Location:** `overrides/static/logos/logo.png`
-- **Format:** PNG with transparency recommended
-- **Size:** Approximately 400×80px for best results
-- **Used in:** Navigation header, PDF exports
+## Why This Approach?
 
-### Custom CSS
-
-- **Location:** `overrides/static/css/custom.css`
-- **Purpose:** Override default styles, add branding
-
-### LaTeX Templates
-
-- **Location:** `overrides/latex_templates/`
-- **Purpose:** Customize PDF export appearance
-- **See:** Built-in templates in `apps/itsm/ServiceCatalogue/templates/ServiceCatalogue/latex/` for reference
-
-## Important Notes
-
-- This `overrides/` directory is **gitignored** — your customizations won't be committed
-- Default files are baked into the Docker image and work out of the box
-- Only create `docker-compose.override.yml` if you need customizations
-- Docker Compose automatically loads `docker-compose.override.yml` when present
-
-## Troubleshooting
-
-### Logo not appearing?
-
-1. Check the path: `overrides/static/logos/logo.png`
-2. Verify `docker-compose.override.yml` is set up correctly
-3. Ensure `LOGO_FILENAME` matches your file name
-4. Restart: `docker-compose restart itsm nginx`
-
-### Static files not updating?
-
-```bash
-docker-compose exec itsm python manage.py collectstatic --noinput --clear
-docker-compose restart nginx
-```
+1. **Explicit** - Reading `docker-compose.override.yml` shows exactly what's replaced
+2. **Simple** - No app-level path layering, just filesystem mounts
+3. **Clean** - Organization files stay separate from the repository
+4. **Safe** - Gitignored content can't accidentally be committed
 
 ## See Also
 
-- [docs/CONFIGURATION.md](docs/CONFIGURATION.md) — Full configuration reference
-- [docker-compose.override.yml.example](docker-compose.override.yml.example) — Override template
+- [docker-compose.override.yml.example](../docker-compose.override.yml.example) - Mount configuration
+- [apps/itsm/user_files/README.md](../apps/itsm/user_files/README.md) - Default files documentation

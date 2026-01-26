@@ -6,60 +6,88 @@
 # This file demonstrates how to customize the ITSM Service Catalogue with your
 # organization's branding (logo, styles, templates).
 #
-# AUTOMATIC LOADING:
-# Docker Compose automatically merges docker-compose.override.yml with the main
-# docker-compose.yml file. Simply rename this file to enable your customizations.
+# HOW IT WORKS:
+# =============
+# The application stores customizable files in apps/itsm/user_files/:
+#   - static/logos/     → Organization logos
+#   - static/css/       → Custom stylesheets
+#   - latex_templates/  → PDF export templates
+#
+# The repository contains empty placeholder directories. Your organization's
+# files are placed in overrides/ and mounted directly into user_files/,
+# replacing the defaults.
+#
+# This approach:
+#   ✓ Makes it explicit what gets replaced (visible in this file)
+#   ✓ Keeps organization files separate from the repository
+#   ✓ Simplifies version control (overrides/ is gitignored)
 #
 # USAGE:
-# 1. Copy this file to docker-compose.override.yml:
+# ======
+# 1. Copy this file:
 #    cp docker-compose.override.yml.example docker-compose.override.yml
 #
-# 2. Place your files in the overrides/ directory:
+# 2. Place your files in overrides/ (mirrors the user_files structure):
 #    overrides/
 #    ├── static/
-#    │   └── logos/
-#    │       └── logo.png       # Your organization's logo
-#    └── latex_templates/       # Custom PDF templates (optional)
+#    │   ├── logos/
+#    │   │   └── logo.png           # Your logo
+#    │   └── css/
+#    │       └── custom.css         # Your styles (optional)
+#    └── latex_templates/           # PDF templates (optional)
 #
-# 3. Start the application:
+# 3. Uncomment the volume mounts below for what you want to override
+#
+# 4. Start the application:
 #    docker-compose up -d
 #
-# That's it! Docker Compose automatically loads the override file.
-#
-# IMPORTANT:
-# - docker-compose.override.yml is gitignored (organization-specific)
-# - The application works out of the box without any overrides
-# - See overrides/README.md for detailed customization instructions
+# Docker Compose automatically merges this file with docker-compose.yml.
 
 services:
   itsm:
     volumes:
-      # Mount your custom static files (logos, CSS, images)
-      # These override the default /app/overrides/static directory
-      - ./overrides/static:/app/overrides/static:ro
+      # =======================================================================
+      # LOGO OVERRIDE
+      # =======================================================================
+      # Mount your logo directory to replace the default logos
+      # Put your logo in: overrides/static/logos/logo.png
+      # Then set LOGO_FILENAME=logo.png in env/itsm.env
+      #
+      - ./overrides/static/logos:/app/user_files/static/logos:ro
 
-      # Mount your custom LaTeX templates for PDF export (optional)
-      # Uncomment to use custom PDF templates:
-      # - ./overrides/latex_templates:/app/overrides/latex_templates:ro
+      # =======================================================================
+      # CUSTOM CSS (optional)
+      # =======================================================================
+      # Mount custom stylesheets for branding colors, fonts, etc.
+      # Put your CSS in: overrides/static/css/custom.css
+      #
+      # - ./overrides/static/css:/app/user_files/static/css:ro
+
+      # =======================================================================
+      # CUSTOM IMAGES (optional)
+      # =======================================================================
+      # Mount additional images (banners, backgrounds, icons)
+      # Put images in: overrides/static/images/
+      #
+      # - ./overrides/static/images:/app/user_files/static/images:ro
+
+      # =======================================================================
+      # LATEX TEMPLATES (optional)
+      # =======================================================================
+      # Mount custom LaTeX templates for PDF export customization
+      # Put .tex files in: overrides/latex_templates/
+      #
+      # - ./overrides/latex_templates:/app/user_files/latex_templates:ro
 
 # =============================================================================
 # ALTERNATIVE: External File Location
 # =============================================================================
-# If you prefer to store customizations outside the project directory
-# (e.g., for centralized management across multiple deployments):
+# For centralized management across multiple deployments, mount from
+# an external location:
 #
 # services:
 #   itsm:
 #     volumes:
-#       - /opt/organization/itsm/static:/app/overrides/static:ro
-#       - /opt/organization/itsm/latex_templates:/app/overrides/latex_templates:ro
-#
-# Your external directory structure should mirror the overrides/ layout:
-# /opt/organization/itsm/
-# ├── static/
-# │   ├── logos/
-# │   │   └── logo.png
-# │   └── css/
-# │       └── custom.css
-# └── latex_templates/
-#     └── custom_header.tex
+#       - /opt/organization/logos:/app/user_files/static/logos:ro
+#       - /opt/organization/css:/app/user_files/static/css:ro
+#       - /opt/organization/latex:/app/user_files/latex_templates:ro
