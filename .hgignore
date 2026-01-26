@@ -51,10 +51,12 @@ htmlcov/
 # Secrets
 secrets/
 
-# User-specific files (logos, certificates, custom content)
-# Top-level user_files/ is completely excluded (organization-specific data)
-# apps/itsm/user_files/ contains dummy data and is tracked in the repository
-user_files/
+# Organization customizations (overrides/ directory)
+# The structure is tracked in git, but actual customization files are ignored
+overrides/static/logos/*
+overrides/static/css/*
+overrides/static/images/*
+overrides/latex_templates/*
 
 # Backups
 *.bak

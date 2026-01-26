@@ -29,5 +29,5 @@ SPDX-FileCopyrightText: 2024-2026 David Kleinhans, Jade University of Applied Sc
 
 - The actual `env/itsm.env` file with real credentials is gitignored
 - SSL certificates should be generated on deployment, not committed
-- User-uploaded files (`user_files/` at project root) are organization-specific and gitignored
-- Sample files in `apps/itsm/user_files/` are tracked as templates
+- Organization-specific files go in `overrides/` directory (structure tracked, content gitignored)
+- See `overrides/README.md` for customization instructions

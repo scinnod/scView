@@ -1,0 +1,3 @@
+# This file ensures the latex_templates directory is tracked in git.
+# Place your custom LaTeX templates here for PDF export customization.
+# See overrides/README.md for details.

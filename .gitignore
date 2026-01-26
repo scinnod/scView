@@ -86,11 +86,16 @@ nginx/certs/*.key
 nginx/certs/*.pem
 
 # ========================
-# User-specific files
+# Organization Customizations
 # ========================
-# Note: user_files/ at project root is organization-specific (ignored)
-# But apps/itsm/user_files/ contains templates/examples (tracked)
-user_files/
+# The overrides/ directory is for organization-specific files (logos, styles, templates).
+# We track the structure (with .gitkeep files) but ignore actual customization files.
+overrides/static/logos/*
+overrides/static/css/*
+overrides/static/images/*
+overrides/latex_templates/*
+!overrides/**/.gitkeep
+!overrides/**/README.md
 
 # ========================
 # Backups

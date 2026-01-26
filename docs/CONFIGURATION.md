@@ -46,7 +46,7 @@ All configuration is managed through `env/itsm.env`. Copy from `env/itsm.env.exa
 |----------|-------------|---------|---------|
 | `ORGANIZATION_NAME` | Full organization name | - | `Technical University of Example` |
 | `ORGANIZATION_ACRONYM` | Short name/acronym | - | `TUE` |
-| `LOGO_FILENAME` | Logo file in `user_files/static/logos/` | `logo.png` | `university-logo.png` |
+| `LOGO_FILENAME` | Logo file in `overrides/static/logos/` | `logo.png` | `university-logo.png` |
 | `PRIMARY_COLOR` | Main brand color (hex, no #) | `0d6efd` | `003366` |
 | `SECONDARY_COLOR` | Accent color (hex, no #) | `6610f2` | `0066cc` |
 
@@ -205,19 +205,22 @@ Menu items requiring login show a lock icon (🔒) when users are not authentica
 
 ### Logo
 
-1. Place your logo in `apps/itsm/user_files/static/logos/`
+1. Place your logo in `overrides/static/logos/`
 2. Recommended format: PNG with transparency, approximately 400×80px
 3. Set `LOGO_FILENAME=your-logo.png` in `env/itsm.env`
-4. Restart: `docker-compose restart itsm`
+4. Enable the override: `cp docker-compose.override.yml.example docker-compose.override.yml`
+5. Restart: `docker-compose up -d`
 
-For production deployments, mount your organization's files via `docker-compose.override.yml`:
+The `docker-compose.override.yml` file is automatically merged by Docker Compose:
 
 ```yaml
 services:
   itsm:
     volumes:
-      - ./user_files/static/logos:/app/user_files/static/logos:ro
+      - ./overrides/static:/app/overrides/static:ro
 ```
+
+See [overrides/README.md](../overrides/README.md) for detailed customization instructions.
 
 ### Brand Colors
 
@@ -230,7 +233,7 @@ SECONDARY_COLOR=0066cc    # Accent color
 
 ### LaTeX Templates
 
-Custom PDF templates can be placed in `apps/itsm/user_files/latex_templates/`. See [apps/itsm/user_files/README.md](../apps/itsm/user_files/README.md) for template documentation.
+Custom PDF templates can be placed in `overrides/latex_templates/`. See [overrides/README.md](../overrides/README.md) for customization instructions and the built-in templates in `apps/itsm/ServiceCatalogue/templates/ServiceCatalogue/latex/` for reference.
 
 ## Project Structure
 
@@ -245,7 +248,7 @@ Custom PDF templates can be placed in `apps/itsm/user_files/latex_templates/`. S
 │   │   ├── migrations/     # Database migrations
 │   │   ├── templates/      # HTML templates
 │   │   └── templatetags/   # Custom template tags
-│   └── user_files/         # Customization files (logos, LaTeX templates)
+│   └── static/             # Default static files
 ├── docs/                    # Documentation
 │   ├── CONFIGURATION.md    # This file
 │   ├── DEPLOYMENT.md       # Deployment guide
@@ -255,9 +258,11 @@ Custom PDF templates can be placed in `apps/itsm/user_files/latex_templates/`. S
 │   ├── itsm.env            # Configuration (create from example)
 │   └── itsm.env.example    # Example configuration
 ├── nginx/                   # nginx configuration
+├── overrides/               # Organization-specific customizations
+│   ├── static/logos/       # Custom logo
+│   └── latex_templates/    # Custom PDF templates
 ├── postgres/
 │   └── init/               # Database initialization scripts
-├── user_files/             # Organization-specific files (gitignored)
 └── docker-compose.yml
 ```
 
