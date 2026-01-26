@@ -214,7 +214,7 @@ APP_LICENSE = 'Apache-2.0'  # License displayed in footer
 # Corporate Identity
 PRIMARY_COLOR = os.getenv('PRIMARY_COLOR', '0d6efd')  # Default Bootstrap blue
 SECONDARY_COLOR = os.getenv('SECONDARY_COLOR', '6610f2')  # Default Bootstrap indigo
-LOGO_FILENAME = os.getenv('LOGO_FILENAME', 'logo.png')
+LOGO_FILENAME = os.getenv('LOGO_FILENAME', '')
 
 # LaTeX configuration
 LATEX_INTERPRETER = 'latexmk -pdf'
