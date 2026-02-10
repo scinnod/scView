@@ -17,7 +17,7 @@ Present your IT services professionally. Help users find what they need. Keep yo
 
 ## Why This Project?
 
-Most IT departments struggle with service documentation scattered across wikis, SharePoint sites, and outdated PDFs. Users can't find services, support teams answer the same questions repeatedly, and nobody knows what's actually available.
+IT departments sometimes struggle with service documentation scattered across wikis, SharePoint sites, and outdated PDFs. Users can't find services, support teams answer the same questions repeatedly, and nobody knows what's actually available.
 
 The ITSM Service Catalogue solves this by providing:
 
@@ -80,6 +80,13 @@ Built by a university IT department, for university IT departments—but works g
 - Three-tier network security (proxy → app → database)
 - Works behind any reverse proxy (nginx, Traefik, Caddy)
 - Automatic secret management
+
+### 🔌 REST API for External Integrations
+- JSON endpoints for online services and full service catalogue
+- Respects all access-control and field-visibility settings
+- Multi-language support via Accept-Language header
+- Ready for SharePoint, intranet portals, or custom dashboards
+- Integration guide with SharePoint examples included
 
 ---
 
@@ -187,6 +194,12 @@ Configure your reverse proxy to route traffic to `itsm_nginx:80`.
 | [docs/LOGOUT_KEYCLOAK.md](docs/LOGOUT_KEYCLOAK.md) | Keycloak logout configuration |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Development guidelines |
 | [SECURITY.md](SECURITY.md) | Security policy |
+
+### REST API & External Integrations
+
+| Document | Description |
+|----------|-------------|
+| [docs/REST_API.md](docs/REST_API.md) | REST API reference, CORS setup, and SharePoint integration guide |
 
 ---
 

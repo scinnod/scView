@@ -1653,6 +1653,51 @@ msgstr ""
 "Sobald Ihr Konto von einem Administrator erstellt wurde, können Sie sich "
 "erfolgreich anmelden."
 
+#: ServiceCatalogue/api_views.py
+msgid ""
+"This information is not publicly available. "
+"The corresponding page requires authentication."
+msgstr ""
+"Diese Information ist nicht öffentlich verfügbar. "
+"Die zugehörige Seite erfordert eine Anmeldung."
+
+#: ServiceCatalogue/api_views.py
+msgid "Availability currently scheduled only until {date}."
+msgstr "Die Verfügbarkeit endet nach derzeitiger Planung am {date}."
+
+#: ServiceCatalogue/api_views.py
+msgid "Service not found or not publicly available."
+msgstr "Service nicht gefunden oder nicht öffentlich verfügbar."
+
+#: ServiceCatalogue/api_views.py
+msgid "Invalid service key format. Expected: CATEGORY-ACRONYM"
+msgstr "Ungültiges Schlüsselformat. Erwartet: KATEGORIE-KÜRZEL"
+
+#: ServiceCatalogue/api_views.py
+#, python-format
+msgid "Service with key \"%(key)s\" not found or not publicly available."
+msgstr "Service mit Schlüssel \"%(key)s\" nicht gefunden oder nicht öffentlich verfügbar."
+
+#: ServiceCatalogue/api_views.py
+msgid "Online services directory"
+msgstr "Verzeichnis der Online-Services"
+
+#: ServiceCatalogue/api_views.py
+msgid "Full service catalogue"
+msgstr "Vollständiger Servicekatalog"
+
+#: ServiceCatalogue/api_views.py
+msgid "Service detail by ID"
+msgstr "Servicedetails nach ID"
+
+#: ServiceCatalogue/api_views.py
+msgid "Service detail by key"
+msgstr "Servicedetails nach Schlüssel"
+
+#: ServiceCatalogue/api_views.py
+msgid "API metadata and available options"
+msgstr "API-Metadaten und verfügbare Optionen"
+
 #~ msgid "Published"
 #~ msgstr "Veröffentlicht"
 

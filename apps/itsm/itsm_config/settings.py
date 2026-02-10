@@ -75,11 +75,13 @@ INSTALLED_APPS = [
     'modeltranslation',
     'django.contrib.admin',
     'simple_history',
+    'corsheaders',
     'ServiceCatalogue',
     'django.contrib.postgres',
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',  # Must be first – adds CORS headers before other middleware
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.locale.LocaleMiddleware',  # Early in stack for proper i18n
@@ -412,3 +414,20 @@ STAFF_ONLY_MODE = os.getenv('STAFF_ONLY_MODE', 'False').lower() in ('true', '1',
 ONLINE_SERVICES_REQUIRE_LOGIN = os.getenv('ONLINE_SERVICES_REQUIRE_LOGIN', 'False').lower() in ('true', '1', 'yes')
 SERVICE_CATALOGUE_REQUIRE_LOGIN = os.getenv('SERVICE_CATALOGUE_REQUIRE_LOGIN', 'True').lower() in ('true', '1', 'yes')
 AI_SEARCH_REQUIRE_LOGIN = os.getenv('AI_SEARCH_REQUIRE_LOGIN', 'True').lower() in ('true', '1', 'yes')
+
+
+# =============================================================================
+# CORS Configuration (for REST API access from external domains)
+# =============================================================================
+# Required when the REST API is consumed from browser-based clients on other
+# domains (e.g. SharePoint SPFx web parts, intranet portals).
+#
+# Safe default: no origins allowed (CORS is effectively disabled).
+# Set CORS_ALLOWED_ORIGINS to a comma-separated list of allowed origins.
+# Example: CORS_ALLOWED_ORIGINS=https://yourcompany.sharepoint.com,https://intranet.example.com
+#
+# Only GET requests to /sc/api/ paths are relevant; the API is read-only.
+
+_cors_origins = os.getenv('CORS_ALLOWED_ORIGINS', '')
+CORS_ALLOWED_ORIGINS = [o.strip() for o in _cors_origins.split(',') if o.strip()] if _cors_origins else []
+CORS_URLS_REGEX = r'^/[a-z]{2}/sc/api/.*$'  # Only apply to API paths (i18n prefix + /sc/api/)

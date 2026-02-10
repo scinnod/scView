@@ -14,6 +14,7 @@ import json
 from datetime import date, timedelta
 
 from django.contrib.auth.models import User, Group, Permission
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, connection
 from django.test import TestCase, Client
@@ -1155,3 +1156,342 @@ class StaffOnlyModeIntegrationTest(TestCase):
         
         # Should be allowed (200)
         self.assertEqual(response.status_code, 200)
+
+
+# ============================================================================
+# REST API Tests
+# ============================================================================
+
+class APITestCase(TestCase):
+    """Base class for REST API tests with common fixtures and helpers."""
+    fixtures = ['initial_test_data.json']
+
+    def setUp(self):
+        self.client = Client()
+
+    def _json(self, response):
+        """Parse JSON from a response."""
+        return json.loads(response.content)
+
+
+@override_settings(ONLINE_SERVICES_REQUIRE_LOGIN=False)
+class OnlineServicesAPITest(APITestCase):
+    """Tests for /api/online-services/ endpoint."""
+
+    def test_returns_200(self):
+        """Endpoint returns 200 when public."""
+        response = self.client.get(reverse('api_online_services'))
+        self.assertEqual(response.status_code, 200)
+
+    def test_json_structure(self):
+        """Response has expected top-level keys."""
+        response = self.client.get(reverse('api_online_services'))
+        data = self._json(response)
+        self.assertTrue(data['success'])
+        self.assertIn('categories', data)
+        self.assertIn('total_count', data)
+        self.assertIn('language', data)
+        self.assertIn('timestamp', data)
+
+    def test_only_services_with_url(self):
+        """Only revisions with a URL appear (mirrors jump page)."""
+        response = self.client.get(reverse('api_online_services'))
+        data = self._json(response)
+        for cat in data['categories']:
+            for svc in cat['services']:
+                self.assertIsNotNone(svc.get('url'), f"{svc['service_name']} should have a URL")
+
+    def test_does_not_expose_internal_fields(self):
+        """Online services API must NOT expose description, contact, responsible, etc."""
+        response = self.client.get(reverse('api_online_services'))
+        data = self._json(response)
+        for cat in data['categories']:
+            for svc in cat['services']:
+                self.assertNotIn('description', svc)
+                self.assertNotIn('contact', svc)
+                self.assertNotIn('responsible', svc)
+                self.assertNotIn('service_providers', svc)
+                self.assertNotIn('service_purpose', svc)
+
+    def test_service_fields(self):
+        """Each service has the expected set of public fields."""
+        response = self.client.get(reverse('api_online_services'))
+        data = self._json(response)
+        svc = data['categories'][0]['services'][0]
+        for key in ('id', 'service_key', 'service_name', 'category', 'version', 'url', 'detail_url', 'is_new'):
+            self.assertIn(key, svc, f"Missing field: {key}")
+
+    def test_clientele_filter(self):
+        """The clientele query parameter filters results."""
+        all_response = self.client.get(reverse('api_online_services'))
+        filtered_response = self.client.get(reverse('api_online_services'), {'clientele': 'STAFF'})
+        all_count = self._json(all_response)['total_count']
+        filtered_count = self._json(filtered_response)['total_count']
+        self.assertLessEqual(filtered_count, all_count)
+
+    def test_language_parameter(self):
+        """The lang parameter switches response language."""
+        response_de = self.client.get(reverse('api_online_services'), {'lang': 'de'})
+        data = self._json(response_de)
+        self.assertEqual(data['language'], 'de')
+
+    def test_only_get_allowed(self):
+        """POST, PUT, DELETE must be rejected."""
+        url = reverse('api_online_services')
+        self.assertEqual(self.client.post(url).status_code, 405)
+        self.assertEqual(self.client.put(url).status_code, 405)
+        self.assertEqual(self.client.delete(url).status_code, 405)
+
+
+@override_settings(ONLINE_SERVICES_REQUIRE_LOGIN=True)
+class OnlineServicesAPIGatedTest(APITestCase):
+    """Tests for /api/online-services/ when the page requires login."""
+
+    def test_returns_403_when_login_required(self):
+        """Endpoint returns 403 when ONLINE_SERVICES_REQUIRE_LOGIN is True."""
+        response = self.client.get(reverse('api_online_services'))
+        self.assertEqual(response.status_code, 403)
+        data = self._json(response)
+        self.assertFalse(data['success'])
+        self.assertIn('error', data)
+
+
+@override_settings(SERVICE_CATALOGUE_REQUIRE_LOGIN=False)
+class ServiceCatalogueAPITest(APITestCase):
+    """Tests for /api/service-catalogue/ endpoint."""
+
+    def test_returns_200(self):
+        response = self.client.get(reverse('api_service_catalogue'))
+        self.assertEqual(response.status_code, 200)
+
+    def test_json_structure(self):
+        response = self.client.get(reverse('api_service_catalogue'))
+        data = self._json(response)
+        self.assertTrue(data['success'])
+        self.assertIn('categories', data)
+        self.assertIn('total_count', data)
+
+    def test_includes_all_listed_services(self):
+        """All listed services appear (including those without a URL)."""
+        response = self.client.get(reverse('api_service_catalogue'))
+        data = self._json(response)
+        # Fixture has 8 listed services
+        self.assertEqual(data['total_count'], 8)
+
+    def test_catalogue_service_fields(self):
+        """Catalogue services expose the correct set of fields."""
+        response = self.client.get(reverse('api_service_catalogue'))
+        data = self._json(response)
+        svc = data['categories'][0]['services'][0]
+        for key in ('id', 'service_key', 'service_name', 'service_purpose',
+                     'category', 'version', 'description', 'detail_url', 'clienteles'):
+            self.assertIn(key, svc, f"Missing field: {key}")
+
+    def test_does_not_expose_internal_fields(self):
+        """Catalogue API must NOT expose responsible, service_providers, etc."""
+        response = self.client.get(reverse('api_service_catalogue'))
+        data = self._json(response)
+        for cat in data['categories']:
+            for svc in cat['services']:
+                self.assertNotIn('responsible', svc)
+                self.assertNotIn('service_providers', svc)
+                self.assertNotIn('description_internal', svc)
+                self.assertNotIn('keywords', svc)
+
+    def test_clientele_filter(self):
+        all_response = self.client.get(reverse('api_service_catalogue'))
+        filtered_response = self.client.get(reverse('api_service_catalogue'), {'clientele': 'EXTERNAL'})
+        all_count = self._json(all_response)['total_count']
+        filtered_count = self._json(filtered_response)['total_count']
+        self.assertLessEqual(filtered_count, all_count)
+
+
+@override_settings(SERVICE_CATALOGUE_REQUIRE_LOGIN=True)
+class ServiceCatalogueAPIGatedTest(APITestCase):
+    """Tests for /api/service-catalogue/ when the page requires login."""
+
+    def test_returns_403_when_login_required(self):
+        response = self.client.get(reverse('api_service_catalogue'))
+        self.assertEqual(response.status_code, 403)
+        data = self._json(response)
+        self.assertFalse(data['success'])
+
+
+@override_settings(SERVICE_CATALOGUE_REQUIRE_LOGIN=False)
+class ServiceDetailAPITest(APITestCase):
+    """Tests for /api/service/<id>/ endpoint."""
+
+    def test_returns_200_for_valid_service(self):
+        revision = ServiceRevision.objects.filter(listed_from__isnull=False).first()
+        response = self.client.get(
+            reverse('api_service_detail', kwargs={'service_id': revision.pk})
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_returns_404_for_nonexistent(self):
+        response = self.client.get(
+            reverse('api_service_detail', kwargs={'service_id': 99999})
+        )
+        self.assertEqual(response.status_code, 404)
+        data = self._json(response)
+        self.assertFalse(data['success'])
+
+    def test_detail_fields(self):
+        revision = ServiceRevision.objects.filter(listed_from__isnull=False).first()
+        response = self.client.get(
+            reverse('api_service_detail', kwargs={'service_id': revision.pk})
+        )
+        data = self._json(response)
+        svc = data['service']
+        self.assertEqual(svc['id'], revision.pk)
+        self.assertIn('service_name', svc)
+        self.assertIn('description', svc)
+        self.assertIn('clienteles', svc)
+
+    def test_does_not_expose_internal_fields(self):
+        revision = ServiceRevision.objects.filter(listed_from__isnull=False).first()
+        response = self.client.get(
+            reverse('api_service_detail', kwargs={'service_id': revision.pk})
+        )
+        svc = self._json(response)['service']
+        self.assertNotIn('responsible', svc)
+        self.assertNotIn('service_providers', svc)
+        self.assertNotIn('description_internal', svc)
+
+
+@override_settings(SERVICE_CATALOGUE_REQUIRE_LOGIN=True)
+class ServiceDetailAPIGatedTest(APITestCase):
+    """Service detail returns 403 when catalogue requires login."""
+
+    def test_returns_403(self):
+        response = self.client.get(
+            reverse('api_service_detail', kwargs={'service_id': 1})
+        )
+        self.assertEqual(response.status_code, 403)
+
+
+@override_settings(SERVICE_CATALOGUE_REQUIRE_LOGIN=False)
+class ServiceByKeyAPITest(APITestCase):
+    """Tests for /api/service-by-key/<key>/ endpoint."""
+
+    def test_returns_200_for_valid_key(self):
+        response = self.client.get(
+            reverse('api_service_by_key', kwargs={'service_key': 'COMPUTE-HPC'})
+        )
+        self.assertEqual(response.status_code, 200)
+        svc = self._json(response)['service']
+        self.assertEqual(svc['service_key'], 'COMPUTE-HPC')
+
+    def test_returns_404_for_unknown_key(self):
+        response = self.client.get(
+            reverse('api_service_by_key', kwargs={'service_key': 'NONE-EXIST'})
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_returns_400_for_malformed_key(self):
+        response = self.client.get(
+            reverse('api_service_by_key', kwargs={'service_key': 'NOKEY'})
+        )
+        self.assertEqual(response.status_code, 400)
+
+
+@override_settings(SERVICE_CATALOGUE_REQUIRE_LOGIN=True)
+class ServiceByKeyAPIGatedTest(APITestCase):
+    """Service-by-key returns 403 when catalogue requires login."""
+
+    def test_returns_403(self):
+        response = self.client.get(
+            reverse('api_service_by_key', kwargs={'service_key': 'COMPUTE-HPC'})
+        )
+        self.assertEqual(response.status_code, 403)
+
+
+class MetadataAPITest(APITestCase):
+    """Tests for /api/metadata/ endpoint (always available)."""
+
+    def test_returns_200(self):
+        response = self.client.get(reverse('api_metadata'))
+        self.assertEqual(response.status_code, 200)
+
+    def test_json_structure(self):
+        response = self.client.get(reverse('api_metadata'))
+        data = self._json(response)
+        self.assertTrue(data['success'])
+        self.assertIn('endpoints', data)
+        self.assertIn('languages', data)
+        self.assertIn('clienteles', data)
+        self.assertIn('categories', data)
+
+    def test_endpoints_reflect_settings(self):
+        """Endpoint 'enabled' flags match the current settings."""
+        response = self.client.get(reverse('api_metadata'))
+        data = self._json(response)
+        eps = data['endpoints']
+        self.assertEqual(
+            eps['online_services']['enabled'],
+            not getattr(settings, 'ONLINE_SERVICES_REQUIRE_LOGIN', True),
+        )
+        self.assertEqual(
+            eps['service_catalogue']['enabled'],
+            not getattr(settings, 'SERVICE_CATALOGUE_REQUIRE_LOGIN', True),
+        )
+        # Metadata itself is always enabled
+        self.assertTrue(eps['metadata']['enabled'])
+
+    @override_settings(
+        ONLINE_SERVICES_REQUIRE_LOGIN=False,
+        SERVICE_CATALOGUE_REQUIRE_LOGIN=False,
+    )
+    def test_all_enabled_when_public(self):
+        """All endpoints show enabled when both settings are False."""
+        response = self.client.get(reverse('api_metadata'))
+        eps = self._json(response)['endpoints']
+        for name, ep in eps.items():
+            self.assertTrue(ep['enabled'], f"{name} should be enabled")
+
+
+@override_settings(
+    SERVICE_CATALOGUE_REQUIRE_LOGIN=False,
+    SERVICECATALOGUE_FIELD_USAGE_INFORMATION=True,
+    SERVICECATALOGUE_FIELD_REQUIREMENTS=True,
+    SERVICECATALOGUE_FIELD_DETAILS=True,
+    SERVICECATALOGUE_FIELD_OPTIONS=True,
+    SERVICECATALOGUE_FIELD_SERVICE_LEVEL=True,
+)
+class APIFieldVisibilityTest(APITestCase):
+    """Test that SERVICECATALOGUE_FIELD_* settings gate API output."""
+
+    @override_settings(SERVICECATALOGUE_FIELD_USAGE_INFORMATION=False)
+    def test_usage_information_hidden(self):
+        response = self.client.get(reverse('api_service_catalogue'))
+        for cat in self._json(response)['categories']:
+            for svc in cat['services']:
+                self.assertNotIn('usage_information', svc)
+
+    @override_settings(SERVICECATALOGUE_FIELD_REQUIREMENTS=False)
+    def test_requirements_hidden(self):
+        response = self.client.get(reverse('api_service_catalogue'))
+        for cat in self._json(response)['categories']:
+            for svc in cat['services']:
+                self.assertNotIn('requirements', svc)
+
+    @override_settings(SERVICECATALOGUE_FIELD_DETAILS=False)
+    def test_details_hidden(self):
+        response = self.client.get(reverse('api_service_catalogue'))
+        for cat in self._json(response)['categories']:
+            for svc in cat['services']:
+                self.assertNotIn('details', svc)
+
+    @override_settings(SERVICECATALOGUE_FIELD_OPTIONS=False)
+    def test_options_hidden(self):
+        response = self.client.get(reverse('api_service_catalogue'))
+        for cat in self._json(response)['categories']:
+            for svc in cat['services']:
+                self.assertNotIn('options', svc)
+
+    @override_settings(SERVICECATALOGUE_FIELD_SERVICE_LEVEL=False)
+    def test_service_level_hidden(self):
+        response = self.client.get(reverse('api_service_catalogue'))
+        for cat in self._json(response)['categories']:
+            for svc in cat['services']:
+                self.assertNotIn('service_level', svc)
