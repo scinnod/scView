@@ -92,6 +92,16 @@ Built by a university IT department, for university IT departments—but works g
 
 ## 🖼️ Screenshots
 
+### Online Services Portal (German)
+Quick-access landing page for frequently used online services - perfect for homepage integration.
+
+![Online Services German](docs/images/screenshot-online-services-de.png)
+
+### Online Services Portal (English)
+Multilingual support with automatic language switching based on user preferences.
+
+![Online Services English](docs/images/screenshot-online-services-en.png)
+
 ### Service Catalogue Overview
 Browse all services in a clean, organized list with categories, status indicators, and quick actions.
 
@@ -106,16 +116,6 @@ User-facing service information with availability, contacts, and related documen
 Additional internal documentation visible only to staff members, including cost centers, responsible teams, and technical details.
 
 ![Service Detail Internal](docs/images/screenshot-service-detail-internal.png)
-
-### Online Services Portal (German)
-Quick-access landing page for frequently used online services - perfect for homepage integration.
-
-![Online Services German](docs/images/screenshot-online-services-de.png)
-
-### Online Services Portal (English)
-Multilingual support with automatic language switching based on user preferences.
-
-![Online Services English](docs/images/screenshot-online-services-en.png)
 
 ### AI-Powered Search
 Natural language queries help users find the right service. Ask questions like "How do I get more storage?" or "I need to host a website".
