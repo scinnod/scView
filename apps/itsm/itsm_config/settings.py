@@ -379,11 +379,15 @@ AI_SEARCH_DATA_PROTECTION_STATEMENT_DE = os.getenv('AI_SEARCH_DATA_PROTECTION_ST
 #   Set to False to prevent automatic user creation (only pre-existing users can login)
 #   Useful during initial setup when access should be restricted to specific users
 #
-# STAFF_ONLY_MODE: Restrict all access to staff users only
+# STAFF_ONLY_MODE: Restrict all frontend access to staff users only
 #   Default: False - All authenticated users can access non-staff views
 #   Set to True to require is_staff=True for all authenticated access
 #   Users without staff status will see an "insufficient privileges" page
 #   Useful during initial setup, maintenance, or restricted access periods
+#   
+#   Note: API access to available services is not affected by this setting,
+#   it only controls frontend view access. API access rather can be controlles
+#   via the _REQUIRE_LOGIN settings for the respective views (see below).
 
 AUTO_CREATE_USERS = os.getenv('AUTO_CREATE_USERS', 'True').lower() in ('true', '1', 'yes')
 STAFF_ONLY_MODE = os.getenv('STAFF_ONLY_MODE', 'False').lower() in ('true', '1', 'yes')
@@ -393,6 +397,10 @@ STAFF_ONLY_MODE = os.getenv('STAFF_ONLY_MODE', 'False').lower() in ('true', '1',
 # =============================================================================
 # Control which views require authentication. This allows organizations to
 # customize the public/protected boundary of their service catalogue.
+# 
+# Data of views not requiring login is also accessible via the REST API for use 
+# in downstream applications (e.g. intranet portals, SharePoint web parts). 
+# Consider this when configuring access control.
 #
 # Note: Internal views (available, upcoming, retired, under revision) and
 # Django admin always require authentication regardless of these settings.
