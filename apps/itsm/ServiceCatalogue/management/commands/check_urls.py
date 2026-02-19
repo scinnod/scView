@@ -1,0 +1,325 @@
+"""
+Management command to check all URLs in service catalogue text fields for availability.
+
+Scans every ServiceRevision field that is auto-linked in the templates via Django's
+``|urlize`` filter (description_internal, usage_information, details and their de/en
+translations) as well as the dedicated URLField (url).  Duplicate URLs are collapsed
+before checking so each address is only requested once.
+
+Exit codes:
+  0 – all URLs reachable
+  1 – at least one broken URL detected
+
+Usage::
+
+    python manage.py check_urls
+    python manage.py check_urls --include-403
+    python manage.py check_urls --timeout 20 --workers 10
+    python manage.py check_urls --all-services
+"""
+
+import re
+import sys
+from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
+import requests
+from django.core.management.base import BaseCommand
+
+# ---------------------------------------------------------------------------
+# URL extraction
+# ---------------------------------------------------------------------------
+
+# Pattern modelled after Django's urlize: match http/https URLs in plain text.
+# Trailing punctuation that is commonly not part of a URL is excluded.
+_URL_RE = re.compile(
+    r'https?://[^\s<>"\'()[\]{}|\\^`]*[^\s<>"\'()[\]{}|\\^`.,;:!?]',
+    re.IGNORECASE,
+)
+
+
+def _extract_urls(text: str) -> list[str]:
+    """Return all http/https URLs found in *text*."""
+    if not text:
+        return []
+    return _URL_RE.findall(text)
+
+
+# ---------------------------------------------------------------------------
+# Field configuration
+# Fields that templates render with |urlize → plain-text URLs become links.
+# Format: (model_field_name, display_label, is_translated)
+# ---------------------------------------------------------------------------
+
+_TEXT_URL_FIELDS = [
+    ('description_internal', 'description_internal', False),
+    ('usage_information',    'usage_information',    True),
+    ('details',              'details',              True),
+]
+_LANGUAGES = ['de', 'en']
+
+
+# ---------------------------------------------------------------------------
+# Command
+# ---------------------------------------------------------------------------
+
+class Command(BaseCommand):
+    help = (
+        'Check all URLs in service catalogue text fields (those rendered with |urlize '
+        'in templates) and the ServiceRevision.url URLField for availability.  '
+        'Reports broken URLs (404, connection errors) together with the service key '
+        'and field they appear in.  Use --include-403 to also flag 403 responses.'
+    )
+
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '--include-403',
+            action='store_true',
+            default=False,
+            help=(
+                'Treat HTTP 403 (Forbidden) responses as broken.  '
+                'By default 403 responses are noted separately but not counted as '
+                'broken, because they may result from authentication requirements '
+                'rather than missing content.'
+            ),
+        )
+        parser.add_argument(
+            '--timeout',
+            type=int,
+            default=10,
+            metavar='SECONDS',
+            help='Per-request timeout in seconds (default: 10).',
+        )
+        parser.add_argument(
+            '--workers',
+            type=int,
+            default=5,
+            metavar='N',
+            help='Number of parallel HTTP worker threads (default: 5).',
+        )
+        parser.add_argument(
+            '--all-services',
+            action='store_true',
+            default=False,
+            help=(
+                'Also check URLs in service revisions that have no listing/availability '
+                'dates at all, or where both end-dates are fully in the past (retired / '
+                'unpublished drafts).  '
+                'By default these are excluded; the default scan covers all revisions '
+                'that are currently listed, currently available, or scheduled for future '
+                'listing or availability.'
+            ),
+        )
+
+    # ------------------------------------------------------------------
+    def handle(self, *args, **options):
+        include_403: bool = options['include_403']
+        timeout: int     = options['timeout']
+        workers: int     = options['workers']
+        all_services: bool = options['all_services']
+
+        self.stdout.write(self.style.MIGRATE_HEADING('\n=== Service Catalogue URL Availability Check ===\n'))
+        self.stdout.write(
+            f'Settings: timeout={timeout}s  workers={workers}  '
+            f'include_403={include_403}  all_services={all_services}'
+        )
+
+        # ------------------------------------------------------------------
+        # 1. Collect URLs
+        # ------------------------------------------------------------------
+        from django.db.models import Q
+        from ServiceCatalogue.models import ServiceRevision
+        import datetime
+
+        today = datetime.date.today()
+        qs = ServiceRevision.objects.select_related('service', 'service__category')
+
+        if not all_services:
+            # Include a revision if it has an active or future *listing* or an
+            # active or future *availability*.  This covers:
+            #   • currently listed  (listed_from <= today, listed_until not past)
+            #   • currently available to staff  (available_from <= today, available_until not past)
+            #   • scheduled for future listing  (listed_from > today)
+            #   • scheduled for future availability  (available_from > today)
+            #   • listed without availability date set yet
+            # Excluded by default:
+            #   • no listing/availability dates set at all
+            #   • both listed_until and available_until fully in the past (retired)
+            has_active_or_future_listing = Q(listed_from__isnull=False) & (
+                Q(listed_until__isnull=True) | Q(listed_until__gte=today)
+            )
+            has_active_or_future_availability = Q(available_from__isnull=False) & (
+                Q(available_until__isnull=True) | Q(available_until__gte=today)
+            )
+            qs = qs.filter(has_active_or_future_listing | has_active_or_future_availability)
+        # else: --all-services → no filter, scan everything
+
+        service_revisions = list(qs)
+        scope_label = 'all revisions' if all_services else 'active/future revisions'
+        self.stdout.write(f'\nScanning {len(service_revisions)} service revision(s) ({scope_label})...')
+
+        # url → list[(service_key, field_label)]
+        url_occurrences: dict[str, list[tuple[str, str]]] = defaultdict(list)
+
+        for sr in service_revisions:
+            service_key = sr.key
+
+            # Dedicated URLField
+            if sr.url:
+                url_occurrences[str(sr.url)].append((service_key, 'url'))
+
+            # Text fields rendered with |urlize in templates
+            for field_name, label, is_translated in _TEXT_URL_FIELDS:
+                if is_translated:
+                    for lang in _LANGUAGES:
+                        value = getattr(sr, f'{field_name}_{lang}', None)
+                        for url in _extract_urls(value):
+                            url_occurrences[url].append((service_key, f'{label} ({lang})'))
+                else:
+                    value = getattr(sr, field_name, None)
+                    for url in _extract_urls(value):
+                        url_occurrences[url].append((service_key, label))
+
+        total_refs   = sum(len(v) for v in url_occurrences.values())
+        total_unique = len(url_occurrences)
+        self.stdout.write(
+            f'Found {total_refs} URL reference(s) across all fields '
+            f'→ {total_unique} unique URL(s) to check.\n'
+        )
+
+        if total_unique == 0:
+            self.stdout.write(self.style.SUCCESS('No URLs found in the selected service revisions.'))
+            return
+
+        # ------------------------------------------------------------------
+        # 2. Check URLs (parallel)
+        # ------------------------------------------------------------------
+        _headers = {'User-Agent': 'ITSM-ServiceCatalogue-URLChecker/1.0'}
+
+        def _check(url: str) -> tuple[str, int | None, str | None]:
+            """Return (url, http_status_or_None, error_message_or_None)."""
+            try:
+                resp = requests.head(
+                    url, allow_redirects=True, timeout=timeout, headers=_headers
+                )
+                if resp.status_code == 405:
+                    # HEAD not supported → fall back to GET (only read headers)
+                    resp = requests.get(
+                        url,
+                        allow_redirects=True,
+                        timeout=timeout,
+                        headers=_headers,
+                        stream=True,
+                    )
+                    resp.close()
+                return url, resp.status_code, None
+            except requests.exceptions.SSLError as exc:
+                return url, None, f'SSL error: {exc}'
+            except requests.exceptions.ConnectionError as exc:
+                return url, None, f'Connection error: {exc}'
+            except requests.exceptions.Timeout:
+                return url, None, f'Timeout (>{timeout}s)'
+            except Exception as exc:               # noqa: BLE001
+                return url, None, f'Error: {exc}'
+
+        self.stdout.write(
+            f'Checking {total_unique} URL(s) with {workers} parallel worker(s)…'
+        )
+        results: dict[str, tuple[int | None, str | None]] = {}
+        with ThreadPoolExecutor(max_workers=workers) as executor:
+            futures = {executor.submit(_check, url): url for url in url_occurrences}
+            done = 0
+            for future in as_completed(futures):
+                url, status, error = future.result()
+                results[url] = (status, error)
+                done += 1
+                if done % max(1, total_unique // 20) == 0 or done == total_unique:
+                    self.stdout.write(f'  {done}/{total_unique} done…', ending='\r')
+                    self.stdout.flush()
+        self.stdout.write('')  # newline after in-place progress
+
+        # ------------------------------------------------------------------
+        # 3. Categorise
+        # ------------------------------------------------------------------
+        broken    = []   # (url, status, error, occurrences)  – always reported
+        forbidden = []   # HTTP 403
+        ok        = []   # 2xx / 3xx
+        other     = []   # any other numeric status
+
+        for url, (status, error) in results.items():
+            occ = url_occurrences[url]
+            if error:
+                broken.append((url, status, error, occ))
+            elif status == 404:
+                broken.append((url, status, None, occ))
+            elif status == 403:
+                forbidden.append((url, status, None, occ))
+            elif status is not None and 200 <= status < 400:
+                ok.append((url, status, None, occ))
+            else:
+                other.append((url, status, None, occ))
+
+        # ------------------------------------------------------------------
+        # 4. Report
+        # ------------------------------------------------------------------
+        self.stdout.write(self.style.MIGRATE_HEADING('\n=== Results ===\n'))
+        self.stdout.write(f'  ✓  OK (2xx / 3xx)          : {len(ok)}')
+        self.stdout.write(f'  ✗  Broken (404 / unreachable): {len(broken)}')
+        self.stdout.write(f'  ⚠  Forbidden (403)           : {len(forbidden)}')
+        if other:
+            self.stdout.write(f'  ?  Other status codes        : {len(other)}')
+
+        # --- Broken URLs ---
+        if broken:
+            self.stdout.write(self.style.ERROR(f'\n--- Broken URLs ({len(broken)}) ---'))
+            for url, status, error, occ in sorted(broken, key=lambda x: x[0]):
+                reason = f'HTTP {status}' if status else error
+                self.stdout.write(self.style.ERROR(f'\n  {url}'))
+                self.stdout.write(f'  Status : {reason}')
+                self.stdout.write(f'  Used in:')
+                for svc_key, field in occ:
+                    self.stdout.write(f'    • {svc_key}  [{field}]')
+        else:
+            self.stdout.write(self.style.SUCCESS('\nNo broken URLs found. ✓'))
+
+        # --- Forbidden ---
+        if forbidden:
+            if include_403:
+                self.stdout.write(self.style.ERROR(f'\n--- Forbidden / 403 URLs ({len(forbidden)}) ---'))
+                for url, _status, _err, occ in sorted(forbidden, key=lambda x: x[0]):
+                    self.stdout.write(self.style.ERROR(f'\n  {url}'))
+                    self.stdout.write(f'  Status : HTTP 403')
+                    self.stdout.write(f'  Used in:')
+                    for svc_key, field in occ:
+                        self.stdout.write(f'    • {svc_key}  [{field}]')
+            else:
+                self.stdout.write(self.style.WARNING(
+                    f'\n{len(forbidden)} URL(s) returned HTTP 403 (Forbidden).  '
+                    'These may be valid but require credentials that this tool does not '
+                    'have.  Re-run with --include-403 to list them.'
+                ))
+
+        # --- Other status codes ---
+        if other:
+            self.stdout.write(self.style.WARNING(f'\n--- Unexpected status codes ({len(other)}) ---'))
+            for url, status, _err, occ in sorted(other, key=lambda x: x[0]):
+                self.stdout.write(self.style.WARNING(f'\n  {url}'))
+                self.stdout.write(f'  Status : HTTP {status}')
+                for svc_key, field in occ:
+                    self.stdout.write(f'    • {svc_key}  [{field}]')
+
+        # ------------------------------------------------------------------
+        # 5. Exit
+        # ------------------------------------------------------------------
+        self.stdout.write(self.style.MIGRATE_HEADING('\n=== Summary ===\n'))
+        issues = len(broken) + (len(forbidden) if include_403 else 0)
+        if issues:
+            self.stdout.write(self.style.ERROR(
+                f'❌ {issues} URL(s) require attention.  '
+                'Please update or remove them in the affected service revisions.'
+            ))
+            self.stdout.write('')
+            sys.exit(1)
+        else:
+            self.stdout.write(self.style.SUCCESS('✅ All checked URLs appear to be reachable.\n'))
+            sys.exit(0)

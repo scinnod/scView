@@ -305,6 +305,85 @@ docker-compose exec itsm python manage.py populate_test_data
 docker-compose exec postgres pg_dump -U postgres itsm > backup.sql
 ```
 
+### AI Configuration Check
+
+The `test_ai_search` command runs a step-by-step connectivity and configuration
+check for the AI-assisted search feature:
+
+```bash
+docker-compose exec itsm python manage.py test_ai_search
+docker-compose exec itsm python manage.py test_ai_search --verbose
+docker-compose exec itsm python manage.py test_ai_search --language de
+
+# Test a different model without changing .env:
+docker-compose exec itsm python manage.py test_ai_search --model deepseek-r1-distill-llama-70b
+```
+
+The command performs **10 checks**:
+
+| Step | What is checked |
+|------|----------------|
+| 1 | `AI_SEARCH_ENABLED` setting |
+| 2 | `AI_SEARCH_API_URL` setting |
+| 3 | `AI_SEARCH_API_KEY` setting |
+| 4 | `AI_SEARCH_MODEL` setting |
+| 5 | `AI_SEARCH_TIMEOUT` setting |
+| 6 | Basic network connectivity to the API base URL |
+| 7 | **Available models** – queries `POST {API_URL}/models` with the configured API key, prints all available model IDs and verifies that `AI_SEARCH_MODEL` is listed among them.  If the model is absent the command aborts and suggests updating `AI_SEARCH_MODEL`. |
+| 8 | API authentication – sends a minimal chat-completions request |
+| 9 | Prompt files (`step1_prompt.txt`, `step2_prompt.txt`) |
+| 10 | End-to-end search (only when all previous checks pass) |
+
+### URL Availability Check
+
+The `check_urls` command scans all service catalogue text fields that are
+auto-linked in templates (via Django's `|urlize` filter) as well as the
+dedicated `ServiceRevision.url` URLField.  It deduplicates URLs, checks each
+one via HTTP, and reports broken links together with the service key and field
+they appear in.
+
+```bash
+# Check active + future service revisions (default)
+docker-compose exec itsm python manage.py check_urls
+
+# Treat HTTP 403 responses as broken (default: noted but not flagged)
+docker-compose exec itsm python manage.py check_urls --include-403
+
+# Adjust timeout and concurrency
+docker-compose exec itsm python manage.py check_urls --timeout 20 --workers 10
+
+# Also include retired / unscheduled-draft revisions
+docker-compose exec itsm python manage.py check_urls --all-services
+```
+
+**Default scope** (without `--all-services`):
+
+Revisions are included when they have at least one date context that is active or future:
+
+| Condition | Included by default |
+|---|---|
+| Currently listed (`listed_from` ≤ today, `listed_until` not past) | ✓ |
+| Currently available to staff (`available_from` ≤ today, `available_until` not past) | ✓ |
+| Scheduled for future listing (`listed_from` > today) | ✓ |
+| Scheduled for future availability (`available_from` > today) | ✓ |
+| No dates set at all (unscheduled draft) | ✗ (use `--all-services`) |
+| Both end-dates in the past (retired) | ✗ (use `--all-services`) |
+
+**Fields scanned:**
+
+| Field | Model | Translated |
+|-------|-------|-----------|
+| `url` | `ServiceRevision` | No |
+| `description_internal` | `ServiceRevision` | No |
+| `usage_information` | `ServiceRevision` | Yes (de / en) |
+| `details` | `ServiceRevision` | Yes (de / en) |
+
+**Exit codes:** `0` – all URLs reachable; `1` – at least one broken URL found.
+
+> **403 behaviour:** By default, HTTP 403 responses are *not* counted as broken
+> because the checker runs without user credentials and some resources legitimately
+> require authentication.  Use `--include-403` to override this.
+
 ### Service Management
 
 ```bash

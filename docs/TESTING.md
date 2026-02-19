@@ -444,3 +444,53 @@ This creates realistic service catalogue data including:
 - Multiple services with revisions
 - Clientele groups and availability
 - Fee structures
+
+## Management Command Tests
+
+The test suite includes dedicated test classes for the operational management commands.  All HTTP calls are mocked so the tests run without network access.
+
+### `CheckUrlsCommandTest`
+
+Tests for `python manage.py check_urls` (`ServiceCatalogue/management/commands/check_urls.py`):
+
+| Test class / method | What it verifies |
+|---------------------|-----------------|
+| `ExtractUrlsHelperTest` | Unit tests for the `_extract_urls()` helper (edge cases: empty input, multiple URLs, trailing punctuation, scheme filtering) |
+| `CheckUrlsCommandTest.test_command_runs_without_data` | Command completes cleanly when no listed revisions exist |
+| `test_url_field_checked` | `ServiceRevision.url` URLField is collected and checked |
+| `test_404_url_reported_as_broken` | 404 responses cause exit code 1 and appear in the report |
+| `test_403_not_reported_by_default` | 403 responses are NOT flagged without `--include-403` |
+| `test_403_reported_with_flag` | 403 responses ARE flagged with `--include-403` |
+| `test_connection_error_reported_as_broken` | Network errors are included in the broken-URL report |
+| `test_urls_in_text_fields_extracted` | Plain URLs in text fields (e.g. `details_en`) are discovered |
+| `test_duplicate_urls_deduplicated` | The same URL in multiple fields is only requested once |
+| `test_head_405_falls_back_to_get` | HEAD 405 triggers a GET fallback |
+
+### `TestAiSearchModelListingTest`
+
+Tests for the model-listing step (check 7) added to `python manage.py test_ai_search`:
+
+| Test method | What it verifies |
+|-------------|-----------------|
+| `test_configured_model_found_in_list` | Check passes and marks the model with "← configured" |
+| `test_configured_model_missing_from_list` | Check fails with a helpful message when model is absent |
+| `test_models_endpoint_prints_all_available_models` | Every model returned by the API is printed |
+| `test_models_endpoint_404_skips_check` | 404 from `/models` is handled gracefully (check skipped) |
+| `test_model_override_replaces_configured_model` | `--model` flag overrides configured model; both IDs appear in output |
+| `test_model_override_absent_from_list_fails` | `--model` with an unavailable model ID causes exit code 1 |
+
+### `CheckUrlsFilteringTest`
+
+Tests for the default queryset scope of `python manage.py check_urls`:
+
+| Test method | What it verifies |
+|-------------|------------------|
+| `test_currently_listed_included` | Active listed revisions are scanned by default |
+| `test_currently_available_included` | Available-but-unlisted revisions are scanned by default |
+| `test_future_listed_included` | Revisions with future `listed_from` are scanned by default |
+| `test_future_available_included` | Revisions with future `available_from` are scanned by default |
+| `test_no_dates_excluded_by_default` | Unscheduled drafts (no dates) are excluded from default scan |
+| `test_no_dates_included_with_all_services` | `--all-services` includes unscheduled drafts |
+| `test_past_listed_only_excluded` | Revisions with `listed_until` fully in the past and no availability are excluded |
+| `test_past_listed_only_included_with_all_services` | `--all-services` includes past-only revisions |
+| `test_listed_with_future_active_availability_included` | Past-listed but still-active availability keeps revision in the default scan |

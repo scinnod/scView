@@ -27,10 +27,22 @@ class Command(BaseCommand):
             default='en',
             help='Language for AI search test (default: en)',
         )
+        parser.add_argument(
+            '--model',
+            type=str,
+            default=None,
+            metavar='MODEL_ID',
+            help=(
+                'Override the AI_SEARCH_MODEL setting for this test run only.  '
+                'Useful for trying a different model without editing .env.  '
+                'Example: --model deepseek-r1-distill-llama-70b'
+            ),
+        )
 
     def handle(self, *args, **options):
         verbose = options['verbose']
         language = options['language']
+        model_override = options.get('model')  # None unless --model was passed
         
         self.stdout.write(self.style.MIGRATE_HEADING('\n=== AI Search Configuration Test ===\n'))
         
@@ -74,14 +86,20 @@ class Command(BaseCommand):
         # Check 4: AI_SEARCH_MODEL
         self.stdout.write('\n4. Checking AI_SEARCH_MODEL...')
         model = getattr(settings, 'AI_SEARCH_MODEL', '')
-        if model:
+        if model_override:
             self.stdout.write(self.style.SUCCESS(f'   ✓ Model configured: {model}'))
-            if model != 'deepseek-r1':
-                self.stdout.write(self.style.WARNING(f'   ℹ Recommended model for KISSKI: deepseek-r1'))
+            self.stdout.write(self.style.WARNING(
+                f'   ⚡ Overriding with --model {model_override} for this test run'
+            ))
+            model = model_override
+        elif model:
+            self.stdout.write(self.style.SUCCESS(f'   ✓ Model configured: {model}'))
         else:
             self.stdout.write(self.style.ERROR('   ✗ Model not configured'))
             self.stdout.write(self.style.WARNING('   → Fix: Set AI_SEARCH_MODEL in your .env file'))
-            self.stdout.write(self.style.WARNING('   → Example: AI_SEARCH_MODEL=deepseek-r1'))
+            self.stdout.write(self.style.WARNING(
+                '   → Example: AI_SEARCH_MODEL=deepseek-r1-distill-llama-70b'
+            ))
             all_checks_passed = False
         
         # Check 5: AI_SEARCH_TIMEOUT
@@ -96,11 +114,16 @@ class Command(BaseCommand):
             self.stdout.write(self.style.ERROR('\n❌ Configuration incomplete. Please fix the issues above.\n'))
             sys.exit(1)
         
+        # Build base URL (strip /chat/completions suffix if present)
+        base_api_url = api_url.rstrip('/')
+        if base_api_url.endswith('/chat/completions'):
+            base_api_url = base_api_url[: -len('/chat/completions')]
+
         # Check 6: Network connectivity test
         self.stdout.write('\n6. Testing network connectivity...')
         try:
-            # Try to reach the API endpoint
-            response = requests.get(api_url.replace('/chat/completions', '/models'), timeout=5)
+            # Use a lightweight unauthenticated GET; a 401/403 still confirms reachability
+            response = requests.get(base_api_url, timeout=5)
             self.stdout.write(self.style.SUCCESS(f'   ✓ Network connectivity OK (HTTP {response.status_code})'))
         except requests.exceptions.ConnectionError as e:
             self.stdout.write(self.style.ERROR(f'   ✗ Connection failed: {str(e)}'))
@@ -115,9 +138,94 @@ class Command(BaseCommand):
         except Exception as e:
             self.stdout.write(self.style.ERROR(f'   ✗ Network error: {str(e)}'))
             all_checks_passed = False
-        
-        # Check 7: API authentication and model availability
-        self.stdout.write('\n7. Testing API authentication and model availability...')
+
+        # Check 7: Fetch available models and verify configured model is listed
+        self.stdout.write('\n7. Fetching available models from API...')
+        try:
+            headers = {
+                'Authorization': f'Bearer {api_key}',
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+            }
+            models_url = f'{base_api_url}/models'
+            self.stdout.write(f'   Requesting: POST {models_url}')
+            models_response = requests.post(
+                models_url,
+                headers=headers,
+                timeout=15,
+            )
+
+            if models_response.status_code == 200:
+                try:
+                    models_data = models_response.json()
+                    # OpenAI-compatible format: {"object": "list", "data": [{"id": "...", ...}, ...]}
+                    model_ids = []
+                    if isinstance(models_data, dict) and 'data' in models_data:
+                        model_ids = [m.get('id', '') for m in models_data['data'] if m.get('id')]
+                    elif isinstance(models_data, list):
+                        model_ids = [m.get('id', '') for m in models_data if isinstance(m, dict) and m.get('id')]
+
+                    if model_ids:
+                        self.stdout.write(self.style.SUCCESS(f'   ✓ {len(model_ids)} model(s) available:'))
+                        for mid in model_ids:
+                            marker = '  ← configured' if mid == model else ''
+                            self.stdout.write(f'     • {mid}{marker}')
+                    else:
+                        self.stdout.write(self.style.WARNING('   ⚠ No model IDs found in response'))
+                        if verbose:
+                            self.stdout.write(f'   Raw response: {models_response.text[:500]}')
+
+                    # Verify the configured model is actually available
+                    if model_ids and model not in model_ids:
+                        self.stdout.write(self.style.ERROR(
+                            f'\n   ✗ Configured model "{model}" is NOT in the list of available models!'
+                        ))
+                        self.stdout.write(self.style.WARNING(
+                            '   → Fix: Update AI_SEARCH_MODEL in your .env file to one of the listed models.'
+                        ))
+                        all_checks_passed = False
+                    elif model in model_ids:
+                        self.stdout.write(self.style.SUCCESS(f'   ✓ Configured model "{model}" is available'))
+
+                except (json.JSONDecodeError, KeyError) as e:
+                    self.stdout.write(self.style.WARNING(f'   ⚠ Could not parse models response: {e}'))
+                    if verbose:
+                        self.stdout.write(f'   Raw response: {models_response.text[:500]}')
+
+            elif models_response.status_code == 401:
+                self.stdout.write(self.style.ERROR('   ✗ Authentication failed when fetching models (HTTP 401)'))
+                self.stdout.write(self.style.WARNING('   → Fix: Check your AI_SEARCH_API_KEY'))
+                all_checks_passed = False
+            elif models_response.status_code == 404:
+                self.stdout.write(self.style.WARNING(
+                    f'   ⚠ Models endpoint returned 404 – provider may not support this endpoint'
+                ))
+                self.stdout.write(self.style.WARNING(
+                    f'      URL tried: {models_url}'
+                ))
+                self.stdout.write(self.style.WARNING(
+                    '      Skipping model availability check.'
+                ))
+            else:
+                self.stdout.write(self.style.WARNING(
+                    f'   ⚠ Unexpected response from models endpoint (HTTP {models_response.status_code})'
+                ))
+                if verbose:
+                    self.stdout.write(f'   Response: {models_response.text[:300]}')
+
+        except requests.exceptions.Timeout:
+            self.stdout.write(self.style.WARNING('   ⚠ Models endpoint timed out – skipping model list check'))
+        except requests.exceptions.ConnectionError as e:
+            self.stdout.write(self.style.ERROR(f'   ✗ Connection error fetching models: {e}'))
+            all_checks_passed = False
+        except Exception as e:
+            self.stdout.write(self.style.WARNING(f'   ⚠ Could not fetch model list: {e}'))
+            if verbose:
+                import traceback
+                self.stdout.write(traceback.format_exc())
+
+        # Check 8: API authentication and model availability
+        self.stdout.write('\n8. Testing API authentication (chat completions)...')
         try:
             headers = {
                 'Authorization': f'Bearer {api_key}',
@@ -133,13 +241,8 @@ class Command(BaseCommand):
                 'max_tokens': 10
             }
             
-            # Construct full endpoint URL
-            # AI_SEARCH_API_URL should be base URL (e.g., https://api.example.com/v1)
-            # We need to append /chat/completions for OpenAI-compatible APIs
-            if not api_url.endswith('/chat/completions'):
-                full_api_url = f"{api_url.rstrip('/')}/chat/completions"
-            else:
-                full_api_url = api_url
+            # Construct full endpoint URL from pre-computed base URL
+            full_api_url = f"{base_api_url}/chat/completions"
             
             if verbose:
                 self.stdout.write(f'\n   Request URL: {full_api_url}')
@@ -198,7 +301,7 @@ class Command(BaseCommand):
             elif response.status_code == 404:
                 self.stdout.write(self.style.ERROR('   ✗ Model or endpoint not found (HTTP 404)'))
                 self.stdout.write(self.style.WARNING(f'   → Fix: Check AI_SEARCH_API_URL is correct'))
-                self.stdout.write(self.style.WARNING(f'      Current: {api_url}'))
+                self.stdout.write(self.style.WARNING(f'      Current (base): {base_api_url}'))
                 self.stdout.write(self.style.WARNING(f'      Testing: {full_api_url}'))
                 self.stdout.write(self.style.WARNING(f'   → Fix: AI_SEARCH_API_URL should be base URL (e.g., https://api.example.com/v1)'))
                 self.stdout.write(self.style.WARNING(f'   → Fix: Verify model "{model}" is available on this API'))
@@ -240,8 +343,8 @@ class Command(BaseCommand):
                 self.stdout.write(traceback.format_exc())
             all_checks_passed = False
         
-        # Check 8: Prompt files
-        self.stdout.write('\n8. Checking AI prompt files...')
+        # Check 9: Prompt files
+        self.stdout.write('\n9. Checking AI prompt files...')
         import os
         from pathlib import Path
         
@@ -262,9 +365,9 @@ class Command(BaseCommand):
             self.stdout.write(self.style.WARNING(f'   → Expected location: {prompts_dir}'))
             all_checks_passed = False
         
-        # Check 9: End-to-end AI search test (if all previous checks passed)
+        # Check 10: End-to-end AI search test (if all previous checks passed)
         if all_checks_passed:
-            self.stdout.write('\n9. Running end-to-end AI search test...')
+            self.stdout.write('\n10. Running end-to-end AI search test...')
             try:
                 from ServiceCatalogue.ai_service import AISearchService
                 from ServiceCatalogue.models import ServiceRevision
@@ -285,6 +388,11 @@ class Command(BaseCommand):
                     
                     # Perform a simple test search
                     ai_service = AISearchService()
+                    if model_override:
+                        ai_service.model = model_override
+                        self.stdout.write(self.style.WARNING(
+                            f'   ⚡ End-to-end test using overridden model: {model_override}'
+                        ))
                     test_query = "I need help with email problems"
                     
                     self.stdout.write(f'   Testing with query: "{test_query}"')
@@ -362,7 +470,7 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.WARNING('   → Verify AI service configuration and connectivity'))
                 all_checks_passed = False
         else:
-            self.stdout.write('\n9. Skipping end-to-end test (previous checks failed)')
+            self.stdout.write('\n10. Skipping end-to-end test (previous checks failed)')
         
         # Final summary
         self.stdout.write(self.style.MIGRATE_HEADING('\n=== Test Summary ===\n'))

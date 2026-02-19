@@ -355,9 +355,10 @@ AI_SEARCH_API_URL = os.getenv('AI_SEARCH_API_URL', None)
 # AI API authentication key
 AI_SEARCH_API_KEY = os.getenv('AI_SEARCH_API_KEY', None)
 
-# AI model to use (KISSKI models: deepseek-r1, qwen3-235b-a22b, mistral-large-instruct, llama-3.3-70b-instruct, etc.)
-# deepseek-r1 is recommended as it's a reasoning model optimized for understanding and analysis
-AI_SEARCH_MODEL = os.getenv('AI_SEARCH_MODEL', 'deepseek-r1')
+# AI model to use (KISSKI / chat-ai.academiccloud.de models: deepseek-r1-distill-llama-70b,
+# qwen3-30b-a3b-thinking-2507, llama-3.3-70b-instruct, qwen3-235b-a22b, etc.)
+# Reasoning models (deepseek-r1-*, qwen3-*-thinking) produce <think> tags that are stripped automatically.
+AI_SEARCH_MODEL = os.getenv('AI_SEARCH_MODEL', 'deepseek-r1-distill-llama-70b')
 
 # Timeout for AI API requests in seconds (default: 180 = 3 minutes)
 AI_SEARCH_TIMEOUT = int(os.getenv('AI_SEARCH_TIMEOUT', '180'))

@@ -1495,3 +1495,579 @@ class APIFieldVisibilityTest(APITestCase):
         for cat in self._json(response)['categories']:
             for svc in cat['services']:
                 self.assertNotIn('service_level', svc)
+
+
+# ============================================================================
+# check_urls management command tests
+# ============================================================================
+
+class ExtractUrlsHelperTest(TestCase):
+    """Unit tests for the _extract_urls helper in check_urls."""
+
+    def setUp(self):
+        from ServiceCatalogue.management.commands.check_urls import _extract_urls
+        self._extract = _extract_urls
+
+    def test_empty_returns_empty(self):
+        self.assertEqual(self._extract(''), [])
+        self.assertEqual(self._extract(None), [])
+
+    def test_single_https_url(self):
+        self.assertEqual(
+            self._extract('See https://example.com for details.'),
+            ['https://example.com'],
+        )
+
+    def test_single_http_url(self):
+        self.assertEqual(
+            self._extract('Visit http://example.org/path'),
+            ['http://example.org/path'],
+        )
+
+    def test_multiple_urls(self):
+        text = 'First https://a.example.com then https://b.example.com/page.'
+        urls = self._extract(text)
+        self.assertIn('https://a.example.com', urls)
+        self.assertIn('https://b.example.com/page', urls)
+        self.assertEqual(len(urls), 2)
+
+    def test_trailing_punctuation_stripped(self):
+        urls = self._extract('See https://example.com/path, please.')
+        self.assertEqual(urls, ['https://example.com/path'])
+
+    def test_url_in_parentheses(self):
+        urls = self._extract('(see https://example.com/help)')
+        self.assertEqual(urls, ['https://example.com/help'])
+
+    def test_no_plain_url(self):
+        self.assertEqual(self._extract('No URLs here at all.'), [])
+
+    def test_ftp_not_matched(self):
+        self.assertEqual(self._extract('ftp://example.com/file'), [])
+
+
+class CheckUrlsCommandTest(TestCase):
+    """Integration tests for the check_urls management command."""
+
+    fixtures = ['initial_test_data.json']
+
+    def _run_command(self, **kwargs):
+        from io import StringIO
+        from django.core.management import call_command
+        out = StringIO()
+        err = StringIO()
+        try:
+            call_command('check_urls', stdout=out, stderr=err, **kwargs)
+            exit_code = 0
+        except SystemExit as exc:
+            exit_code = exc.code
+        return out.getvalue(), err.getvalue(), exit_code
+
+    def test_command_runs_without_data(self):
+        """Command exits cleanly when no service revisions are listed."""
+        out, _, exit_code = self._run_command()
+        # No errors should propagate; exit 0 (nothing broken) or 0 (no URLs)
+        self.assertIn(exit_code, (0, None))
+
+    def test_command_all_services_flag(self):
+        """--all-services flag is accepted without error."""
+        out, _, exit_code = self._run_command(all_services=True)
+        self.assertIn(exit_code, (0, None))
+
+    @staticmethod
+    def _make_listed_service_revision(url=None, details_en=None, description_internal=None):
+        """Create a minimal listed ServiceRevision for testing."""
+        import datetime
+        from ServiceCatalogue.models import ServiceCategory, Service, ServiceRevision
+        cat, _ = ServiceCategory.objects.get_or_create(
+            acronym='TST',
+            defaults={
+                'name': 'Test Category',
+                'name_de': 'Testkategorie',
+                'name_en': 'Test Category',
+                'order': '99',
+            },
+        )
+        svc, _ = Service.objects.get_or_create(
+            category=cat,
+            acronym='CHK',
+            defaults={
+                'name': 'URL Check Test',
+                'name_de': 'URL Check Test',
+                'name_en': 'URL Check Test',
+                'purpose': 'Testing',
+                'purpose_de': 'Test',
+                'purpose_en': 'Testing',
+            },
+        )
+        sr = ServiceRevision.objects.create(
+            service=svc,
+            version='1.0',
+            listed_from=datetime.date.today(),
+            description='Test service',
+            description_de='Test',
+            description_en='Test service',
+            url=url,
+            details_en=details_en or '',
+            details_de='',
+            description_internal=description_internal or '',
+        )
+        return sr
+
+    @override_settings(AI_SEARCH_ENABLED=False)
+    def test_url_field_checked(self):
+        """A ServiceRevision.url value is collected and checked."""
+        from unittest.mock import patch, MagicMock
+        self._make_listed_service_revision(url='https://reachable.example.com')
+
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+
+        with patch('ServiceCatalogue.management.commands.check_urls.requests.head',
+                   return_value=mock_resp):
+            out, _, exit_code = self._run_command()
+
+        self.assertIn('https://reachable.example.com', out)
+        self.assertEqual(exit_code, 0)
+
+    @override_settings(AI_SEARCH_ENABLED=False)
+    def test_404_url_reported_as_broken(self):
+        """A 404 response is flagged as a broken URL."""
+        from unittest.mock import patch, MagicMock
+        self._make_listed_service_revision(url='https://broken.example.com/gone')
+
+        mock_resp = MagicMock()
+        mock_resp.status_code = 404
+
+        with patch('ServiceCatalogue.management.commands.check_urls.requests.head',
+                   return_value=mock_resp):
+            out, _, exit_code = self._run_command()
+
+        self.assertIn('https://broken.example.com/gone', out)
+        self.assertIn('Broken', out)
+        self.assertEqual(exit_code, 1)
+
+    @override_settings(AI_SEARCH_ENABLED=False)
+    def test_403_not_reported_by_default(self):
+        """HTTP 403 is not counted as broken unless --include-403 is set."""
+        from unittest.mock import patch, MagicMock
+        self._make_listed_service_revision(url='https://private.example.com')
+
+        mock_resp = MagicMock()
+        mock_resp.status_code = 403
+
+        with patch('ServiceCatalogue.management.commands.check_urls.requests.head',
+                   return_value=mock_resp):
+            out, _, exit_code = self._run_command()
+
+        self.assertNotIn('Broken', out.split('Forbidden')[0] if 'Forbidden' in out else out)
+        self.assertEqual(exit_code, 0)
+
+    @override_settings(AI_SEARCH_ENABLED=False)
+    def test_403_reported_with_flag(self):
+        """HTTP 403 is reported as broken when --include-403 is passed."""
+        from unittest.mock import patch, MagicMock
+        self._make_listed_service_revision(url='https://private.example.com')
+
+        mock_resp = MagicMock()
+        mock_resp.status_code = 403
+
+        with patch('ServiceCatalogue.management.commands.check_urls.requests.head',
+                   return_value=mock_resp):
+            out, _, exit_code = self._run_command(include_403=True)
+
+        self.assertIn('https://private.example.com', out)
+        self.assertEqual(exit_code, 1)
+
+    @override_settings(AI_SEARCH_ENABLED=False)
+    def test_connection_error_reported_as_broken(self):
+        """Connection errors are included in the broken URL report."""
+        from unittest.mock import patch
+        import requests as req
+        self._make_listed_service_revision(url='https://unreachable.example.invalid')
+
+        with patch(
+            'ServiceCatalogue.management.commands.check_urls.requests.head',
+            side_effect=req.exceptions.ConnectionError('refused'),
+        ):
+            out, _, exit_code = self._run_command()
+
+        self.assertIn('https://unreachable.example.invalid', out)
+        self.assertEqual(exit_code, 1)
+
+    @override_settings(AI_SEARCH_ENABLED=False)
+    def test_urls_in_text_fields_extracted(self):
+        """URLs embedded in text fields (details_en) are discovered."""
+        from unittest.mock import patch, MagicMock
+        self._make_listed_service_revision(
+            details_en='More info at https://docs.example.com/guide and done.'
+        )
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+
+        with patch('ServiceCatalogue.management.commands.check_urls.requests.head',
+                   return_value=mock_resp):
+            out, _, exit_code = self._run_command()
+
+        self.assertIn('https://docs.example.com/guide', out)
+        self.assertEqual(exit_code, 0)
+
+    @override_settings(AI_SEARCH_ENABLED=False)
+    def test_duplicate_urls_deduplicated(self):
+        """The same URL appearing in multiple fields is only requested once."""
+        from unittest.mock import patch, MagicMock, call
+        repeated_url = 'https://shared.example.com'
+        self._make_listed_service_revision(
+            url=repeated_url,
+            details_en=f'See {repeated_url} for more.',
+        )
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+
+        with patch(
+            'ServiceCatalogue.management.commands.check_urls.requests.head',
+            return_value=mock_resp,
+        ) as mock_head:
+            self._run_command()
+
+        # The URL should only be requested once despite appearing twice
+        urls_checked = [c.args[0] for c in mock_head.call_args_list]
+        self.assertEqual(urls_checked.count(repeated_url), 1)
+
+    @override_settings(AI_SEARCH_ENABLED=False)
+    def test_head_405_falls_back_to_get(self):
+        """When HEAD returns 405, the command retries with GET."""
+        from unittest.mock import patch, MagicMock
+        self._make_listed_service_revision(url='https://get-only.example.com')
+
+        head_resp = MagicMock()
+        head_resp.status_code = 405
+
+        get_resp = MagicMock()
+        get_resp.status_code = 200
+
+        with patch(
+            'ServiceCatalogue.management.commands.check_urls.requests.head',
+            return_value=head_resp,
+        ), patch(
+            'ServiceCatalogue.management.commands.check_urls.requests.get',
+            return_value=get_resp,
+        ) as mock_get:
+            out, _, exit_code = self._run_command()
+
+        mock_get.assert_called_once()
+        self.assertEqual(exit_code, 0)
+
+
+# ============================================================================
+# test_ai_search command – model listing check
+# ============================================================================
+
+class TestAiSearchModelListingTest(TestCase):
+    """Tests for the model-listing step added to test_ai_search."""
+
+    def _run(self, mock_models_response, mock_chat_response=None, cmd_kwargs=None, **settings_overrides):
+        """Run test_ai_search with mocked HTTP calls and return (output, exit_code)."""
+        from io import StringIO
+        from unittest.mock import patch, MagicMock
+        from django.core.management import call_command
+
+        defaults = dict(
+            AI_SEARCH_ENABLED=True,
+            AI_SEARCH_API_URL='https://chat-ai.academiccloud.de/v1',
+            AI_SEARCH_API_KEY='test-key-1234',
+            AI_SEARCH_MODEL='meta-llama-3.1-8b-instruct',
+            AI_SEARCH_TIMEOUT=30,
+        )
+        defaults.update(settings_overrides)
+
+        out = StringIO()
+        exit_code = None
+
+        def _fake_post(url, **kwargs):
+            if url.endswith('/models'):
+                return mock_models_response
+            # chat/completions
+            if mock_chat_response:
+                return mock_chat_response
+            resp = MagicMock()
+            resp.status_code = 200
+            resp.json.return_value = {
+                'choices': [{'message': {'content': 'Test response'}}],
+                'usage': {'total_tokens': 5},
+            }
+            return resp
+
+        def _fake_get(url, **kwargs):
+            resp = MagicMock()
+            resp.status_code = 200
+            return resp
+
+        with override_settings(**defaults):
+            with patch('ServiceCatalogue.management.commands.test_ai_search.requests.post',
+                       side_effect=_fake_post), \
+                 patch('ServiceCatalogue.management.commands.test_ai_search.requests.get',
+                       side_effect=_fake_get):
+                try:
+                    call_command('test_ai_search', stdout=out, **(cmd_kwargs or {}))
+                    exit_code = 0
+                except SystemExit as exc:
+                    exit_code = exc.code
+
+        return out.getvalue(), exit_code
+
+    def _models_response(self, model_ids):
+        from unittest.mock import MagicMock
+        resp = MagicMock()
+        resp.status_code = 200
+        resp.json.return_value = {
+            'object': 'list',
+            'data': [{'id': m} for m in model_ids],
+        }
+        return resp
+
+    def test_configured_model_found_in_list(self):
+        """Check 7 passes when the configured model appears in the models list."""
+        resp = self._models_response(['meta-llama-3.1-8b-instruct', 'other-model'])
+        out, _ = self._run(resp)
+        self.assertIn('meta-llama-3.1-8b-instruct', out)
+        self.assertIn('← configured', out)
+
+    def test_configured_model_missing_from_list(self):
+        """Check 7 fails and suggests fixing config when model is absent."""
+        resp = self._models_response(['other-model-a', 'other-model-b'])
+        out, exit_code = self._run(resp)
+        self.assertIn('NOT in the list', out)
+        self.assertEqual(exit_code, 1)
+
+    def test_models_endpoint_prints_all_available_models(self):
+        """All models returned by the API are printed."""
+        model_ids = ['model-alpha', 'model-beta', 'meta-llama-3.1-8b-instruct']
+        resp = self._models_response(model_ids)
+        out, _ = self._run(resp)
+        for mid in model_ids:
+            self.assertIn(mid, out)
+
+    def test_models_endpoint_404_skips_check(self):
+        """A 404 from the models endpoint is handled gracefully (check skipped)."""
+        from unittest.mock import MagicMock
+        resp = MagicMock()
+        resp.status_code = 404
+        out, _ = self._run(resp)
+        self.assertIn('404', out)
+        self.assertIn('Skipping model availability', out)
+
+    def test_models_endpoint_401_fails_check(self):
+        """A 401 from the models endpoint marks the check as failed."""
+        from unittest.mock import MagicMock
+        resp = MagicMock()
+        resp.status_code = 401
+        out, exit_code = self._run(resp)
+        self.assertIn('401', out)
+        self.assertEqual(exit_code, 1)
+
+    def test_model_override_replaces_configured_model(self):
+        """--model overrides the configured model and is passed to the models check."""
+        resp = self._models_response([
+            'meta-llama-3.1-8b-instruct',
+            'deepseek-r1-distill-llama-70b',
+        ])
+        out, exit_code = self._run(resp, cmd_kwargs={'model': 'deepseek-r1-distill-llama-70b'})
+        self.assertIn('deepseek-r1-distill-llama-70b', out)
+        # Both configured model and override should appear in the output
+        self.assertIn('meta-llama-3.1-8b-instruct', out)  # original configured model
+        self.assertIn('Overriding with --model', out)
+
+    def test_model_override_absent_from_list_fails(self):
+        """--model with a model not in the API list causes exit code 1."""
+        resp = self._models_response(['meta-llama-3.1-8b-instruct'])
+        out, exit_code = self._run(
+            resp,
+            cmd_kwargs={'model': 'nonexistent-model-xyz'},
+        )
+        self.assertIn('NOT in the list', out)
+        self.assertEqual(exit_code, 1)
+
+
+# ============================================================================
+# check_urls – filtering logic tests
+# ============================================================================
+
+class CheckUrlsFilteringTest(TestCase):
+    """
+    Test the default queryset filtering in check_urls:
+    - Active / future revisions included by default
+    - Unscheduled drafts and fully-retired revisions excluded by default
+    - --all-services includes everything
+    """
+
+    fixtures = ['initial_test_data.json']
+
+    _counter = 0
+
+    def _make_revision(self, listed_from=None, listed_until=None,
+                       available_from=None, available_until=None,
+                       url='https://test-filter.example.com'):
+        """Create a ServiceRevision with fully configurable dates."""
+        import datetime
+        from ServiceCatalogue.models import ServiceCategory, Service, ServiceRevision
+        CheckUrlsFilteringTest._counter += 1
+        seq = CheckUrlsFilteringTest._counter
+        cat, _ = ServiceCategory.objects.get_or_create(
+            acronym='FLT',
+            defaults={
+                'name': 'Filter Test',
+                'name_de': 'Filtertest',
+                'name_en': 'Filter Test',
+                'order': '98',
+            },
+        )
+        svc, _ = Service.objects.get_or_create(
+            category=cat,
+            acronym=f'F{seq:02d}',
+            defaults={
+                'name': f'Filter Test {seq}',
+                'name_de': f'Filter Test {seq}',
+                'name_en': f'Filter Test {seq}',
+                'purpose': 'Testing',
+                'purpose_de': 'Test',
+                'purpose_en': 'Testing',
+            },
+        )
+        sr = ServiceRevision.objects.create(
+            service=svc,
+            version='1.0',
+            listed_from=listed_from,
+            listed_until=listed_until,
+            available_from=available_from,
+            available_until=available_until,
+            description='Test',
+            description_de='Test',
+            description_en='Test',
+            url=url,
+            details_en='',
+            details_de='',
+            description_internal='',
+        )
+        return sr
+
+    def _run_command_and_collect_checked_urls(self, **cmd_kwargs):
+        """Run check_urls (all HTTP mocked as 200) and return the set of checked URLs."""
+        from io import StringIO
+        from unittest.mock import patch, MagicMock
+        from django.core.management import call_command
+
+        ok_resp = MagicMock()
+        ok_resp.status_code = 200
+
+        checked: list[str] = []
+
+        def _fake_head(url, **kwargs):
+            checked.append(url)
+            return ok_resp
+
+        out = StringIO()
+        with patch('ServiceCatalogue.management.commands.check_urls.requests.head',
+                   side_effect=_fake_head):
+            try:
+                call_command('check_urls', stdout=out, **cmd_kwargs)
+            except SystemExit:
+                pass
+        return set(checked)
+
+    def test_currently_listed_included(self):
+        """A currently-listed revision is checked by default."""
+        import datetime
+        today = datetime.date.today()
+        sr = self._make_revision(
+            listed_from=today - datetime.timedelta(days=1),
+            url='https://currently-listed.example.com',
+        )
+        checked = self._run_command_and_collect_checked_urls()
+        self.assertIn(sr.url, checked)
+
+    def test_currently_available_included(self):
+        """A currently-available (but unlisted) revision is checked by default."""
+        import datetime
+        today = datetime.date.today()
+        sr = self._make_revision(
+            available_from=today - datetime.timedelta(days=1),
+            url='https://currently-available.example.com',
+        )
+        checked = self._run_command_and_collect_checked_urls()
+        self.assertIn(sr.url, checked)
+
+    def test_future_listed_included(self):
+        """A revision scheduled for future listing is checked by default."""
+        import datetime
+        today = datetime.date.today()
+        sr = self._make_revision(
+            listed_from=today + datetime.timedelta(days=30),
+            url='https://future-listed.example.com',
+        )
+        checked = self._run_command_and_collect_checked_urls()
+        self.assertIn(sr.url, checked)
+
+    def test_future_available_included(self):
+        """A revision scheduled for future availability is checked by default."""
+        import datetime
+        today = datetime.date.today()
+        sr = self._make_revision(
+            available_from=today + datetime.timedelta(days=60),
+            url='https://future-available.example.com',
+        )
+        checked = self._run_command_and_collect_checked_urls()
+        self.assertIn(sr.url, checked)
+
+    def test_no_dates_excluded_by_default(self):
+        """An unscheduled draft (no dates at all) is excluded from the default scan."""
+        sr = self._make_revision(
+            url='https://unscheduled-draft.example.com',
+        )
+        checked = self._run_command_and_collect_checked_urls()
+        self.assertNotIn(sr.url, checked)
+
+    def test_no_dates_included_with_all_services(self):
+        """An unscheduled draft IS included when --all-services is passed."""
+        sr = self._make_revision(
+            url='https://unscheduled-draft-allsvc.example.com',
+        )
+        checked = self._run_command_and_collect_checked_urls(all_services=True)
+        self.assertIn(sr.url, checked)
+
+    def test_past_listed_only_excluded(self):
+        """A revision with listing fully in the past and no availability is excluded."""
+        import datetime
+        today = datetime.date.today()
+        sr = self._make_revision(
+            listed_from=today - datetime.timedelta(days=60),
+            listed_until=today - datetime.timedelta(days=1),
+            url='https://past-listed-only.example.com',
+        )
+        checked = self._run_command_and_collect_checked_urls()
+        self.assertNotIn(sr.url, checked)
+
+    def test_past_listed_only_included_with_all_services(self):
+        """A past-listed-only revision IS included with --all-services."""
+        import datetime
+        today = datetime.date.today()
+        sr = self._make_revision(
+            listed_from=today - datetime.timedelta(days=60),
+            listed_until=today - datetime.timedelta(days=1),
+            url='https://past-listed-allsvc.example.com',
+        )
+        checked = self._run_command_and_collect_checked_urls(all_services=True)
+        self.assertIn(sr.url, checked)
+
+    def test_listed_with_future_active_availability_included(self):
+        """Past-listed but still-active availability keeps revision in default scan."""
+        import datetime
+        today = datetime.date.today()
+        sr = self._make_revision(
+            listed_from=today - datetime.timedelta(days=60),
+            listed_until=today - datetime.timedelta(days=1),  # listing ended
+            available_from=today - datetime.timedelta(days=60),  # still available!
+            url='https://listing-ended-still-available.example.com',
+        )
+        checked = self._run_command_and_collect_checked_urls()
+        self.assertIn(sr.url, checked)
