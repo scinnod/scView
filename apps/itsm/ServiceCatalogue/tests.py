@@ -1649,10 +1649,13 @@ class CheckUrlsCommandTest(TestCase):
         mock_resp.status_code = 200
 
         with patch('ServiceCatalogue.management.commands.check_urls.requests.head',
-                   return_value=mock_resp):
+                   return_value=mock_resp) as mock_head:
             out, _, exit_code = self._run_command()
 
-        self.assertIn('https://reachable.example.com', out)
+        # OK URLs are only counted in the summary, not listed individually.
+        # Verify the URL was actually collected and requested.
+        urls_checked = [c.args[0] for c in mock_head.call_args_list]
+        self.assertIn('https://reachable.example.com', urls_checked)
         self.assertEqual(exit_code, 0)
 
     @override_settings(AI_SEARCH_ENABLED=False)
@@ -1733,10 +1736,13 @@ class CheckUrlsCommandTest(TestCase):
         mock_resp.status_code = 200
 
         with patch('ServiceCatalogue.management.commands.check_urls.requests.head',
-                   return_value=mock_resp):
+                   return_value=mock_resp) as mock_head:
             out, _, exit_code = self._run_command()
 
-        self.assertIn('https://docs.example.com/guide', out)
+        # OK URLs are only counted in the summary, not listed individually.
+        # Verify the URL was actually collected and requested.
+        urls_checked = [c.args[0] for c in mock_head.call_args_list]
+        self.assertIn('https://docs.example.com/guide', urls_checked)
         self.assertEqual(exit_code, 0)
 
     @override_settings(AI_SEARCH_ENABLED=False)
