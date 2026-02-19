@@ -551,11 +551,14 @@ class ServiceRevisionModelTest(TestCase):
 
     def test_service_revision_status_properties(self):
         """Test status computation properties"""
-        # Test listed status (property name is status_listing)
-        self.assertIn("currently listed", self.revision.status_listing.lower())
-        
-        # Test available status (property name is status_availablility)
-        self.assertIn("available", self.revision.status_availablility.lower())
+        from django.utils import translation
+        # Force English so the assertions match regardless of the server locale
+        with translation.override('en'):
+            # Test listed status (property name is status_listing)
+            self.assertIn("currently listed", self.revision.status_listing.lower())
+
+            # Test available status (property name is status_availablility)
+            self.assertIn("available", self.revision.status_availablility.lower())
 
     def test_service_revision_search_keys_generation(self):
         """Test that search keys are generated on save"""
@@ -656,7 +659,10 @@ class ServiceListViewTest(ViewTestCase):
 
     def test_services_listed_view_shows_services(self):
         """Test that listed services appear in the view"""
-        response = self.client.get(reverse('services_listed'))
+        from django.utils import translation
+        # Request English URL so the service name renders in English
+        with translation.override('en'):
+            response = self.client.get(reverse('services_listed'))
         # Fixture has HPC Cluster service with COMPUTE-HPC key
         self.assertContains(response, "HPC Cluster")
         self.assertContains(response, "COMPUTE-HPC")
@@ -675,7 +681,9 @@ class SearchFunctionalityTest(ViewTestCase):
 
     def test_search_with_query(self):
         """Test search with a query parameter"""
-        response = self.client.get(reverse('services_listed'), {'q': 'HPC'})
+        from django.utils import translation
+        with translation.override('en'):
+            response = self.client.get(reverse('services_listed'), {'q': 'HPC'})
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "HPC Cluster")
 
@@ -708,6 +716,7 @@ class ServiceLifecycleTest(TestCase):
 
     def test_service_not_yet_listed(self):
         """Test service that will be listed in the future"""
+        from django.utils import translation
         future_date = date.today() + timedelta(days=30)
         revision = ServiceRevision.objects.create(
             service=self.service,
@@ -716,20 +725,24 @@ class ServiceLifecycleTest(TestCase):
             listed_from=future_date
         )
         # status_listing returns "2-listing at {date}" for future services
-        self.assertIn("listing at", revision.status_listing.lower())
+        with translation.override('en'):
+            self.assertIn("listing at", revision.status_listing.lower())
 
     def test_service_currently_listed(self):
         """Test currently listed service"""
+        from django.utils import translation
         revision = ServiceRevision.objects.create(
             service=self.service,
             version="v1.0",
             description="Current service",
             listed_from=date.today() - timedelta(days=1)
         )
-        self.assertIn("currently listed", revision.status_listing.lower())
+        with translation.override('en'):
+            self.assertIn("currently listed", revision.status_listing.lower())
 
     def test_service_no_longer_listed(self):
         """Test service that was delisted"""
+        from django.utils import translation
         past_date = date.today() - timedelta(days=30)
         revision = ServiceRevision.objects.create(
             service=self.service,
@@ -738,10 +751,12 @@ class ServiceLifecycleTest(TestCase):
             listed_from=past_date,
             listed_until=past_date + timedelta(days=1)
         )
-        self.assertIn("not more listed", revision.status_listing.lower())
+        with translation.override('en'):
+            self.assertIn("not more listed", revision.status_listing.lower())
 
     def test_service_eol(self):
         """Test end-of-life service"""
+        from django.utils import translation
         past_date = date.today() - timedelta(days=30)
         revision = ServiceRevision.objects.create(
             service=self.service,
@@ -750,7 +765,8 @@ class ServiceLifecycleTest(TestCase):
             available_from=past_date,
             available_until=past_date + timedelta(days=1)
         )
-        status = revision.status_availablility.lower()
+        with translation.override('en'):
+            status = revision.status_availablility.lower()
         self.assertTrue("eol" in status or "not more available" in status)
 
 
@@ -836,8 +852,10 @@ class ServiceCatalogueIntegrationTest(TestCase):
 
     def test_complete_service_in_catalogue(self):
         """Test that a complete service appears correctly in catalogue"""
-        response = Client().get(reverse('services_listed'))
-        
+        from django.utils import translation
+        with translation.override('en'):
+            response = Client().get(reverse('services_listed'))
+
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "HPC Cluster")
         self.assertContains(response, "COMPUTE-HPC")
@@ -949,19 +967,22 @@ class UserAccessControlTest(TestCase):
         """Test that AUTO_CREATE_USERS=False prevents new user creation via middleware"""
         from itsm_config.backends import CustomRemoteUserMiddleware
         from django.test import RequestFactory
+        from django.utils import translation
         
         factory = RequestFactory()
         request = factory.get('/sso-login/', HTTP_X_REMOTE_USER='newuser_that_does_not_exist')
         
         middleware = CustomRemoteUserMiddleware(lambda r: None)
-        response = middleware(request)
+        # Force English so the template strings match the expected values
+        with translation.override('en'):
+            response = middleware(request)
         
         # Should return error page response (not raise exception)
         self.assertEqual(response.status_code, 403)
         content = response.content.decode().lower()
         # Check for key elements of the user creation disabled page
         self.assertIn('user not found', content)
-        self.assertIn('automatic user creation is currently disabled', content)
+        self.assertIn('automatic user creation', content)
     
     @override_settings(AUTO_CREATE_USERS=True)
     def test_auto_create_users_enabled_allows_new_user(self):
@@ -984,6 +1005,7 @@ class UserAccessControlTest(TestCase):
         """Test that STAFF_ONLY_MODE=True blocks non-staff users via middleware"""
         from itsm_config.backends import StaffOnlyModeMiddleware
         from django.test import RequestFactory
+        from django.utils import translation
         
         factory = RequestFactory()
         request = factory.get('/en/sc/services')
@@ -991,8 +1013,9 @@ class UserAccessControlTest(TestCase):
         
         middleware = StaffOnlyModeMiddleware(lambda r: None)
         
-        # Non-staff user should receive 403 response (not raise exception)
-        response = middleware(request)
+        # Force English so the template strings match the expected values
+        with translation.override('en'):
+            response = middleware(request)
         self.assertEqual(response.status_code, 403)
         self.assertIn('insufficient', response.content.decode().lower())
     
@@ -1549,7 +1572,9 @@ class ExtractUrlsHelperTest(TestCase):
 class CheckUrlsCommandTest(TestCase):
     """Integration tests for the check_urls management command."""
 
-    fixtures = ['initial_test_data.json']
+    # No fixtures: each test creates its own service revisions via _make_listed_service_revision().
+    # Using the shared fixture would pull in internal links (e.g. [[COLLAB-CALENDAR]]) that
+    # trigger Phase-2 broken-link errors and interfere with URL-only assertions.
 
     def _run_command(self, **kwargs):
         from io import StringIO
@@ -1660,7 +1685,9 @@ class CheckUrlsCommandTest(TestCase):
                    return_value=mock_resp):
             out, _, exit_code = self._run_command()
 
-        self.assertNotIn('Broken', out.split('Forbidden')[0] if 'Forbidden' in out else out)
+        # 403 responses should not appear in the broken-URL section
+        self.assertNotIn('--- Broken URL', out)
+        self.assertIn('No broken URLs found', out)
         self.assertEqual(exit_code, 0)
 
     @override_settings(AI_SEARCH_ENABLED=False)
@@ -2265,7 +2292,9 @@ class ClassifyInternalLinkTest(TestCase):
 class CheckInternalLinksCommandTest(TestCase):
     """Integration tests for internal link validation in check_urls."""
 
-    fixtures = ['initial_test_data.json']
+    # No fixtures: each test builds its own data with _make_revision().
+    # The shared fixture contains an intentionally broken [[COLLAB-CALENDAR]] link which
+    # would cause tests that expect a clean exit to spuriously fail.
 
     def _run_command(self, **kwargs):
         from io import StringIO

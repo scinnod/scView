@@ -181,6 +181,22 @@
       .footer-app-link:hover {
           text-decoration: underline;
       }
+
+      /* Body links use corporate primary color */
+      a {
+          color: var(--primary-color);
+      }
+
+      a:hover {
+          color: color-mix(in srgb, var(--primary-color) 80%, black);
+      }
+
+      /* Accordion: active button uses secondary color (primary is too dominant) */
+      .accordion-button:not(.collapsed) {
+          color: var(--secondary-color);
+          background-color: color-mix(in srgb, var(--secondary-color) 8%, white);
+          box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.125);
+      }
     </style>
     {% block extra_css %}{% endblock %}
   </head>
