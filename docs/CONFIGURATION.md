@@ -334,13 +334,28 @@ The command performs **10 checks**:
 | 9 | Prompt files (`step1_prompt.txt`, `step2_prompt.txt`) |
 | 10 | End-to-end search (only when all previous checks pass) |
 
-### URL Availability Check
+### URL and Internal Link Check
 
-The `check_urls` command scans all service catalogue text fields that are
-auto-linked in templates (via Django's `|urlize` filter) as well as the
-dedicated `ServiceRevision.url` URLField.  It deduplicates URLs, checks each
-one via HTTP, and reports broken links together with the service key and field
-they appear in.
+The `check_urls` command runs in two phases:
+
+**Phase 1 – External URL availability**
+
+Scans every ServiceRevision field auto-linked in templates (via Django's `|urlize` filter)
+as well as the dedicated `ServiceRevision.url` URLField.  It deduplicates URLs, checks each
+one via HTTP, and reports broken links together with the service key and field they appear in.
+
+**Phase 2 – Internal `[[...]]` link validation**
+
+Scans all text fields rendered with the `|parse_internal_links` template filter for
+`[[...]]` references and validates them using the same resolution logic as the template
+filter itself (via `_classify_internal_link` in `templatetags/html_links.py`):
+
+| Reference | Classification | Severity |
+|-----------|---------------|----------|
+| `[[email]]` – no key separator (`-`) | Soft link, not validated | Warning (exit 0) |
+| `[[INVALID-SERVICE]]` – has separator, no match | Broken link | **Error (exit 1)** |
+| `[[COLLAB-EMAIL]]` – has separator, matches one revision | Valid, direct link | OK |
+| `[[COLLAB-EMAIL]]` – has separator, matches multiple revisions | Valid, search link | OK |
 
 ```bash
 # Check active + future service revisions (default)
@@ -369,7 +384,7 @@ Revisions are included when they have at least one date context that is active o
 | No dates set at all (unscheduled draft) | ✗ (use `--all-services`) |
 | Both end-dates in the past (retired) | ✗ (use `--all-services`) |
 
-**Fields scanned:**
+**Fields scanned for external URLs:**
 
 | Field | Model | Translated |
 |-------|-------|-----------|
@@ -378,11 +393,28 @@ Revisions are included when they have at least one date context that is active o
 | `usage_information` | `ServiceRevision` | Yes (de / en) |
 | `details` | `ServiceRevision` | Yes (de / en) |
 
-**Exit codes:** `0` – all URLs reachable; `1` – at least one broken URL found.
+**Fields scanned for internal `[[...]]` links:**
+
+| Field | Model | Translated |
+|-------|-------|-----------|
+| `description_internal` | `ServiceRevision` | No |
+| `description` | `ServiceRevision` | Yes (de / en) |
+| `usage_information` | `ServiceRevision` | Yes (de / en) |
+| `requirements` | `ServiceRevision` | Yes (de / en) |
+| `details` | `ServiceRevision` | Yes (de / en) |
+| `options` | `ServiceRevision` | Yes (de / en) |
+| `service_level` | `ServiceRevision` | Yes (de / en) |
+| `eol` | `ServiceRevision` | No |
+
+**Exit codes:** `0` – all URLs reachable and no broken internal links; `1` – at least one broken URL or broken internal link found.
 
 > **403 behaviour:** By default, HTTP 403 responses are *not* counted as broken
 > because the checker runs without user credentials and some resources legitimately
 > require authentication.  Use `--include-403` to override this.
+
+> **Soft links:** `[[references]]` that do not contain the key separator (`-`) are
+> reported as warnings but do **not** trigger exit code 1.  These cannot be validated
+> because they resolve to a plain fulltext search.
 
 ### Service Management
 

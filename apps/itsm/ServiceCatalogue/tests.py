@@ -2071,3 +2071,345 @@ class CheckUrlsFilteringTest(TestCase):
         )
         checked = self._run_command_and_collect_checked_urls()
         self.assertIn(sr.url, checked)
+
+
+# ============================================================================
+# check_urls – internal link validation tests
+# ============================================================================
+
+class ExtractInternalLinksHelperTest(TestCase):
+    """Unit tests for the _extract_internal_links helper in check_urls."""
+
+    def setUp(self):
+        from ServiceCatalogue.management.commands.check_urls import _extract_internal_links
+        self._extract = _extract_internal_links
+
+    def test_empty_returns_empty(self):
+        self.assertEqual(self._extract(''), [])
+        self.assertEqual(self._extract(None), [])
+
+    def test_single_link(self):
+        self.assertEqual(
+            self._extract('See [[COLLAB-EMAIL]] for details.'),
+            ['COLLAB-EMAIL'],
+        )
+
+    def test_soft_link_no_separator(self):
+        """A link without a key separator (soft link) is still extracted."""
+        self.assertEqual(self._extract('Look at [[email]] system'), ['email'])
+
+    def test_multiple_links(self):
+        refs = self._extract('Use [[COLLAB-EMAIL]] or [[COMPUTE-HPC]].')
+        self.assertIn('COLLAB-EMAIL', refs)
+        self.assertIn('COMPUTE-HPC', refs)
+        self.assertEqual(len(refs), 2)
+
+    def test_no_links(self):
+        self.assertEqual(self._extract('No internal links here.'), [])
+
+    def test_link_with_version(self):
+        self.assertEqual(
+            self._extract('Use [[COLLAB-EMAIL-2.0]] specifically.'),
+            ['COLLAB-EMAIL-2.0'],
+        )
+
+    def test_link_with_parentheses_excluded(self):
+        """Links containing parentheses are not matched (mirrors the template filter)."""
+        self.assertEqual(self._extract('[[not(a)link]]'), [])
+
+    def test_surrounding_text_preserved(self):
+        refs = self._extract('Before [[A-B]] and [[C-D]] after.')
+        self.assertEqual(refs, ['A-B', 'C-D'])
+
+    def test_mixed_with_http_url(self):
+        """HTTP URLs in the same text do not confuse [[...]] extraction."""
+        refs = self._extract('Visit https://example.com and see [[COLLAB-WIKI]].')
+        self.assertEqual(refs, ['COLLAB-WIKI'])
+
+
+class ClassifyInternalLinkTest(TestCase):
+    """Unit tests for _classify_internal_link (requires DB for keysep matches)."""
+
+    fixtures = ['initial_test_data.json']
+
+    def setUp(self):
+        from ServiceCatalogue.templatetags.html_links import (
+            _classify_internal_link,
+            _ILINK_SOFT, _ILINK_UNIQUE, _ILINK_MULTI, _ILINK_BROKEN,
+        )
+        self._classify = _classify_internal_link
+        self._SOFT   = _ILINK_SOFT
+        self._UNIQUE = _ILINK_UNIQUE
+        self._MULTI  = _ILINK_MULTI
+        self._BROKEN = _ILINK_BROKEN
+
+    def _make_listed_revision(self, category_acronym, service_acronym, version='1.0'):
+        """Create a minimal currently-listed ServiceRevision."""
+        import datetime
+        from ServiceCatalogue.models import ServiceCategory, Service, ServiceRevision
+        cat, _ = ServiceCategory.objects.get_or_create(
+            acronym=category_acronym,
+            defaults={
+                'name': f'{category_acronym} Category',
+                'name_de': f'{category_acronym} Kategorie',
+                'name_en': f'{category_acronym} Category',
+                'order': '95',
+            },
+        )
+        svc, _ = Service.objects.get_or_create(
+            category=cat,
+            acronym=service_acronym,
+            defaults={
+                'name': f'{category_acronym}-{service_acronym}',
+                'name_de': f'{category_acronym}-{service_acronym}',
+                'name_en': f'{category_acronym}-{service_acronym}',
+                'purpose': 'Test',
+                'purpose_de': 'Test',
+                'purpose_en': 'Test',
+            },
+        )
+        return ServiceRevision.objects.create(
+            service=svc,
+            version=version,
+            listed_from=datetime.date.today(),
+            description='Test',
+            description_de='Test',
+            description_en='Test',
+            details_en='',
+            details_de='',
+            description_internal='',
+        )
+
+    def test_no_keysep_returns_soft(self):
+        """Link without key separator ('email') is classified as soft."""
+        kind, count = self._classify('email')
+        self.assertEqual(kind, self._SOFT)
+        self.assertEqual(count, 0)
+
+    def test_soft_count_is_always_zero(self):
+        """Soft links always return match_count=0 regardless of content."""
+        kind, count = self._classify('some plain search text')
+        self.assertEqual(kind, self._SOFT)
+        self.assertEqual(count, 0)
+
+    def test_broken_when_no_match(self):
+        """Key with separator but no matching revision is classified broken."""
+        kind, count = self._classify('NOTEXIST-SERVICE')
+        self.assertEqual(kind, self._BROKEN)
+        self.assertEqual(count, 0)
+
+    def test_unique_when_one_match(self):
+        """Key matching exactly one listed revision is classified unique."""
+        self._make_listed_revision('CLF', 'UTEST', version='1.0')
+        kind, count = self._classify('CLF-UTEST')
+        self.assertEqual(kind, self._UNIQUE)
+        self.assertEqual(count, 1)
+
+    def test_multi_when_multiple_matches(self):
+        """Key matching several listed revisions (same service, multiple versions) is multi."""
+        self._make_listed_revision('CLF', 'MULTI', version='1.0')
+        self._make_listed_revision('CLF', 'MULTI', version='2.0')
+        kind, count = self._classify('CLF-MULTI')
+        self.assertEqual(kind, self._MULTI)
+        self.assertGreater(count, 1)
+
+    def test_unlisted_revision_not_counted(self):
+        """A revision without listed_from (draft) is not counted as a valid match."""
+        from ServiceCatalogue.models import ServiceCategory, Service, ServiceRevision
+        cat, _ = ServiceCategory.objects.get_or_create(
+            acronym='UNL',
+            defaults={'name': 'UNL', 'name_de': 'UNL', 'name_en': 'UNL', 'order': '94'},
+        )
+        svc, _ = Service.objects.get_or_create(
+            category=cat, acronym='DRAFT',
+            defaults={
+                'name': 'UNL-DRAFT', 'name_de': 'UNL-DRAFT', 'name_en': 'UNL-DRAFT',
+                'purpose': 'Test', 'purpose_de': 'Test', 'purpose_en': 'Test',
+            },
+        )
+        ServiceRevision.objects.create(
+            service=svc, version='1.0', listed_from=None,
+            description='Draft', description_de='Draft', description_en='Draft',
+            details_en='', details_de='', description_internal='',
+        )
+        kind, count = self._classify('UNL-DRAFT')
+        self.assertEqual(kind, self._BROKEN)
+
+    def test_expired_revision_not_counted(self):
+        """A revision whose listed_until is in the past is not counted as valid."""
+        import datetime
+        from ServiceCatalogue.models import ServiceCategory, Service, ServiceRevision
+        cat, _ = ServiceCategory.objects.get_or_create(
+            acronym='EXP',
+            defaults={'name': 'EXP', 'name_de': 'EXP', 'name_en': 'EXP', 'order': '93'},
+        )
+        svc, _ = Service.objects.get_or_create(
+            category=cat, acronym='OLD',
+            defaults={
+                'name': 'EXP-OLD', 'name_de': 'EXP-OLD', 'name_en': 'EXP-OLD',
+                'purpose': 'Test', 'purpose_de': 'Test', 'purpose_en': 'Test',
+            },
+        )
+        yesterday = datetime.date.today() - datetime.timedelta(days=1)
+        ServiceRevision.objects.create(
+            service=svc, version='1.0',
+            listed_from=datetime.date.today() - datetime.timedelta(days=30),
+            listed_until=yesterday,
+            description='Expired', description_de='Expired', description_en='Expired',
+            details_en='', details_de='', description_internal='',
+        )
+        kind, count = self._classify('EXP-OLD')
+        self.assertEqual(kind, self._BROKEN)
+
+
+class CheckInternalLinksCommandTest(TestCase):
+    """Integration tests for internal link validation in check_urls."""
+
+    fixtures = ['initial_test_data.json']
+
+    def _run_command(self, **kwargs):
+        from io import StringIO
+        from unittest.mock import patch, MagicMock
+        from django.core.management import call_command
+        out = StringIO()
+        err = StringIO()
+        ok_resp = MagicMock()
+        ok_resp.status_code = 200
+        # Mock HTTP so no real network calls are made during internal-link tests
+        with patch('ServiceCatalogue.management.commands.check_urls.requests.head',
+                   return_value=ok_resp):
+            try:
+                call_command('check_urls', stdout=out, stderr=err, **kwargs)
+                exit_code = 0
+            except SystemExit as exc:
+                exit_code = exc.code
+        return out.getvalue(), err.getvalue(), exit_code
+
+    @staticmethod
+    def _make_revision(category='ILT', acronym='SVC', version='1.0',
+                       listed_from=None, description_internal='',
+                       details_en='', details_de=''):
+        """Create a listed ServiceRevision with controllable text fields."""
+        import datetime
+        from ServiceCatalogue.models import ServiceCategory, Service, ServiceRevision
+        cat, _ = ServiceCategory.objects.get_or_create(
+            acronym=category,
+            defaults={
+                'name': f'{category} Category',
+                'name_de': f'{category} Kategorie',
+                'name_en': f'{category} Category',
+                'order': '93',
+            },
+        )
+        svc, _ = Service.objects.get_or_create(
+            category=cat,
+            acronym=acronym,
+            defaults={
+                'name': f'{category}-{acronym}',
+                'name_de': f'{category}-{acronym}',
+                'name_en': f'{category}-{acronym}',
+                'purpose': 'Test',
+                'purpose_de': 'Test',
+                'purpose_en': 'Test',
+            },
+        )
+        return ServiceRevision.objects.create(
+            service=svc,
+            version=version,
+            listed_from=listed_from or datetime.date.today(),
+            description='Test',
+            description_de='Test',
+            description_en='Test',
+            description_internal=description_internal,
+            details_en=details_en,
+            details_de=details_de,
+        )
+
+    @override_settings(AI_SEARCH_ENABLED=False)
+    def test_no_internal_links_exits_clean(self):
+        """Command exits 0 when service fields contain no [[...]] references."""
+        self._make_revision(description_internal='No links here.')
+        _, _, exit_code = self._run_command()
+        self.assertEqual(exit_code, 0)
+
+    @override_settings(AI_SEARCH_ENABLED=False)
+    def test_broken_internal_link_exits_1(self):
+        """A [[KEY-NOEXIST]] reference matching no revision causes exit code 1."""
+        self._make_revision(description_internal='See [[NOTEXST-BROKEN]] for info.')
+        out, _, exit_code = self._run_command()
+        self.assertIn('[[NOTEXST-BROKEN]]', out)
+        self.assertIn('Broken Internal', out)
+        self.assertEqual(exit_code, 1)
+
+    @override_settings(AI_SEARCH_ENABLED=False)
+    def test_soft_link_warning_exit_0(self):
+        """A [[softlink]] without key separator produces a warning but exit code 0."""
+        self._make_revision(description_internal='Refer to [[email]] support.')
+        out, _, exit_code = self._run_command()
+        self.assertIn('[[email]]', out)
+        self.assertIn('Soft', out)
+        self.assertEqual(exit_code, 0)
+
+    @override_settings(AI_SEARCH_ENABLED=False)
+    def test_valid_internal_link_exit_0(self):
+        """A [[CAT-SVC]] referencing a real listed revision exits 0."""
+        # Create the target revision first so it can be matched
+        self._make_revision(category='TGT', acronym='REAL', version='1.0')
+        # Create the source revision that references it
+        self._make_revision(
+            category='SRC', acronym='REF', version='1.0',
+            description_internal='Refer to [[TGT-REAL]] for context.',
+        )
+        _, _, exit_code = self._run_command()
+        self.assertEqual(exit_code, 0)
+
+    @override_settings(AI_SEARCH_ENABLED=False)
+    def test_internal_links_in_translated_text_fields_detected(self):
+        """Internal links are extracted from translated text fields (e.g. details_en)."""
+        self._make_revision(details_en='See [[XNOTFOUND-NOSVC]] for more.')
+        out, _, exit_code = self._run_command()
+        self.assertIn('[[XNOTFOUND-NOSVC]]', out)
+        self.assertEqual(exit_code, 1)
+
+    @override_settings(AI_SEARCH_ENABLED=False)
+    def test_broken_and_soft_reported_in_separate_sections(self):
+        """Broken links and soft links are each shown in their own sections."""
+        self._make_revision(
+            description_internal='Broken: [[CAT-GHOST]]; Soft: [[support]].'
+        )
+        out, _, exit_code = self._run_command()
+        self.assertIn('[[CAT-GHOST]]', out)
+        self.assertIn('[[support]]', out)
+        self.assertIn('Broken Internal', out)
+        self.assertIn('Soft', out)
+        self.assertEqual(exit_code, 1)
+
+    @override_settings(AI_SEARCH_ENABLED=False)
+    def test_summary_mentions_internal_links(self):
+        """The summary section explicitly names broken internal links."""
+        self._make_revision(description_internal='See [[NO-SUCH-SERVICE]] later.')
+        out, _, exit_code = self._run_command()
+        self.assertIn('internal link', out.lower())
+        self.assertEqual(exit_code, 1)
+
+    @override_settings(AI_SEARCH_ENABLED=False)
+    def test_broken_url_and_broken_ilink_both_exit_1(self):
+        """Both a broken URL and a broken internal link in the same revision cause exit 1."""
+        from unittest.mock import patch, MagicMock
+        self._make_revision(
+            description_internal='See [[BROKEN-ILINK]] done.',
+            details_en='More at https://broken-url.example.com/gone.',
+        )
+        bad_resp = MagicMock()
+        bad_resp.status_code = 404
+        with patch('ServiceCatalogue.management.commands.check_urls.requests.head',
+                   return_value=bad_resp):
+            try:
+                from io import StringIO
+                from django.core.management import call_command
+                out = StringIO()
+                call_command('check_urls', stdout=out)
+                exit_code = 0
+            except SystemExit as exc:
+                exit_code = exc.code
+        self.assertEqual(exit_code, 1)

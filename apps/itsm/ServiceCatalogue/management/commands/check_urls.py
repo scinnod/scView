@@ -1,14 +1,24 @@
 """
-Management command to check all URLs in service catalogue text fields for availability.
+Management command to check URLs and internal links in service catalogue text fields.
 
-Scans every ServiceRevision field that is auto-linked in the templates via Django's
-``|urlize`` filter (description_internal, usage_information, details and their de/en
-translations) as well as the dedicated URLField (url).  Duplicate URLs are collapsed
-before checking so each address is only requested once.
+Phase 1 – External URL availability
+    Scans every ServiceRevision field auto-linked in templates via Django's ``|urlize``
+    filter (description_internal, usage_information, details and their de/en
+    translations) as well as the dedicated URLField (url).  Duplicate URLs are collapsed
+    before checking so each address is only requested once.
+
+Phase 2 – Internal ``[[...]]`` link validation
+    Scans all text fields rendered with the ``|parse_internal_links`` template filter
+    for ``[[...]]`` references and validates them using the same logic as the template
+    filter (via :func:`_classify_internal_link` in ``templatetags/html_links.py``):
+
+    * ``[[email]]`` – no key separator → *soft link*, not validated → **warning**
+    * ``[[INVALID-SERVICE]]`` – key separator present, no matching revision → **error**
+    * ``[[COLLAB-EMAIL]]`` – matches one or more revisions → OK
 
 Exit codes:
-  0 – all URLs reachable
-  1 – at least one broken URL detected
+  0 – all URLs reachable and no broken internal links detected
+  1 – at least one broken URL or broken internal link detected
 
 Usage::
 
@@ -37,12 +47,22 @@ _URL_RE = re.compile(
     re.IGNORECASE,
 )
 
+# Pattern for [[internal link]] references (matches the same syntax as the template filter).
+_INTERNAL_LINK_RE = re.compile(r'\[\[([^()]*?)\]\]')
+
 
 def _extract_urls(text: str) -> list[str]:
     """Return all http/https URLs found in *text*."""
     if not text:
         return []
     return _URL_RE.findall(text)
+
+
+def _extract_internal_links(text: str) -> list[str]:
+    """Return all [[...]] internal link references found in *text*."""
+    if not text:
+        return []
+    return _INTERNAL_LINK_RE.findall(text)
 
 
 # ---------------------------------------------------------------------------
@@ -56,6 +76,20 @@ _TEXT_URL_FIELDS = [
     ('usage_information',    'usage_information',    True),
     ('details',              'details',              True),
 ]
+
+# Fields scanned for [[internal link]] references.
+# These correspond to all ServiceRevision fields rendered with |parse_internal_links
+# in the templates (service.purpose is on Service, not ServiceRevision, and is omitted).
+_INTERNAL_LINK_FIELDS = [
+    ('description_internal', 'description_internal', False),
+    ('description',          'description',          True),
+    ('usage_information',    'usage_information',    True),
+    ('requirements',         'requirements',         True),
+    ('details',              'details',              True),
+    ('options',              'options',              True),
+    ('service_level',        'service_level',        True),
+    ('eol',                  'eol',                  False),
+]
 _LANGUAGES = ['de', 'en']
 
 
@@ -65,10 +99,12 @@ _LANGUAGES = ['de', 'en']
 
 class Command(BaseCommand):
     help = (
-        'Check all URLs in service catalogue text fields (those rendered with |urlize '
-        'in templates) and the ServiceRevision.url URLField for availability.  '
-        'Reports broken URLs (404, connection errors) together with the service key '
-        'and field they appear in.  Use --include-403 to also flag 403 responses.'
+        'Phase 1: Check all URLs in service catalogue text fields (those rendered with '
+        '|urlize in templates) and the ServiceRevision.url URLField for availability.  '
+        'Phase 2: Validate all [[...]] internal link references in text fields rendered '
+        'with |parse_internal_links – broken references (key separator present, no match) '
+        'cause exit code 1; soft links (no key separator) produce a warning only.  '
+        'Use --include-403 to also flag HTTP 403 responses as broken.'
     )
 
     def add_arguments(self, parser):
@@ -189,7 +225,6 @@ class Command(BaseCommand):
 
         if total_unique == 0:
             self.stdout.write(self.style.SUCCESS('No URLs found in the selected service revisions.'))
-            return
 
         # ------------------------------------------------------------------
         # 2. Check URLs (parallel)
@@ -222,21 +257,22 @@ class Command(BaseCommand):
             except Exception as exc:               # noqa: BLE001
                 return url, None, f'Error: {exc}'
 
-        self.stdout.write(
-            f'Checking {total_unique} URL(s) with {workers} parallel worker(s)…'
-        )
         results: dict[str, tuple[int | None, str | None]] = {}
-        with ThreadPoolExecutor(max_workers=workers) as executor:
-            futures = {executor.submit(_check, url): url for url in url_occurrences}
-            done = 0
-            for future in as_completed(futures):
-                url, status, error = future.result()
-                results[url] = (status, error)
-                done += 1
-                if done % max(1, total_unique // 20) == 0 or done == total_unique:
-                    self.stdout.write(f'  {done}/{total_unique} done…', ending='\r')
-                    self.stdout.flush()
-        self.stdout.write('')  # newline after in-place progress
+        if total_unique > 0:
+            self.stdout.write(
+                f'Checking {total_unique} URL(s) with {workers} parallel worker(s)…'
+            )
+            with ThreadPoolExecutor(max_workers=workers) as executor:
+                futures = {executor.submit(_check, url): url for url in url_occurrences}
+                done = 0
+                for future in as_completed(futures):
+                    url, status, error = future.result()
+                    results[url] = (status, error)
+                    done += 1
+                    if done % max(1, total_unique // 20) == 0 or done == total_unique:
+                        self.stdout.write(f'  {done}/{total_unique} done…', ending='\r')
+                        self.stdout.flush()
+            self.stdout.write('')  # newline after in-place progress
 
         # ------------------------------------------------------------------
         # 3. Categorise
@@ -309,17 +345,102 @@ class Command(BaseCommand):
                     self.stdout.write(f'    • {svc_key}  [{field}]')
 
         # ------------------------------------------------------------------
-        # 5. Exit
+        # 5. Internal link validation
+        # ------------------------------------------------------------------
+        from ServiceCatalogue.templatetags.html_links import (
+            _classify_internal_link, _ILINK_BROKEN, _ILINK_SOFT,
+        )
+        from ServiceCatalogue.models import keysep
+
+        self.stdout.write(self.style.MIGRATE_HEADING('\n=== Internal Link Validation ===\n'))
+
+        # link_text → list[(service_key, field_label)]
+        ilink_occurrences: dict[str, list[tuple[str, str]]] = defaultdict(list)
+
+        for sr in service_revisions:
+            service_key = sr.key
+            for field_name, label, is_translated in _INTERNAL_LINK_FIELDS:
+                if is_translated:
+                    for lang in _LANGUAGES:
+                        value = getattr(sr, f'{field_name}_{lang}', None)
+                        for link_text in _extract_internal_links(value):
+                            ilink_occurrences[link_text].append((service_key, f'{label} ({lang})'))
+                else:
+                    value = getattr(sr, field_name, None)
+                    for link_text in _extract_internal_links(value):
+                        ilink_occurrences[link_text].append((service_key, label))
+
+        total_ilink_refs   = sum(len(v) for v in ilink_occurrences.values())
+        total_unique_ilinks = len(ilink_occurrences)
+        self.stdout.write(
+            f'Found {total_ilink_refs} internal link reference(s) '
+            f'→ {total_unique_ilinks} unique reference(s) to validate.'
+        )
+
+        broken_ilinks: list[tuple[str, list]] = []
+        soft_ilinks:   list[tuple[str, list]] = []
+        ok_ilinks:     list[str]              = []
+
+        for link_text, occ in ilink_occurrences.items():
+            kind, _ = _classify_internal_link(link_text)
+            if kind == _ILINK_BROKEN:
+                broken_ilinks.append((link_text, occ))
+            elif kind == _ILINK_SOFT:
+                soft_ilinks.append((link_text, occ))
+            else:
+                ok_ilinks.append(link_text)
+
+        self.stdout.write(f'  ✓  Valid references              : {len(ok_ilinks)}')
+        self.stdout.write(f'  ✗  Broken references (no match)  : {len(broken_ilinks)}')
+        self.stdout.write(f'  ⚠  Soft links (not validated)    : {len(soft_ilinks)}')
+
+        # --- Broken internal links ---
+        if broken_ilinks:
+            self.stdout.write(self.style.ERROR(f'\n--- Broken Internal Links ({len(broken_ilinks)}) ---'))
+            for link_text, occ in sorted(broken_ilinks, key=lambda x: x[0]):
+                self.stdout.write(self.style.ERROR(f'\n  [[{link_text}]]'))
+                self.stdout.write('  Reason : No currently-listed service revision matches this key')
+                self.stdout.write('  Used in:')
+                for svc_key, field in occ:
+                    self.stdout.write(f'    • {svc_key}  [{field}]')
+        else:
+            self.stdout.write(self.style.SUCCESS('\nNo broken internal links found. ✓'))
+
+        # --- Soft (unvalidated) links ---
+        if soft_ilinks:
+            self.stdout.write(self.style.WARNING(
+                f'\n--- Soft (Unvalidated) Internal Links ({len(soft_ilinks)}) ---'
+            ))
+            self.stdout.write(self.style.WARNING(
+                f'  These links do not contain the key separator "{keysep}" '
+                'and are not validated against the service catalogue.\n'
+            ))
+            for link_text, occ in sorted(soft_ilinks, key=lambda x: x[0]):
+                self.stdout.write(self.style.WARNING(f'  [[{link_text}]]'))
+                for svc_key, field in occ:
+                    self.stdout.write(f'    • {svc_key}  [{field}]')
+
+        # ------------------------------------------------------------------
+        # 6. Exit
         # ------------------------------------------------------------------
         self.stdout.write(self.style.MIGRATE_HEADING('\n=== Summary ===\n'))
-        issues = len(broken) + (len(forbidden) if include_403 else 0)
+        url_issues    = len(broken) + (len(forbidden) if include_403 else 0)
+        ilink_issues  = len(broken_ilinks)
+        issues        = url_issues + ilink_issues
         if issues:
+            parts = []
+            if url_issues:
+                parts.append(f'{url_issues} URL(s)')
+            if ilink_issues:
+                parts.append(f'{ilink_issues} internal link(s)')
             self.stdout.write(self.style.ERROR(
-                f'❌ {issues} URL(s) require attention.  '
+                f'❌ {", ".join(parts)} require attention.  '
                 'Please update or remove them in the affected service revisions.'
             ))
             self.stdout.write('')
             sys.exit(1)
         else:
-            self.stdout.write(self.style.SUCCESS('✅ All checked URLs appear to be reachable.\n'))
+            self.stdout.write(self.style.SUCCESS(
+                '✅ All checked URLs are reachable and all internal links are valid.\n'
+            ))
             sys.exit(0)

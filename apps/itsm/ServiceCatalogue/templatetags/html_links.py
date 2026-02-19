@@ -15,6 +15,53 @@ from ServiceCatalogue.models import ServiceRevision, keysep
 
 register = template.Library()
 
+# ---------------------------------------------------------------------------
+# Internal-link classification constants
+# ---------------------------------------------------------------------------
+
+_ILINK_SOFT   = 'soft'    # no key separator – unvalidated fulltext search (warning)
+_ILINK_UNIQUE = 'unique'  # exactly one currently-listed revision matched
+_ILINK_MULTI  = 'multi'   # multiple currently-listed revisions matched
+_ILINK_BROKEN = 'broken'  # key separator present but no matching revision (error)
+
+
+def _classify_internal_link(link_text):
+    """
+    Classify an internal ``[[...]]`` link reference without generating HTML.
+
+    Returns ``(kind, match_count)`` where *kind* is one of the ``_ILINK_*``
+    constants defined in this module:
+
+    * ``_ILINK_SOFT``   – no key separator; link is not validated (warning only)
+    * ``_ILINK_UNIQUE`` – exactly one currently-listed revision found
+    * ``_ILINK_MULTI``  – more than one currently-listed revision found
+    * ``_ILINK_BROKEN`` – key separator present but no matching revision (error)
+
+    This function is the shared classification kernel used by both the HTML
+    template filters (:func:`_resolve_internal_link`) and the ``check_urls``
+    management command.  It performs a single DB query (or zero for the soft
+    case).
+    """
+    if keysep not in link_text:
+        return _ILINK_SOFT, 0
+
+    try:
+        today = datetime.date.today()
+        match_count = (
+            ServiceRevision.objects
+            .filter(search_keys__icontains=link_text, listed_from__lte=today)
+            .exclude(listed_until__lt=today)
+            .count()
+        )
+        if match_count == 1:
+            return _ILINK_UNIQUE, 1
+        elif match_count > 1:
+            return _ILINK_MULTI, match_count
+        else:
+            return _ILINK_BROKEN, 0
+    except Exception:
+        return _ILINK_BROKEN, 0
+
 
 def _resolve_internal_link(link_text, for_detail_view=False):
     """
