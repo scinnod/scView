@@ -199,6 +199,15 @@
       <h5 class="accordion-header" id="acc-header-{{sr.id}}">
        <button class="accordion-button{% if object_list|length > 1 %} collapsed{% endif %} fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{sr.id}}" aria-expanded="{% if object_list|length > 1 %}false{% else %}true{% endif %}" aria-controls="collapse-{{sr.id}}">
          {{sr.service.name}} {% ifchanged sr.service %}{% else %}<span class="badge bg-secondary ms-2">{{sr.version}}</span>{% endifchanged %}
+         {% if sr.available_from and sr.available_from <= today %}
+           {% if not sr.available_until or sr.available_until >= today %}
+             {% if not sr.listed_from or sr.listed_from > today %}
+             <span class="badge bg-warning text-dark ms-2" title="{% translate 'This service is available but not publicly listed in the service catalogue.' %}"><i class="bi bi-eye-slash me-1"></i>{% translate "not publicly listed" %}</span>
+             {% elif sr.listed_until and sr.listed_until < today %}
+             <span class="badge bg-warning text-dark ms-2" title="{% translate 'This service is available but not publicly listed in the service catalogue.' %}"><i class="bi bi-eye-slash me-1"></i>{% translate "not publicly listed" %}</span>
+             {% endif %}
+           {% endif %}
+         {% endif %}
        </button>
       </h5>
       <div id="collapse-{{sr.id}}" class="accordion-collapse collapse{% if object_list|length == 1 %} show{% endif %}" aria-labelledby="acc-header-{{sr.id}}">

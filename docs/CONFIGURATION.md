@@ -420,6 +420,20 @@ Revisions are included when they have at least one date context that is active o
 > reported as warnings but do **not** trigger exit code 1.  These cannot be validated
 > because they resolve to a plain fulltext search.
 
+**Phase 3 – Markup in strict fields**
+
+Scans the `description` and `purpose` fields for markup syntax that is not supported
+in those "strict" fields (see [SERVICE_MANAGEMENT.md](SERVICE_MANAGEMENT.md#field-formatting-overview)
+for the full field formatting table):
+
+| Field | Checked for | Severity |
+|-------|------------|----------|
+| `purpose` (de / en) | Bold, italic, lists, URLs, internal links | Warning |
+| `description` (de / en) | Bold, italic, lists, URLs (internal links `[[...]]` are allowed) | Warning |
+
+Markup warnings do **not** cause exit code 1 — they are informational only, because the
+formatting will simply not render in these fields and may confuse readers.
+
 ### Service Management
 
 ```bash

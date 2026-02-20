@@ -90,6 +90,18 @@ A revision is considered:
 - **Online**: `listed_from` ≤ today and (no `listed_until` or `listed_until` > today)
 - **Retired**: `listed_until` ≤ today
 
+### "Not Publicly Listed" Badge
+
+In internal views (staff-only list and detail views), services that are **currently available** but **not publicly listed** in the catalogue are clearly marked with a warning badge:
+
+> ⚠ **not publicly listed**
+
+This badge appears when:
+- The service has an active availability window (`available_from` ≤ today, `available_until` not past)
+- But is **not** publicly listed (no `listed_from`, or `listed_from` > today, or `listed_until` < today)
+
+This helps staff members quickly identify services that users can access but cannot discover through the public catalogue.
+
 ## Initial Setup
 
 1. Run `initialize_groups` to create permission groups
@@ -174,6 +186,10 @@ Not all fields support the same formatting options. The table below summarises w
 | `options` | ✓ | ✓ | ✓ | ✓ | |
 | `service_level` | ✓ | ✓ | ✓ | ✓ | |
 | `eol` | ✓ | ✓ | ✓ | ✓ | End-of-life instructions |
+
+> **Validation:** The `check_urls` management command (Phase 3) warns when markup syntax
+> is found in strict fields (`purpose`, `description`).  See
+> [CONFIGURATION.md](CONFIGURATION.md#url-and-internal-link-check) for details.
 
 ### LaTeX / PDF Output
 

@@ -16,6 +16,17 @@ Phase 2 – Internal ``[[...]]`` link validation
     * ``[[INVALID-SERVICE]]`` – key separator present, no matching revision → **error**
     * ``[[COLLAB-EMAIL]]`` – matches one or more revisions → OK
 
+Phase 3 – Markup in strict fields
+    Scans the ``description`` and ``purpose`` fields for markup syntax that is not
+    supported in those fields (per the field formatting overview in the documentation).
+
+    * ``purpose``: Strict – no bold/italic, no lists, no URLs, no internal links
+    * ``description``: Strict – no bold/italic, no lists, no URLs, but internal links
+      ``[[...]]`` are allowed
+
+    Any markup found in these fields produces a **warning** (not an error) because the
+    formatting will not render and may confuse users reading the plain text.
+
 Exit codes:
   0 – all URLs reachable and no broken internal links detected
   1 – at least one broken URL or broken internal link detected
@@ -49,6 +60,38 @@ _URL_RE = re.compile(
 
 # Pattern for [[internal link]] references (matches the same syntax as the template filter).
 _INTERNAL_LINK_RE = re.compile(r'\[\[([^()]*?)\]\]')
+
+# Patterns for detecting markup syntax in strict fields
+_BOLD_RE = re.compile(r'\*\*[^*]+?\*\*')
+_ITALIC_RE = re.compile(r'(?<!\*)\*[^*]+?\*(?!\*)')
+_UL_RE = re.compile(r'^[-*]\s+', re.MULTILINE)
+_OL_RE = re.compile(r'^\d+\.\s+', re.MULTILINE)
+
+
+def _detect_markup(text: str, allow_internal_links: bool = False) -> list[str]:
+    """Detect markup syntax in text that should be plain/strict.
+
+    Returns a list of human-readable descriptions of the markup found.
+    When *allow_internal_links* is True, ``[[...]]`` references are
+    **not** reported (used for the ``description`` field which supports
+    internal links but not other markup).
+    """
+    if not text:
+        return []
+    findings: list[str] = []
+    if _BOLD_RE.search(text):
+        findings.append('bold (**...**)')
+    if _ITALIC_RE.search(text):
+        findings.append('italic (*...*)')
+    if _UL_RE.search(text):
+        findings.append('unordered list (- ...)')
+    if _OL_RE.search(text):
+        findings.append('ordered list (1. ...)')
+    if _URL_RE.search(text):
+        findings.append('URL (https://...)')
+    if not allow_internal_links and _INTERNAL_LINK_RE.search(text):
+        findings.append('internal link ([[...]])')
+    return findings
 
 
 def _extract_urls(text: str) -> list[str]:
@@ -108,6 +151,8 @@ class Command(BaseCommand):
         'Phase 2: Validate all [[...]] internal link references in text fields rendered '
         'with |parse_internal_links – broken references (key separator present, no match) '
         'cause exit code 1; soft links (no key separator) produce a warning only.  '
+        'Phase 3: Warn about markup syntax (bold, italic, lists, URLs, internal links) '
+        'found in strict fields (description, purpose) where it is not supported.  '
         'Use --include-403 to also flag HTTP 403 responses as broken.'
     )
 
@@ -425,11 +470,66 @@ class Command(BaseCommand):
                     self.stdout.write(f'    • {svc_key}  [{field}]')
 
         # ------------------------------------------------------------------
-        # 6. Exit
+        # 6. Markup in strict fields
+        # ------------------------------------------------------------------
+        from ServiceCatalogue.models import Service
+
+        self.stdout.write(self.style.MIGRATE_HEADING('\n=== Markup in Strict Fields ===\n'))
+        self.stdout.write(
+            'Checking description and purpose fields for unsupported markup…\n'
+            '  • purpose: bold, italic, lists, URLs, internal links → all unsupported\n'
+            '  • description: bold, italic, lists, URLs → unsupported (internal links OK)'
+        )
+
+        # Collect markup occurrences: (service_key, field_label, findings_list)
+        markup_warnings: list[tuple[str, str, list[str]]] = []
+
+        # -- ServiceRevision.description (translated, allows [[...]] but not other markup)
+        for sr in service_revisions:
+            service_key = sr.key
+            for lang in _LANGUAGES:
+                value = getattr(sr, f'description_{lang}', None)
+                findings = _detect_markup(value, allow_internal_links=True)
+                if findings:
+                    markup_warnings.append((service_key, f'description ({lang})', findings))
+
+        # -- Service.purpose (translated, no markup at all)
+        # Collect unique services from the scanned revisions
+        seen_services: set[int] = set()
+        for sr in service_revisions:
+            if sr.service_id in seen_services:
+                continue
+            seen_services.add(sr.service_id)
+            service_key = sr.service.key
+            for lang in _LANGUAGES:
+                value = getattr(sr.service, f'purpose_{lang}', None)
+                findings = _detect_markup(value, allow_internal_links=False)
+                if findings:
+                    markup_warnings.append((service_key, f'purpose ({lang})', findings))
+
+        self.stdout.write(f'\n  ⚠  Fields with unsupported markup  : {len(markup_warnings)}')
+
+        if markup_warnings:
+            self.stdout.write(self.style.WARNING(
+                f'\n--- Unsupported Markup ({len(markup_warnings)}) ---'
+            ))
+            self.stdout.write(self.style.WARNING(
+                '  These fields are "strict" (plain text only). '
+                'Markup syntax will not be rendered and may confuse readers.\n'
+            ))
+            for svc_key, field, findings in sorted(markup_warnings, key=lambda x: (x[0], x[1])):
+                self.stdout.write(self.style.WARNING(f'  {svc_key}  [{field}]'))
+                self.stdout.write(f'    Found: {", ".join(findings)}')
+        else:
+            self.stdout.write(self.style.SUCCESS('\nNo unsupported markup found in strict fields. ✓'))
+
+        # ------------------------------------------------------------------
+        # 7. Exit
         # ------------------------------------------------------------------
         self.stdout.write(self.style.MIGRATE_HEADING('\n=== Summary ===\n'))
         url_issues    = len(broken) + (len(forbidden) if include_403 else 0)
         ilink_issues  = len(broken_ilinks)
+        markup_issues = len(markup_warnings)
         issues        = url_issues + ilink_issues
         if issues:
             parts = []
@@ -441,10 +541,15 @@ class Command(BaseCommand):
                 f'❌ {", ".join(parts)} require attention.  '
                 'Please update or remove them in the affected service revisions.'
             ))
-            self.stdout.write('')
-            sys.exit(1)
-        else:
-            self.stdout.write(self.style.SUCCESS(
-                '✅ All checked URLs are reachable and all internal links are valid.\n'
+        if markup_issues:
+            self.stdout.write(self.style.WARNING(
+                f'⚠  {markup_issues} field(s) contain unsupported markup (warnings only).'
             ))
-            sys.exit(0)
+        if not issues and not markup_issues:
+            self.stdout.write(self.style.SUCCESS(
+                '✅ All checked URLs are reachable, all internal links are valid, '
+                'and no unsupported markup was found.\n'
+            ))
+        else:
+            self.stdout.write('')
+        sys.exit(1 if issues else 0)
