@@ -348,7 +348,7 @@ one via HTTP, and reports broken links together with the service key and field t
 
 Scans all text fields rendered with the `|parse_internal_links` template filter for
 `[[...]]` references and validates them using the same resolution logic as the template
-filter itself (via `_classify_internal_link` in `templatetags/html_links.py`):
+filter itself (via `_classify_internal_link` in `templatetags/text_filters.py`):
 
 | Reference | Classification | Severity |
 |-----------|---------------|----------|
@@ -391,7 +391,11 @@ Revisions are included when they have at least one date context that is active o
 | `url` | `ServiceRevision` | No |
 | `description_internal` | `ServiceRevision` | No |
 | `usage_information` | `ServiceRevision` | Yes (de / en) |
+| `requirements` | `ServiceRevision` | Yes (de / en) |
 | `details` | `ServiceRevision` | Yes (de / en) |
+| `options` | `ServiceRevision` | Yes (de / en) |
+| `service_level` | `ServiceRevision` | Yes (de / en) |
+| `eol` | `ServiceRevision` | No |
 
 **Fields scanned for internal `[[...]]` links:**
 

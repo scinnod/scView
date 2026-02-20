@@ -1,7 +1,7 @@
 {% extends "ServiceCatalogue/services_base.html" %}
 
 {% load i18n %}
-{% load html_links %}
+{% load text_filters %}
 
 {% block title %} {{ title }}{% if kwargs.clientele_id %} {% translate "for" %} {% for clientele in clienteles %}{% if clientele.id == kwargs.clientele_id %}{{ clientele.name }}{% endif %}{% endfor %}{% endif %}{% endblock %}
 {% block description %}
@@ -71,7 +71,7 @@
             </a>
             {% endif %}
           </h6>
-          <div class="ms-4 p-3 bg-light rounded-3">{{ sr.service.purpose|linebreaks|parse_internal_links}}</div>
+          <div class="ms-4 p-3 bg-light rounded-3">{{ sr.service.purpose|linebreaks }}</div>
         </div>
 
         <!-- Internal Description (Staff Only) -->
@@ -82,7 +82,7 @@
             {% translate "Internal description / configuration" %}
           </h6>
           <div class="ms-4 p-3 bg-warning bg-opacity-10 border border-warning rounded-3">
-            {{ sr.description_internal|linebreaks|urlize|parse_internal_links}}
+            {{ sr.description_internal|linebreaks|urlize|parse_simple_markdown|parse_internal_links}}
           </div>
         </div>
         {% endif %}
@@ -107,7 +107,7 @@
               <div class="d-flex justify-content-between align-items-start mb-2">
                 <p class="fw-bold mb-0">{% translate "Please Note" %}:</p>
               </div>
-              <div>{{ sr.usage_information|linebreaks|urlize|parse_internal_links}}</div>
+              <div>{{ sr.usage_information|linebreaks|urlize|parse_simple_markdown|parse_internal_links}}</div>
             </div>
           </div>
         </div>
@@ -120,7 +120,7 @@
             <i class="bi bi-check2-square"></i>
             {% translate "Requirements" %}
           </h6>
-          <div class="ms-4 p-3 bg-light rounded-3">{{ sr.requirements|linebreaks|parse_internal_links}}</div>
+          <div class="ms-4 p-3 bg-light rounded-3">{{ sr.requirements|linebreaks|urlize|parse_simple_markdown|parse_internal_links}}</div>
         </div>
         {% endif %}
 
@@ -131,7 +131,7 @@
             <i class="bi bi-list-check"></i>
             {% translate "Details" %}
           </h6>
-          <div class="ms-4 p-3 bg-light rounded-3">{{ sr.details|linebreaks|urlize|parse_internal_links}}</div>
+          <div class="ms-4 p-3 bg-light rounded-3">{{ sr.details|linebreaks|urlize|parse_simple_markdown|parse_internal_links}}</div>
         </div>
         {% endif %}
 
@@ -142,7 +142,7 @@
             <i class="bi bi-sliders"></i>
             {% translate "Options" %}
           </h6>
-          <div class="ms-4 p-3 bg-light rounded-3">{{ sr.options|linebreaks|parse_internal_links}}</div>
+          <div class="ms-4 p-3 bg-light rounded-3">{{ sr.options|linebreaks|urlize|parse_simple_markdown|parse_internal_links}}</div>
         </div>
         {% endif %}
 
@@ -153,7 +153,7 @@
             <i class="bi bi-graph-up-arrow"></i>
             {% translate "Service Level" %}
           </h6>
-          <div class="ms-4 p-3 bg-light rounded-3">{{ sr.service_level|linebreaks|parse_internal_links}}</div>
+          <div class="ms-4 p-3 bg-light rounded-3">{{ sr.service_level|linebreaks|urlize|parse_simple_markdown|parse_internal_links}}</div>
         </div>
         {% endif %}
 
@@ -306,7 +306,7 @@
             <i class="bi bi-archive"></i>
             {% translate "EOL action" %}
           </h6>
-          <div class="ms-4 p-3 bg-light rounded-3">{{ sr.eol|linebreaks|parse_internal_links}}</div>
+          <div class="ms-4 p-3 bg-light rounded-3">{{ sr.eol|linebreaks|urlize|parse_simple_markdown|parse_internal_links}}</div>
         </div>
         {% endif %}
 

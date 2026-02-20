@@ -6,6 +6,7 @@
 \usepackage[hidelinks]{hyperref}
 \usepackage[utf8]{inputenc}
 \usepackage[table]{xcolor}
+\usepackage{enumitem}
 %\usepackage[ngerman]{babel}
 \usepackage{fancyhdr}
 \usepackage{tikz}
@@ -61,16 +62,18 @@
       {\it {{ sr.service.category.description | latex_escape }} }
     {% endif %}
   {% endif %}
-  \subsubsection{ {{- sr.service.name | latex_escape }} ({{ sr.version | latex_escape }})}                
+  \subsubsection{ {{- sr.service.name | latex_escape }} ({{ sr.version | latex_escape }})}
+  {{ sr.service.key | latex_service_label }}
+  {{ sr.key | latex_revision_label }}              
   \begin{tabular}{@{}p{.2\textwidth}p{.77\textwidth}}
   Service identifyer:&{{ sr.key | latex_escape}}\\
   Purpose / value:&{{sr.service.purpose | latex_escape}}\\
-  Description:&{{sr.description | latex_escape}}\\
-  {% if show_usage_information and sr.usage_information %}Please Note:&{{sr.usage_information | latex_escape }}\\{% endif %}
-  {% if show_requirements and sr.requirements %}Requirements:&{{sr.requirements | latex_escape }}\\{% endif %}
-  {% if show_details and sr.details %}Details:&{{sr.details | latex_escape }}\\{% endif %}
-  {% if show_options and sr.options %}Options:&{{sr.options | latex_escape }}\\{% endif %}
-  {% if show_service_level and sr.service_level %}Service Level:&{{sr.service_level | latex_escape }}\{% endif %}
+  Description:&{{sr.description | latex_escape | latex_internal_links}}\\
+  {% if show_usage_information and sr.usage_information %}Please Note:&{{sr.usage_information | latex_escape_markdown | latex_internal_links }}\\{% endif %}
+  {% if show_requirements and sr.requirements %}Requirements:&{{sr.requirements | latex_escape_markdown | latex_internal_links }}\\{% endif %}
+  {% if show_details and sr.details %}Details:&{{sr.details | latex_escape_markdown | latex_internal_links }}\\{% endif %}
+  {% if show_options and sr.options %}Options:&{{sr.options | latex_escape_markdown | latex_internal_links }}\\{% endif %}
+  {% if show_service_level and sr.service_level %}Service Level:&{{sr.service_level | latex_escape_markdown | latex_internal_links }}\\{% endif %}
   {% if sr.url %}Link to service:&\href{ {{- sr.url -}} }{ {{- sr.url | latex_escape -}} }\\{% endif %}
   {% if sr.contact %}Service contact:&\href{mailto: {{- sr.contact -}} ?subject=[Service Request {{ sr.key | iriencode  }}] {{sr.service.name | iriencode }} }{ {{- sr.contact | latex_escape -}} }\\{% endif %}
    {% if not sr.available_from %}Available from:&\emph{not yet known}\\{% elif sr.available_from > today %}Available from:&{{sr.available_from}}\\{% endif %}
@@ -104,16 +107,18 @@
   {% endif %}
   {% if not loop.previtem or sr.service.key != loop.previtem.service.key %} {# unfortunately changed cannot be nested #}
   \subsubsection{ {{- sr.service.name | latex_escape }} }
+  {{ sr.service.key | latex_service_label }}
   {{sr.service.purpose | latex_escape}}\\
   {% endif %} 
+  {{ sr.key | latex_revision_label }}
   \begin{tabular}{@{}p{.2\textwidth}p{.77\textwidth}}
   \rowcolor{gray!10}\textbf{Service identifyer:}&\textbf{ {{- sr.key | latex_escape }} }\\  
-  Description:&{{sr.description | latex_escape}}\\
-  {% if show_usage_information and sr.usage_information %}Please Note:&{{sr.usage_information | latex_escape }}\\{% endif %}
-  {% if show_requirements and sr.requirements %}Requirements:&{{sr.requirements | latex_escape }}\\{% endif %}
-  {% if show_details and sr.details %}Details:&{{sr.details | latex_escape }}\\{% endif %}
-  {% if show_options and sr.options %}Options:&{{sr.options | latex_escape }}\\{% endif %}
-  {% if show_service_level and sr.service_level %}Service Level:&{{sr.service_level | latex_escape }}\{% endif %}
+  Description:&{{sr.description | latex_escape | latex_internal_links}}\\
+  {% if show_usage_information and sr.usage_information %}Please Note:&{{sr.usage_information | latex_escape_markdown | latex_internal_links }}\\{% endif %}
+  {% if show_requirements and sr.requirements %}Requirements:&{{sr.requirements | latex_escape_markdown | latex_internal_links }}\\{% endif %}
+  {% if show_details and sr.details %}Details:&{{sr.details | latex_escape_markdown | latex_internal_links }}\\{% endif %}
+  {% if show_options and sr.options %}Options:&{{sr.options | latex_escape_markdown | latex_internal_links }}\\{% endif %}
+  {% if show_service_level and sr.service_level %}Service Level:&{{sr.service_level | latex_escape_markdown | latex_internal_links }}\\{% endif %}
   {% if sr.url %}Link to service:&\href{ {{- sr.url -}} }{ {{- sr.url | latex_escape -}} }\\{% endif %}
   {% if sr.contact %}Service contact:&\href{mailto: {{- sr.contact -}} ?subject=[Service Request {{ sr.key | iriencode  }}] {{sr.service.name | iriencode  }} }{ {{- sr.contact | latex_escape -}} }\\{% endif %}
   Availablability:&{% if sr.available_from and  sr.available_until %}{% if sr.available_from > today %}starting{% endif %} {{sr.available_from}} -- {{sr.available_until}}

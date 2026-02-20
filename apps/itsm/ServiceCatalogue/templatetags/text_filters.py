@@ -1,4 +1,5 @@
 import datetime
+import re
 from re import sub
 
 from django import template
@@ -14,6 +15,106 @@ from django.utils.translation import gettext as _
 from ServiceCatalogue.models import ServiceRevision, keysep
 
 register = template.Library()
+
+
+# ---------------------------------------------------------------------------
+# Simple Markdown formatting helpers
+# ---------------------------------------------------------------------------
+
+def _parse_simple_markdown_text(html):
+    """
+    Parse a limited subset of Markdown-like syntax in already-HTML text
+    (i.e. after Django's ``linebreaks`` filter has run).
+
+    Supported syntax (and **only** this syntax):
+
+    * **Bold**: ``**text**`` → ``<strong>text</strong>``
+    * *Italic*: ``*text*`` → ``<em>text</em>``
+    * Unordered lists: lines starting with ``- `` or ``* ``
+    * Ordered lists: lines starting with ``1. ``, ``2. ``, etc.
+
+    All other Markdown elements (headings, images, code blocks, tables, etc.)
+    are intentionally **not** supported.  The input fields are meant to stay
+    human-readable plain text with only light formatting.
+
+    **Design note:** This function operates on HTML that has already been
+    processed by Django's ``linebreaks`` filter, so list items appear as
+    ``<p>- item1<br>- item2</p>`` patterns.  The function detects these
+    patterns and converts them into proper ``<ul>``/``<ol>`` elements.
+    """
+    # Step 1: Bold – **text** → <strong>text</strong>
+    # Must be processed before italic to avoid conflicts.
+    # Avoid matching inside HTML tags or across paragraphs.
+    html = re.sub(
+        r'\*\*([^*<>]+?)\*\*',
+        r'<strong>\1</strong>',
+        html,
+    )
+
+    # Step 2: Italic – *text* → <em>text</em>
+    # Single asterisk, but not part of a list marker (handled by list logic).
+    # Also must not match already-converted <strong> markers.
+    html = re.sub(
+        r'(?<!\*)\*([^*<>]+?)\*(?!\*)',
+        r'<em>\1</em>',
+        html,
+    )
+
+    # Step 3: Lists
+    # After ``linebreaks``, content looks like:
+    #   <p>- item 1<br>- item 2<br>- item 3</p>
+    # or mixed with normal paragraphs.  We process each <p>…</p> block and
+    # check whether it consists entirely of list items.
+    html = _convert_lists(html)
+
+    return html
+
+
+def _convert_lists(html):
+    """
+    Convert list-like ``<p>`` blocks into proper ``<ul>`` / ``<ol>`` elements.
+
+    A paragraph is treated as a list if **every** line inside it starts with
+    a recognised list marker:
+
+    * ``- `` or ``* `` for unordered lists
+    * ``1. ``, ``2. ``, etc. for ordered lists
+
+    Mixed list types within a single paragraph are not supported and will be
+    left untouched.
+    """
+    # Pattern for unordered list item markers (- or * at start of line)
+    # We use a regex that matches the bullet followed by a space.
+    UL_MARKER = re.compile(r'^(?:[-*])\s+', re.MULTILINE)
+    # Pattern for ordered list item markers (digits followed by . and space)
+    OL_MARKER = re.compile(r'^\d+\.\s+', re.MULTILINE)
+
+    def _process_paragraph(match):
+        inner = match.group(1)
+        # Split on <br>, <br/>, <br /> variants
+        lines = re.split(r'<br\s*/?>', inner)
+        lines = [line.strip() for line in lines if line.strip()]
+
+        if not lines:
+            return match.group(0)
+
+        # Check if all lines are unordered list items
+        all_ul = all(re.match(r'^[-*]\s+', line) for line in lines)
+        # Check if all lines are ordered list items
+        all_ol = all(re.match(r'^\d+\.\s+', line) for line in lines)
+
+        if all_ul:
+            items = [re.sub(r'^[-*]\s+', '', line) for line in lines]
+            return '<ul>\n' + ''.join(f'<li>{item}</li>\n' for item in items) + '</ul>'
+        elif all_ol:
+            items = [re.sub(r'^\d+\.\s+', '', line) for line in lines]
+            return '<ol>\n' + ''.join(f'<li>{item}</li>\n' for item in items) + '</ol>'
+        else:
+            return match.group(0)
+
+    # Process each <p>…</p> block
+    html = re.sub(r'<p>(.*?)</p>', _process_paragraph, html, flags=re.DOTALL)
+    return html
 
 # ---------------------------------------------------------------------------
 # Internal-link classification constants
@@ -213,3 +314,42 @@ def parse_internal_links_detail(text, autoescape=True):
     
     result = sub(r"\[\[[^()]*?\]\]", replace_link, esc(text))
     return mark_safe(result)
+
+
+@register.filter(is_safe=True)
+@stringfilter
+def parse_simple_markdown(text):
+    """
+    Apply limited Markdown-like formatting to HTML text.
+
+    Intended to run **after** ``linebreaks`` (and optionally ``urlize``) but
+    **before** the internal-link filters.  The filter chain for fields that
+    support rich formatting is::
+
+        {{ field|linebreaks|urlize|parse_simple_markdown|parse_internal_links_detail }}
+
+    Only the following Markdown elements are supported:
+
+    * ``**bold**`` → **bold**
+    * ``*italic*`` → *italic*
+    * Lines starting with ``- `` or ``* `` → unordered list
+    * Lines starting with ``1. ``, ``2. `` … → ordered list
+
+    All other Markdown syntax (headings, images, code blocks, tables, block
+    quotes, horizontal rules, etc.) is intentionally **not** supported.
+    The text fields are meant to remain human-readable plain text with only
+    light formatting.
+
+    Examples::
+
+        >>> from django.template.defaultfilters import linebreaks
+        >>> parse_simple_markdown(linebreaks("**bold** and *italic*"))
+        '<p><strong>bold</strong> and <em>italic</em></p>'
+
+        >>> parse_simple_markdown(linebreaks("- first\\n- second\\n- third"))
+        '<ul>\\n<li>first</li>\\n<li>second</li>\\n<li>third</li>\\n</ul>'
+
+        >>> parse_simple_markdown(linebreaks("1. one\\n2. two"))
+        '<ol>\\n<li>one</li>\\n<li>two</li>\\n</ol>'
+    """
+    return mark_safe(_parse_simple_markdown_text(text))

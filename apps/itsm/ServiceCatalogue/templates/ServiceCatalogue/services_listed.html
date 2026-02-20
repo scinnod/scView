@@ -1,7 +1,7 @@
 {% extends "ServiceCatalogue/services_base.html" %}
 
 {% load i18n %}
-{% load html_links %}
+{% load text_filters %}
 
 {% block title %} {{ title }}{% if kwargs.clientele_id %} {% translate "for" %} {% for clientele in clienteles %}{% if clientele.id == kwargs.clientele_id %}{{ clientele.name }}{% endif %}{% endfor %}{% endif %}{% endblock %}
 {% block description %}{% if description and not request.GET.q %}<div class="alert alert-light border"><p class="mb-0">{{ description|safe|linebreaks}}</p></div>{% endif %}{% endblock %}
@@ -28,7 +28,7 @@
         <!-- Main Purpose -->
         <div class="mb-3 checkmark">
           <h6 class="text-primary fw-semibold mb-2"><i class="bi bi-bullseye me-2"></i>{% translate "Main purpose" %}</h6>
-          <div class="ms-4">{{ sr.service.purpose|linebreaks|parse_internal_links}}</div>
+          <div class="ms-4">{{ sr.service.purpose|linebreaks }}</div>
         </div>
 
         <!-- Description -->
@@ -46,7 +46,7 @@
             </div>
             <div class="flex-grow-1">
               <p class="fw-bold mb-0">{% translate "Please Note" %}:</p>
-              <div>{{ sr.usage_information|linebreaks|urlize|parse_internal_links }}</div>
+              <div>{{ sr.usage_information|linebreaks|urlize|parse_simple_markdown|parse_internal_links }}</div>
             </div>
           </div>
         </div>
@@ -56,7 +56,7 @@
         {% if show_requirements and sr.requirements %}
         <div class="mb-3 checkmark">
           <h6 class="text-primary fw-semibold mb-2"><i class="bi bi-check2-square me-2"></i>{% translate "Requirements" %}</h6>
-          <div class="ms-4">{{ sr.requirements|linebreaks|parse_internal_links}}</div>
+          <div class="ms-4">{{ sr.requirements|linebreaks|urlize|parse_simple_markdown|parse_internal_links}}</div>
         </div>
         {% endif %}
 
@@ -64,7 +64,7 @@
         {% if show_details and sr.details %}
         <div class="mb-3 checkmark">
           <h6 class="text-primary fw-semibold mb-2"><i class="bi bi-list-check me-2"></i>{% translate "Details" %}</h6>
-          <div class="ms-4">{{ sr.details|linebreaks|urlize|parse_internal_links}}</div>
+          <div class="ms-4">{{ sr.details|linebreaks|urlize|parse_simple_markdown|parse_internal_links}}</div>
         </div>
         {% endif %}
 
@@ -72,7 +72,7 @@
         {% if show_options and sr.options %}
         <div class="mb-3 checkmark">
           <h6 class="text-primary fw-semibold mb-2"><i class="bi bi-sliders me-2"></i>{% translate "Options" %}</h6>
-          <div class="ms-4">{{ sr.options|linebreaks|parse_internal_links}}</div>
+          <div class="ms-4">{{ sr.options|linebreaks|urlize|parse_simple_markdown|parse_internal_links}}</div>
         </div>
         {% endif %}
 
@@ -80,7 +80,7 @@
         {% if show_service_level and sr.service_level %}
         <div class="mb-3 checkmark">
           <h6 class="text-primary fw-semibold mb-2"><i class="bi bi-graph-up-arrow me-2"></i>{% translate "Service Level" %}</h6>
-          <div class="ms-4">{{ sr.service_level|linebreaks|parse_internal_links}}</div>
+          <div class="ms-4">{{ sr.service_level|linebreaks|urlize|parse_simple_markdown|parse_internal_links}}</div>
         </div>
         {% endif %}
 

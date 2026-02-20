@@ -254,7 +254,8 @@ class ServiceRevision(models.Model):
         null=True,
         verbose_name=_("Internal description / configuration"),
         help_text=_(
-            "For instance: details on hardware, configuration details, pitfalls, documentation requirements etc. May contain links to external sources."
+            "For instance: details on hardware, configuration details, pitfalls, documentation requirements etc. May contain links to external sources. "
+            "Supports formatting: **bold**, *italic*, lists (- item / 1. item), URLs (auto-linked), and internal links ([[SERVICE-KEY]])."
         ),
     )
     description = models.TextField(
@@ -268,20 +269,25 @@ class ServiceRevision(models.Model):
         null=True,
         verbose_name=_("Please Note (public, search, ai)"),
         help_text=_(
-            "Important information for using this service, e.g. regarding compliance with data privacy, information security and/or AI regulations (EU AI Act). This text is displayed highlighted in the service description."
+            "Important information for using this service, e.g. regarding compliance with data privacy, information security and/or AI regulations (EU AI Act). This text is displayed highlighted in the service description. "
+            "Supports formatting: **bold**, *italic*, lists (- item / 1. item), URLs (auto-linked), and internal links ([[SERVICE-KEY]])."
         ),
     )
     requirements = models.TextField(
         blank=True,
         null=True,
         verbose_name=_("Requirements for use of service, if any. (public, search, ai)"),
+        help_text=_(
+            "Supports formatting: **bold**, *italic*, lists (- item / 1. item), URLs (auto-linked), and internal links ([[SERVICE-KEY]])."
+        ),
     )
     details = models.TextField(
         blank=True,
         null=True,
         verbose_name=_("Service details (public, search, ai)"),
         help_text=_(
-            "Detailed description and notes on availability / service levels and support during operation, etc. if applicable.  May contain links to external sources."
+            "Detailed description and notes on availability / service levels and support during operation, etc. if applicable. May contain links to external sources. "
+            "Supports formatting: **bold**, *italic*, lists (- item / 1. item), URLs (auto-linked), and internal links ([[SERVICE-KEY]])."
         ),
     )
     options = models.TextField(
@@ -289,7 +295,8 @@ class ServiceRevision(models.Model):
         null=True,
         verbose_name=_("Available options (public, search, ai)"),
         help_text=_(
-            "Can be used to harmonize user-specific requirements and wishes, at least to some extent."
+            "Can be used to harmonize user-specific requirements and wishes, at least to some extent. "
+            "Supports formatting: **bold**, *italic*, lists (- item / 1. item), URLs (auto-linked), and internal links ([[SERVICE-KEY]])."
         ),
     )
     service_level = models.TextField(
@@ -297,7 +304,8 @@ class ServiceRevision(models.Model):
         null=True,
         verbose_name=_("Service level / SLA (public, ai)"),
         help_text=_(
-            "Service level agreement, availability guarantees, support hours, uptime commitments, and response time expectations."
+            "Service level agreement, availability guarantees, support hours, uptime commitments, and response time expectations. "
+            "Supports formatting: **bold**, *italic*, lists (- item / 1. item), URLs (auto-linked), and internal links ([[SERVICE-KEY]])."
         ),
     )
     contact = models.EmailField(
@@ -340,7 +348,8 @@ class ServiceRevision(models.Model):
         null=True,
         verbose_name=_("What should happen at EOL?"),
         help_text=_(
-            "Give some hints what to do with this service at end of life, e.g. which which revision to transfer to or which action to take."
+            "Give some hints what to do with this service at end of life, e.g. which which revision to transfer to or which action to take. "
+            "Supports formatting: **bold**, *italic*, lists (- item / 1. item), URLs (auto-linked), and internal links ([[SERVICE-KEY]])."
         ),
     )
     search_keys = models.CharField(

@@ -513,7 +513,7 @@ Unit tests for the `_extract_internal_links()` helper in `check_urls`:
 
 ### `ClassifyInternalLinkTest`
 
-Unit tests for `_classify_internal_link()` in `templatetags/html_links.py`:
+Unit tests for `_classify_internal_link()` in `templatetags/text_filters.py`:
 
 | Test method | What it verifies |
 |-------------|-----------------|
@@ -539,3 +539,61 @@ Integration tests for Phase 2 (internal link validation) of `python manage.py ch
 | `test_broken_and_soft_reported_in_separate_sections` | Broken and soft links each appear in their own output section |
 | `test_summary_mentions_internal_links` | Summary line explicitly names broken internal links |
 | `test_broken_url_and_broken_ilink_both_exit_1` | Both a broken URL and a broken internal link in one revision cause exit 1 |
+
+### `SimpleMarkdownFilterTest`
+
+Unit tests for the `parse_simple_markdown` HTML template filter in `templatetags/text_filters.py`:
+
+| Test method | What it verifies |
+|-------------|-----------------|
+| `test_bold_single_word` | `**bold**` becomes `<strong>bold</strong>` |
+| `test_bold_multiple_words` | `**bold phrase**` wraps multiple words |
+| `test_bold_multiple_occurrences` | Multiple `**…**` groups are all converted |
+| `test_italic_single_word` | `*italic*` becomes `<em>italic</em>` |
+| `test_italic_not_confused_with_bold` | `**bold**` and `*italic*` coexist correctly |
+| `test_unordered_list_dashes` | Lines starting with `- ` become `<ul><li>…</li></ul>` |
+| `test_unordered_list_asterisks` | Lines starting with `* ` also create unordered lists |
+| `test_ordered_list` | Lines starting with `1. `, `2. `, etc. become `<ol><li>…</li></ol>` |
+| `test_normal_paragraph_preserved` | Plain text stays in `<p>` tags |
+| `test_bold_inside_list` | Bold markup works inside list items |
+| `test_empty_input` | Empty string returns empty string |
+| `test_no_markdown_passthrough` | Text without markdown passes through unchanged |
+| `test_heading_not_parsed` | `# Heading` is NOT converted (unsupported) |
+| `test_image_not_parsed` | `![alt](url)` is NOT converted (unsupported) |
+| `test_code_block_not_parsed` | Fenced code blocks are NOT converted (unsupported) |
+
+### `LatexEscapeMarkdownFilterTest`
+
+Unit tests for the `latex_escape_markdown` Jinja2 filter in `latex_filters.py`:
+
+| Test method | What it verifies |
+|-------------|-----------------|
+| `test_bold` | `**bold**` becomes `\textbf{bold}` |
+| `test_italic` | `*italic*` becomes `\textit{italic}` |
+| `test_bold_and_italic` | Both bold and italic work together |
+| `test_unordered_list` | `- item` lines become `\begin{itemize}…\end{itemize}` |
+| `test_ordered_list` | `1. item` lines become `\begin{enumerate}…\end{enumerate}` |
+| `test_special_chars_escaped` | LaTeX special characters (`%`, `$`, `&`) are escaped |
+| `test_empty_input` | Empty string and `None` both return empty string |
+| `test_bold_with_special_chars` | Special characters inside bold are properly escaped |
+
+### `LatexInternalLinksFilterTest`
+
+Unit tests for the `latex_internal_links` Jinja2 filter in `latex_filters.py`:
+
+| Test method | What it verifies |
+|-------------|-----------------|
+| `test_service_key_link` | `[[COMM-EMAIL]]` becomes `\hyperref[svc:comm-email]{COMM-EMAIL}` |
+| `test_no_key_separator_bold` | `[[email service]]` (no `-`) becomes `\textbf{email service}` |
+| `test_empty_input` | Empty string returns empty string |
+| `test_multiple_links` | Multiple `[[…]]` references are all converted |
+
+### `LatexLabelFilterTest`
+
+Unit tests for the `latex_service_label` and `latex_revision_label` Jinja2 filters in `latex_filters.py`:
+
+| Test method | What it verifies |
+|-------------|-----------------|
+| `test_service_label` | `COMM-EMAIL` becomes `\label{svc:comm-email}` |
+| `test_revision_label` | `COMM-EMAIL-2.0` becomes `\label{rev:comm-email-2.0}` (dots preserved) |
+| `test_label_sanitization` | Unsafe characters (spaces, slashes) are removed from labels |

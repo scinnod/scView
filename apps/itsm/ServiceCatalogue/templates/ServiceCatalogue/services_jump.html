@@ -1,7 +1,7 @@
 {% extends "ServiceCatalogue/services_base.html" %}
 
 {% load i18n %}
-{% load html_links %}
+{% load text_filters %}
 
 {% block title %} {{ title }}{% if kwargs.clientele_id %} {% translate "for" %} {% for clientele in clienteles %}{% if clientele.id == kwargs.clientele_id %}{{ clientele.name }}{% endif %}{% endfor %}{% endif %}{% endblock %}
 

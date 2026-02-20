@@ -301,6 +301,39 @@ Defines versioned details of a service. Each service can have multiple revisions
 
 **Computed Key:** Automatically generated as `{service.key}-{version}` (e.g., "COMM-EMAIL-2.0")
 
+### Text Formatting in ServiceRevision Fields
+
+Certain text fields in ServiceRevision support lightweight formatting syntax that is rendered in both the HTML catalogue and PDF/LaTeX exports. The syntax is kept deliberately simple so that the raw text remains human-readable.
+
+**Supported formatting:**
+
+| Syntax | Example | Result |
+|--------|---------|--------|
+| Bold | `**important**` | **important** |
+| Italic | `*note*` | *note* |
+| Unordered list | `- item` (one per line) | Bullet list |
+| Ordered list | `1. step` (one per line) | Numbered list |
+| Internal link | `[[COMM-EMAIL]]` | Link to service |
+| URL | `https://example.com` | Clickable link |
+
+**Fields supporting full formatting** (bold, italic, lists, URLs, internal links):
+`description_internal`, `usage_information`, `requirements`, `details`, `options`, `service_level`, `eol`
+
+**Fields with restricted formatting** (line breaks and internal links only): 
+`description` (both `_de` and `_en`)
+
+The `purpose` field on **Service** does not support any formatting — it is rendered as plain text only.
+
+**Example with formatting in a fixture:**
+```json
+{
+    "description_en": "This service provides **secure** file storage.\n\nKey features:\n- 100 GB default quota\n- *Automatic* daily backups\n- Integration with [[COMM-EMAIL]]\n\nMore info: https://storage.example.com",
+    "requirements_en": "1. Valid institutional account\n2. Completed IT security training"
+}
+```
+
+**Note:** Use `\n` for newlines in JSON strings. Each list item must start on a new line. All items in a block must use the same marker type (all bullets or all numbers).
+
 ### Availability
 
 Links a ServiceRevision to target user groups (Clientele) with pricing information.

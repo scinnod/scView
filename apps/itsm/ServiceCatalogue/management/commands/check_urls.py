@@ -10,7 +10,7 @@ Phase 1 – External URL availability
 Phase 2 – Internal ``[[...]]`` link validation
     Scans all text fields rendered with the ``|parse_internal_links`` template filter
     for ``[[...]]`` references and validates them using the same logic as the template
-    filter (via :func:`_classify_internal_link` in ``templatetags/html_links.py``):
+    filter (via :func:`_classify_internal_link` in ``templatetags/text_filters.py``):
 
     * ``[[email]]`` – no key separator → *soft link*, not validated → **warning**
     * ``[[INVALID-SERVICE]]`` – key separator present, no matching revision → **error**
@@ -74,7 +74,11 @@ def _extract_internal_links(text: str) -> list[str]:
 _TEXT_URL_FIELDS = [
     ('description_internal', 'description_internal', False),
     ('usage_information',    'usage_information',    True),
+    ('requirements',         'requirements',         True),
     ('details',              'details',              True),
+    ('options',              'options',              True),
+    ('service_level',        'service_level',        True),
+    ('eol',                  'eol',                  False),
 ]
 
 # Fields scanned for [[internal link]] references.
@@ -347,7 +351,7 @@ class Command(BaseCommand):
         # ------------------------------------------------------------------
         # 5. Internal link validation
         # ------------------------------------------------------------------
-        from ServiceCatalogue.templatetags.html_links import (
+        from ServiceCatalogue.templatetags.text_filters import (
             _classify_internal_link, _ILINK_BROKEN, _ILINK_SOFT,
         )
         from ServiceCatalogue.models import keysep

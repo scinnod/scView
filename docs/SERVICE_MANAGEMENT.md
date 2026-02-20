@@ -99,3 +99,89 @@ A revision is considered:
 5. Begin adding services and revisions
 
 See [CONFIGURATION.md](CONFIGURATION.md) for access control settings.
+## Text Formatting in Service Fields
+
+The Service Catalogue supports limited text formatting in certain fields to improve readability while keeping the content human-readable as plain text. This section describes the available formatting options and which fields support them.
+
+### Formatting Syntax
+
+#### Bold and Italic
+
+Wrap text in double or single asterisks for bold or italic emphasis:
+
+```
+**bold text** → bold text
+*italic text* → italic text
+```
+
+#### Lists
+
+Start lines with `- ` or `* ` for unordered (bullet) lists, or `1. `, `2. `, etc. for ordered (numbered) lists. Each item must be on its own line:
+
+```
+- First item
+- Second item
+- Third item
+
+1. Step one
+2. Step two
+3. Step three
+```
+
+All items in a paragraph must use the same list type — mixing bullet and numbered markers in a single block is not supported.
+
+#### Internal Links
+
+Reference other services using double square brackets with the service key:
+
+```
+[[COMM-EMAIL]]          → links to the Email service (if unique)
+[[COMM-EMAIL-2.0]]      → links to a specific revision
+[[email]]               → soft link — triggers a fulltext search (not validated)
+```
+
+When a key contains the hierarchy separator (`-`), the system validates the reference against currently listed service revisions. References without a separator are treated as soft links (fulltext search triggers) and generate a warning during `check_urls` validation but do not cause errors.
+
+See [CONFIGURATION.md](CONFIGURATION.md#url-and-internal-link-check) for `check_urls` validation details.
+
+#### URLs
+
+Plain-text URLs (e.g. `https://example.com`) are automatically converted into clickable links in fields that support URL auto-linking.
+
+### Unsupported Syntax
+
+The following Markdown elements are deliberately **not** supported to keep content simple and readable as plain text:
+
+- Headings (`#`, `##`, …)
+- Images (`![](…)`)
+- Code blocks (`` ` `` or `~~~`)
+- Tables
+- Block quotes (`>`)
+- Horizontal rules (`---`)
+
+### Field Formatting Overview
+
+Not all fields support the same formatting options. The table below summarises which formatting features are available in each field. "Strict" fields only render plain text with line breaks — they deliberately do not support bold, italic, lists, URL auto-linking, or internal links.
+
+| Field | Bold / Italic | Lists | URLs | Internal Links | Notes |
+|-------|:---:|:---:|:---:|:---:|-------|
+| `purpose` | — | — | — | — | Strict — brief, self-consistent, technology-independent |
+| `description` | — | — | — | ✓ | Strict — self-contained service description |
+| `description_internal` | ✓ | ✓ | ✓ | ✓ | Internal only (staff view) |
+| `usage_information` | ✓ | ✓ | ✓ | ✓ | Displayed highlighted |
+| `requirements` | ✓ | ✓ | ✓ | ✓ | |
+| `details` | ✓ | ✓ | ✓ | ✓ | |
+| `options` | ✓ | ✓ | ✓ | ✓ | |
+| `service_level` | ✓ | ✓ | ✓ | ✓ | |
+| `eol` | ✓ | ✓ | ✓ | ✓ | End-of-life instructions |
+
+### LaTeX / PDF Output
+
+The same formatting syntax works in LaTeX/PDF exports:
+
+- **Bold/italic** are converted to `\textbf{}` / `\textit{}`
+- **Lists** become `\begin{itemize}` / `\begin{enumerate}` environments
+- **Internal links** become `\hyperref` cross-references using auto-generated `\label`s
+- **URLs** are rendered as `\url{}` commands
+
+Each service and service revision in the PDF receives a LaTeX label (`\label{svc:...}` and `\label{rev:...}`) that can be referenced by internal links.

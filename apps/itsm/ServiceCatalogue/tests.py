@@ -2166,7 +2166,7 @@ class ClassifyInternalLinkTest(TestCase):
     fixtures = ['initial_test_data.json']
 
     def setUp(self):
-        from ServiceCatalogue.templatetags.html_links import (
+        from ServiceCatalogue.templatetags.text_filters import (
             _classify_internal_link,
             _ILINK_SOFT, _ILINK_UNIQUE, _ILINK_MULTI, _ILINK_BROKEN,
         )
@@ -2448,3 +2448,217 @@ class CheckInternalLinksCommandTest(TestCase):
             except SystemExit as exc:
                 exit_code = exc.code
         self.assertEqual(exit_code, 1)
+
+
+# ============================================================================
+# Template Filter Tests – parse_simple_markdown
+# ============================================================================
+
+class SimpleMarkdownFilterTest(TestCase):
+    """Tests for the parse_simple_markdown template filter (HTML output)."""
+
+    def _render(self, text):
+        """Apply linebreaks then parse_simple_markdown, mimicking template usage."""
+        from django.template.defaultfilters import linebreaks
+        from ServiceCatalogue.templatetags.text_filters import parse_simple_markdown
+        return parse_simple_markdown(linebreaks(text))
+
+    # -- Bold --
+
+    def test_bold_single_word(self):
+        result = self._render('This is **bold** text')
+        self.assertIn('<strong>bold</strong>', result)
+        self.assertNotIn('**', result)
+
+    def test_bold_multiple_words(self):
+        result = self._render('Some **bold phrase** here')
+        self.assertIn('<strong>bold phrase</strong>', result)
+
+    def test_bold_multiple_occurrences(self):
+        result = self._render('**one** and **two**')
+        self.assertIn('<strong>one</strong>', result)
+        self.assertIn('<strong>two</strong>', result)
+
+    # -- Italic --
+
+    def test_italic_single_word(self):
+        result = self._render('This is *italic* text')
+        self.assertIn('<em>italic</em>', result)
+        self.assertNotIn('<strong>', result)
+
+    def test_italic_not_confused_with_bold(self):
+        result = self._render('**bold** and *italic*')
+        self.assertIn('<strong>bold</strong>', result)
+        self.assertIn('<em>italic</em>', result)
+
+    # -- Unordered Lists --
+
+    def test_unordered_list_dashes(self):
+        result = self._render('- first\n- second\n- third')
+        self.assertIn('<ul>', result)
+        self.assertIn('<li>first</li>', result)
+        self.assertIn('<li>second</li>', result)
+        self.assertIn('<li>third</li>', result)
+        self.assertIn('</ul>', result)
+        self.assertNotIn('<p>', result)
+
+    def test_unordered_list_asterisks(self):
+        result = self._render('* alpha\n* beta')
+        self.assertIn('<ul>', result)
+        self.assertIn('<li>alpha</li>', result)
+        self.assertIn('<li>beta</li>', result)
+
+    # -- Ordered Lists --
+
+    def test_ordered_list(self):
+        result = self._render('1. first\n2. second\n3. third')
+        self.assertIn('<ol>', result)
+        self.assertIn('<li>first</li>', result)
+        self.assertIn('<li>second</li>', result)
+        self.assertIn('<li>third</li>', result)
+        self.assertIn('</ol>', result)
+
+    # -- Mixed Content --
+
+    def test_normal_paragraph_preserved(self):
+        result = self._render('Just normal text')
+        self.assertIn('<p>', result)
+        self.assertIn('Just normal text', result)
+
+    def test_bold_inside_list(self):
+        result = self._render('- **bold** item\n- normal item')
+        self.assertIn('<li><strong>bold</strong> item</li>', result)
+
+    def test_empty_input(self):
+        from ServiceCatalogue.templatetags.text_filters import parse_simple_markdown
+        result = parse_simple_markdown('')
+        self.assertEqual(result, '')
+
+    def test_no_markdown_passthrough(self):
+        result = self._render('plain text only')
+        self.assertIn('plain text only', result)
+        self.assertNotIn('<ul>', result)
+        self.assertNotIn('<ol>', result)
+
+    # -- Safety: unsupported Markdown elements must NOT be converted --
+
+    def test_heading_not_parsed(self):
+        """Markdown headings (# ...) must not be converted."""
+        result = self._render('# Heading\nsome text')
+        self.assertNotIn('<h1>', result)
+        self.assertIn('# Heading', result)
+
+    def test_image_not_parsed(self):
+        """Markdown images must not be converted."""
+        result = self._render('![alt](http://example.com/img.png)')
+        self.assertNotIn('<img', result)
+
+    def test_code_block_not_parsed(self):
+        """Markdown code blocks must not be converted."""
+        result = self._render('```\ncode\n```')
+        self.assertNotIn('<code>', result)
+        self.assertNotIn('<pre>', result)
+
+
+# ============================================================================
+# Template Filter Tests – LaTeX filters
+# ============================================================================
+
+class LatexEscapeMarkdownFilterTest(TestCase):
+    """Tests for the latex_escape_markdown Jinja2 filter."""
+
+    def test_bold(self):
+        from ServiceCatalogue.latex_filters import do_latex_escape_markdown
+        result = do_latex_escape_markdown('This is **bold** text')
+        self.assertIn('\\textbf{bold}', result)
+        self.assertNotIn('**', result)
+
+    def test_italic(self):
+        from ServiceCatalogue.latex_filters import do_latex_escape_markdown
+        result = do_latex_escape_markdown('This is *italic* text')
+        self.assertIn('\\textit{italic}', result)
+        self.assertNotIn('*italic*', result)
+
+    def test_bold_and_italic(self):
+        from ServiceCatalogue.latex_filters import do_latex_escape_markdown
+        result = do_latex_escape_markdown('**bold** and *italic*')
+        self.assertIn('\\textbf{bold}', result)
+        self.assertIn('\\textit{italic}', result)
+
+    def test_unordered_list(self):
+        from ServiceCatalogue.latex_filters import do_latex_escape_markdown
+        result = do_latex_escape_markdown('- item one\n- item two')
+        self.assertIn('\\begin{itemize}', result)
+        self.assertIn('\\item', result)
+        self.assertIn('item one', result)
+        self.assertIn('\\end{itemize}', result)
+
+    def test_ordered_list(self):
+        from ServiceCatalogue.latex_filters import do_latex_escape_markdown
+        result = do_latex_escape_markdown('1. first\n2. second')
+        self.assertIn('\\begin{enumerate}', result)
+        self.assertIn('\\item', result)
+        self.assertIn('first', result)
+        self.assertIn('\\end{enumerate}', result)
+
+    def test_special_chars_escaped(self):
+        from ServiceCatalogue.latex_filters import do_latex_escape_markdown
+        result = do_latex_escape_markdown('Price is 50% of $100 & more')
+        self.assertIn('\\%', result)
+        self.assertIn('\\$', result)
+        self.assertIn('\\&', result)
+
+    def test_empty_input(self):
+        from ServiceCatalogue.latex_filters import do_latex_escape_markdown
+        self.assertEqual(do_latex_escape_markdown(''), '')
+        self.assertEqual(do_latex_escape_markdown(None), '')
+
+    def test_bold_with_special_chars(self):
+        from ServiceCatalogue.latex_filters import do_latex_escape_markdown
+        result = do_latex_escape_markdown('**bold & special**')
+        self.assertIn('\\textbf{bold \\& special}', result)
+
+
+class LatexInternalLinksFilterTest(TestCase):
+    """Tests for the latex_internal_links Jinja2 filter."""
+
+    def test_service_key_link(self):
+        from ServiceCatalogue.latex_filters import do_latex_internal_links
+        result = do_latex_internal_links('See [[COMM-EMAIL]] for details')
+        self.assertIn('\\hyperref[svc:comm-email]{COMM-EMAIL}', result)
+
+    def test_no_key_separator_bold(self):
+        from ServiceCatalogue.latex_filters import do_latex_internal_links
+        result = do_latex_internal_links('See [[email service]] for details')
+        self.assertIn('\\textbf{email service}', result)
+
+    def test_empty_input(self):
+        from ServiceCatalogue.latex_filters import do_latex_internal_links
+        self.assertEqual(do_latex_internal_links(''), '')
+
+    def test_multiple_links(self):
+        from ServiceCatalogue.latex_filters import do_latex_internal_links
+        result = do_latex_internal_links('[[COMM-EMAIL]] and [[STORE-NAS]]')
+        self.assertIn('\\hyperref[svc:comm-email]', result)
+        self.assertIn('\\hyperref[svc:store-nas]', result)
+
+
+class LatexLabelFilterTest(TestCase):
+    """Tests for the latex_service_label and latex_revision_label filters."""
+
+    def test_service_label(self):
+        from ServiceCatalogue.latex_filters import do_latex_service_label
+        result = do_latex_service_label('COMM-EMAIL')
+        self.assertEqual(result, '\\label{svc:comm-email}')
+
+    def test_revision_label(self):
+        from ServiceCatalogue.latex_filters import do_latex_revision_label
+        result = do_latex_revision_label('COMM-EMAIL-2.0')
+        self.assertEqual(result, '\\label{rev:comm-email-2.0}')
+
+    def test_label_sanitization(self):
+        from ServiceCatalogue.latex_filters import do_latex_service_label
+        result = do_latex_service_label('MY KEY/WITH SPACES')
+        # Should only contain safe chars
+        self.assertNotIn(' ', result)
+        self.assertNotIn('/', result)
