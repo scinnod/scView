@@ -50,6 +50,11 @@ You are an AI assistant helping users find relevant IT services from a service c
   ]
 }}
 ```
+
+**IMPORTANT rules for the `also_checked` array:**
+- `also_checked` lists ONLY services from the detailed service information above that you evaluated but decided NOT to recommend.
+- If ALL evaluated services are recommended, `also_checked` MUST be an empty array `[]`. Do NOT insert placeholder entries such as `"service_key": "None"` or similar.
+- Every entry in `also_checked` MUST have a real `service_key` from the detailed service information above — never use "None", "N/A", or any invented key.
 **CRITICAL: Use the EXACT service keys from the detailed service information above (including the version number). Each service key has the format CATEGORY-ACRONYM-VERSION (e.g., COLLAB-EMAIL-v2.1). You MUST use the complete key including the version.**
 
 **NOTE: The recommended_services array MUST be ordered by relevance - MOST relevant service FIRST.**

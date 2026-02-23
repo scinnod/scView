@@ -1793,6 +1793,155 @@ class CheckUrlsCommandTest(TestCase):
 
 
 # ============================================================================
+# AI search – also_checked filtering
+# ============================================================================
+
+class AlsoCheckedFilteringTest(TestCase):
+    """Verify that invalid also_checked entries are stripped by AISearchService.
+
+    Some non-reasoning models (e.g. llama-3.3-70b-instruct) produce placeholder
+    entries like {"service_key": "None", ...} when all evaluated services end up
+    in the recommended list.  The service must silently drop them.
+    """
+
+    fixtures = ['initial_test_data.json']
+
+    @override_settings(
+        AI_SEARCH_ENABLED=True,
+        AI_SEARCH_API_URL='https://example.com/v1',
+        AI_SEARCH_API_KEY='test-key',
+        AI_SEARCH_MODEL='test-model',
+        AI_SEARCH_TIMEOUT=30,
+    )
+    def test_none_service_key_filtered_out(self):
+        """Entries with service_key 'None' are removed from also_checked."""
+        from unittest.mock import patch, MagicMock
+        from ServiceCatalogue.ai_service import AISearchService
+
+        svc = AISearchService()
+
+        # Step 1 response: two candidate services
+        step1_json = json.dumps({
+            'is_it_related': True,
+            'services_to_check': ['COMPUTE-HPC', 'COLLAB-EMAIL'],
+            'preliminary_note': 'Checking...',
+        })
+        # Step 2 response: both recommended, but model inserts "None" in also_checked
+        step2_json = json.dumps({
+            'overall_assessment': 'Both services are relevant.',
+            'recommended_services': [
+                {'service_key': 'COMPUTE-HPC-1.0', 'relevance_explanation': 'x', 'focus_areas': 'y'},
+                {'service_key': 'COLLAB-EMAIL-2.0', 'relevance_explanation': 'x', 'focus_areas': 'y'},
+            ],
+            'also_checked': [
+                {'service_key': 'None', 'reason_not_recommended': 'No other services identified.'},
+            ],
+        })
+
+        call_count = {'n': 0}
+        def fake_api(messages, temperature=0.7):
+            call_count['n'] += 1
+            if call_count['n'] == 1:
+                return step1_json, 10
+            return step2_json, 20
+
+        with patch.object(svc, '_call_openai_api', side_effect=fake_api):
+            result = svc.perform_search('I need HPC', 'en')
+
+        self.assertTrue(result['success'])
+        self.assertEqual(len(result['also_checked']), 0,
+                         'Entries with service_key "None" must be filtered out')
+
+    @override_settings(
+        AI_SEARCH_ENABLED=True,
+        AI_SEARCH_API_URL='https://example.com/v1',
+        AI_SEARCH_API_KEY='test-key',
+        AI_SEARCH_MODEL='test-model',
+        AI_SEARCH_TIMEOUT=30,
+    )
+    def test_valid_also_checked_preserved(self):
+        """Legitimate also_checked entries (real service keys) are kept."""
+        from unittest.mock import patch
+        from ServiceCatalogue.ai_service import AISearchService
+
+        svc = AISearchService()
+
+        step1_json = json.dumps({
+            'is_it_related': True,
+            'services_to_check': ['COMPUTE-HPC', 'COLLAB-EMAIL'],
+            'preliminary_note': 'Checking...',
+        })
+        step2_json = json.dumps({
+            'overall_assessment': 'One service is relevant.',
+            'recommended_services': [
+                {'service_key': 'COMPUTE-HPC-1.0', 'relevance_explanation': 'x', 'focus_areas': 'y'},
+            ],
+            'also_checked': [
+                {'service_key': 'COLLAB-EMAIL-1.0', 'reason_not_recommended': 'Not relevant to HPC.'},
+            ],
+        })
+
+        call_count = {'n': 0}
+        def fake_api(messages, temperature=0.7):
+            call_count['n'] += 1
+            if call_count['n'] == 1:
+                return step1_json, 10
+            return step2_json, 20
+
+        with patch.object(svc, '_call_openai_api', side_effect=fake_api):
+            result = svc.perform_search('I need HPC', 'en')
+
+        self.assertTrue(result['success'])
+        self.assertEqual(len(result['also_checked']), 1,
+                         'Valid also_checked entries must be preserved')
+        self.assertEqual(result['also_checked'][0]['service_key'], 'COLLAB-EMAIL-1.0')
+
+    @override_settings(
+        AI_SEARCH_ENABLED=True,
+        AI_SEARCH_API_URL='https://example.com/v1',
+        AI_SEARCH_API_KEY='test-key',
+        AI_SEARCH_MODEL='test-model',
+        AI_SEARCH_TIMEOUT=30,
+    )
+    def test_empty_service_key_filtered_out(self):
+        """Entries with empty or missing service_key are removed."""
+        from unittest.mock import patch
+        from ServiceCatalogue.ai_service import AISearchService
+
+        svc = AISearchService()
+
+        step1_json = json.dumps({
+            'is_it_related': True,
+            'services_to_check': ['COMPUTE-HPC'],
+            'preliminary_note': 'Checking...',
+        })
+        step2_json = json.dumps({
+            'overall_assessment': 'Relevant.',
+            'recommended_services': [
+                {'service_key': 'COMPUTE-HPC-1.0', 'relevance_explanation': 'x', 'focus_areas': 'y'},
+            ],
+            'also_checked': [
+                {'service_key': '', 'reason_not_recommended': 'N/A'},
+                {'reason_not_recommended': 'Missing key entirely'},
+            ],
+        })
+
+        call_count = {'n': 0}
+        def fake_api(messages, temperature=0.7):
+            call_count['n'] += 1
+            if call_count['n'] == 1:
+                return step1_json, 10
+            return step2_json, 20
+
+        with patch.object(svc, '_call_openai_api', side_effect=fake_api):
+            result = svc.perform_search('I need HPC', 'en')
+
+        self.assertTrue(result['success'])
+        self.assertEqual(len(result['also_checked']), 0,
+                         'Entries with empty/missing service_key must be filtered out')
+
+
+# ============================================================================
 # test_ai_search command – model listing check
 # ============================================================================
 

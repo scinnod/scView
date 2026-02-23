@@ -4,7 +4,6 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.shortcuts import redirect
 
 from . import views
-from . import api_views
 
 # app_name = "servicecatalogue"
 
@@ -110,30 +109,6 @@ urlpatterns = [
         views.ai_search_clear,
         name="ai_search_clear"
     ),
-    # REST API endpoints for external integrations (SharePoint, etc.)
-    path(
-        "api/online-services/",
-        api_views.api_online_services,
-        name="api_online_services"
-    ),
-    path(
-        "api/service-catalogue/",
-        api_views.api_service_catalogue,
-        name="api_service_catalogue"
-    ),
-    path(
-        "api/service/<int:service_id>/",
-        api_views.api_service_detail,
-        name="api_service_detail"
-    ),
-    path(
-        "api/service-by-key/<str:service_key>/",
-        api_views.api_service_by_key,
-        name="api_service_by_key"
-    ),
-    path(
-        "api/metadata/",
-        api_views.api_metadata,
-        name="api_metadata"
-    ),
+    # REST API endpoints have been moved to api_urls.py (included outside
+    # i18n_patterns so that API paths are language-neutral).
 ]

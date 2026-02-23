@@ -28,6 +28,7 @@ urlpatterns = [
     path('sso-login/', sso_login, name='sso_login'),  # SSO login endpoint for Keycloak
     path('sso-logout/', logout_view, name='sso_logout'),  # Unified logout for production and development
     path('i18n/setlang/', set_language, name='set_language'),  # Language switching
+    path('sc/api/', include('ServiceCatalogue.api_urls')),  # REST API (outside i18n_patterns – language via ?lang=)
     path('', lambda request: redirect(reverse("index"), permanent=False)),
     ]
 

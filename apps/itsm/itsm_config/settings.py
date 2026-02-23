@@ -442,4 +442,4 @@ AI_SEARCH_REQUIRE_LOGIN = os.getenv('AI_SEARCH_REQUIRE_LOGIN', 'True').lower() i
 
 _cors_origins = os.getenv('CORS_ALLOWED_ORIGINS', '')
 CORS_ALLOWED_ORIGINS = [o.strip() for o in _cors_origins.split(',') if o.strip()] if _cors_origins else []
-CORS_URLS_REGEX = r'^/[a-z]{2}/sc/api/.*$'  # Only apply to API paths (i18n prefix + /sc/api/)
+CORS_URLS_REGEX = r'^/sc/api/.*$'  # Only apply to API paths (/sc/api/)

@@ -16,6 +16,7 @@ consume it from SharePoint or other external systems.
 | **Access-gated** | Each endpoint is gated by the **same** `*_REQUIRE_LOGIN` setting that controls the corresponding web page.<br>If a page requires login the API endpoint returns **403**. |
 | **Field-safe** | Exposed fields are strictly limited to those visible on the respective public page.<br>`SERVICECATALOGUE_FIELD_*` settings are respected; disabled fields are never included. |
 | **Cached** | Responses are cached for 15 minutes (metadata for 1 hour). |
+| **Language-neutral paths** | API endpoints live outside `i18n_patterns` — no automatic language-prefix redirect.<br>Use the `?lang=` query parameter to select the response language. |
 
 ### 1.2  Endpoints
 
@@ -69,6 +70,9 @@ curl "https://your-domain.com/sc/api/online-services/?lang=en"
 curl "https://your-domain.com/sc/api/service-catalogue/?lang=de"
 curl "https://your-domain.com/sc/api/service-by-key/ITD-EMAIL/?lang=en"
 ```
+
+Note: API paths do **not** carry a language prefix (e.g. `/de/` or `/en/`).
+Language selection is handled exclusively via the `?lang=` query parameter.
 
 A `403` response means the corresponding page requires login and the API
 correctly refuses to expose the data.

@@ -22,6 +22,10 @@ Available endpoints (all under ``/sc/api/``):
   /api/service/<id>/      –  single service detail       (gated by SERVICE_CATALOGUE_REQUIRE_LOGIN)
   /api/service-by-key/<key>/ – service detail by key     (gated by SERVICE_CATALOGUE_REQUIRE_LOGIN)
   /api/metadata/          –  API self-description        (always available)
+
+These endpoints are registered outside ``i18n_patterns`` so that API paths
+are language-neutral (no ``/de/`` or ``/en/`` prefix).  Use the ``?lang=``
+query parameter to select the response language.
 """
 
 import datetime

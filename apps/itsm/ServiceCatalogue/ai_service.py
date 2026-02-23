@@ -625,6 +625,14 @@ class AISearchService:
             
             # Enrich also_checked services with name and version
             also_checked = step2_data.get('also_checked', [])
+            # Filter out invalid entries: some models (e.g. llama) produce
+            # placeholder entries like {"service_key": "None", ...} when all
+            # evaluated services are recommended.  Keep only entries whose
+            # service_key actually appears in the services we sent to the AI.
+            also_checked = [
+                s for s in also_checked
+                if s.get('service_key') and s['service_key'] in services_details
+            ]
             for service in also_checked:
                 service_key = service.get('service_key', '')
                 if service_key in services_details:
