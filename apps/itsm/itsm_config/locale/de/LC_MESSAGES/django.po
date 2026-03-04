@@ -23,6 +23,7 @@ msgstr ""
 msgid ""
 "User '%(username)s' does not exist and automatic user creation is disabled."
 msgstr ""
+"Benutzer '%(username)s' existiert nicht und die automatische Benutzererstellung ist deaktiviert."
 
 #: itsm_config/backends.py:192
 #, python-format
@@ -30,3 +31,4 @@ msgid ""
 "User '%(username)s' does not have staff privileges. Staff-only mode is "
 "currently enabled."
 msgstr ""
+"Benutzer '%(username)s' hat keine Mitarbeiterrechte. Der Nur-Mitarbeiter-Modus ist derzeit aktiviert."
