@@ -383,10 +383,10 @@ AI_SEARCH_DATA_PROTECTION_STATEMENT_DE = os.getenv('AI_SEARCH_DATA_PROTECTION_ST
 #   Set to False to prevent automatic user creation (only pre-existing users can login)
 #   Useful during initial setup when access should be restricted to specific users
 #
-# STAFF_ONLY_MODE: Restrict all frontend access to staff users only
+# STAFF_ONLY_MODE: Restrict all frontend access to staff and superusers only
 #   Default: False - All authenticated users can access non-staff views
-#   Set to True to require is_staff=True for all authenticated access
-#   Users without staff status will see an "insufficient privileges" page
+#   Set to True to require is_staff=True or is_superuser=True for all authenticated access
+#   Users without staff or superuser status will see an "insufficient privileges" page
 #   Useful during initial setup, maintenance, or restricted access periods
 #   
 #   Note: API access to available services is not affected by this setting,

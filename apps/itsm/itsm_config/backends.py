@@ -126,8 +126,8 @@ class StaffOnlyModeMiddleware:
     
     When STAFF_ONLY_MODE is enabled:
     - All pages require login (redirects to LOGIN_URL if not authenticated)
-    - Authenticated non-staff users see the 403 "insufficient privileges" page
-    - Only staff users can access the application
+    - Authenticated non-staff/non-superuser users see the 403 "insufficient privileges" page
+    - Only staff users and superusers can access the application
     
     Exempt paths (always accessible):
     - / (root redirect)
@@ -184,12 +184,12 @@ class StaffOnlyModeMiddleware:
                 'next'
             )
         
-        # Require staff status
-        if not request.user.is_staff:
+        # Require staff or superuser status
+        if not request.user.is_staff and not request.user.is_superuser:
             # Return 403 response directly
             from ServiceCatalogue.views import insufficient_privileges_view
             error = StaffOnlyModeError(
-                _("User '%(username)s' does not have staff privileges. Staff-only mode is currently enabled.") % {
+                _("User '%(username)s' does not have staff or superuser privileges. Staff-only mode is currently enabled.") % {
                     'username': request.user.username
                 }
             )

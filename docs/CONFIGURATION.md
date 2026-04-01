@@ -25,7 +25,7 @@ All configuration is managed through `env/itsm.env`. Copy from `env/itsm.env.exa
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `AUTO_CREATE_USERS` | Auto-create users on SSO login | `True` |
-| `STAFF_ONLY_MODE` | Restrict access to staff users | `False` |
+| `STAFF_ONLY_MODE` | Restrict access to staff/superusers | `False` |
 | `ONLINE_SERVICES_REQUIRE_LOGIN` | Landing page requires login | `False` |
 | `SERVICE_CATALOGUE_REQUIRE_LOGIN` | Catalogue requires login | `True` |
 | `AI_SEARCH_REQUIRE_LOGIN` | AI search requires login | `True` |
@@ -125,7 +125,7 @@ These settings are useful during initial setup, maintenance periods, or when acc
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `AUTO_CREATE_USERS` | Automatically create users on first SSO login | `True` |
-| `STAFF_ONLY_MODE` | Restrict all access to staff users only | `False` |
+| `STAFF_ONLY_MODE` | Restrict all access to staff users and superusers only | `False` |
 
 **AUTO_CREATE_USERS:**
 - When `True` (default): Users are automatically created in Django when they first authenticate via Keycloak/SSO
@@ -133,7 +133,7 @@ These settings are useful during initial setup, maintenance periods, or when acc
 
 **STAFF_ONLY_MODE:**
 - When `False` (default): All authenticated users can access non-staff views
-- When `True`: Only users with `is_staff=True` can access the application. Non-staff users see a 403 "Insufficient Privileges" page with their username, options to log out and try a different account, or request privileges from administrators
+- When `True`: Only users with `is_staff=True` or `is_superuser=True` can access the application. Non-staff/non-superuser users see a 403 "Insufficient Privileges" page with their username, options to log out and try a different account, or request privileges from administrators
 
 **Example: Restricted Initial Setup**
 ```bash

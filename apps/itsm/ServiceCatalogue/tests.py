@@ -949,6 +949,11 @@ class UserAccessControlTest(TestCase):
             password='testpass123',
             is_staff=False
         )
+        self.superuser = User.objects.create_superuser(
+            username='superuser',
+            password='testpass123',
+            is_staff=False
+        )
         self.client = Client()
     
     def test_auto_create_users_default_is_true(self):
@@ -1039,6 +1044,27 @@ class UserAccessControlTest(TestCase):
             self.assertEqual(response.content, b'OK')
         except Exception as e:
             self.fail(f"Staff user should be allowed but got: {e}")
+    
+    @override_settings(STAFF_ONLY_MODE=True)
+    def test_staff_only_mode_allows_superuser(self):
+        """Test that STAFF_ONLY_MODE=True allows superusers via middleware"""
+        from itsm_config.backends import StaffOnlyModeMiddleware
+        from django.test import RequestFactory
+        from django.http import HttpResponse
+        
+        factory = RequestFactory()
+        request = factory.get('/en/sc/services')
+        request.user = self.superuser
+        
+        mock_response = HttpResponse('OK')
+        middleware = StaffOnlyModeMiddleware(lambda r: mock_response)
+        
+        # Superuser should not raise an error
+        try:
+            response = middleware(request)
+            self.assertEqual(response.content, b'OK')
+        except Exception as e:
+            self.fail(f"Superuser should be allowed but got: {e}")
     
     @override_settings(STAFF_ONLY_MODE=False)
     def test_staff_only_mode_disabled_allows_non_staff(self):
