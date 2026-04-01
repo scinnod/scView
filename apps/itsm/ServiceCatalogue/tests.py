@@ -949,10 +949,11 @@ class UserAccessControlTest(TestCase):
             password='testpass123',
             is_staff=False
         )
-        self.superuser = User.objects.create_superuser(
+        self.superuser = User.objects.create_user(
             username='superuser',
             password='testpass123',
-            is_staff=False
+            is_staff=False,
+            is_superuser=True
         )
         self.client = Client()
     
