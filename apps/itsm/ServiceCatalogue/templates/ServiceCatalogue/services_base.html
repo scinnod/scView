@@ -10,7 +10,7 @@
   .content { padding-top: 0 !important; margin-top: 0 !important; }
   body { padding-top: 0 !important; }
 </style>
-{% cache caching_time_seconds services_base_navigation request.path user.is_authenticated user.is_staff %}
+{% cache caching_time_seconds services_base_navigation request.path user.is_authenticated user.is_staff user.is_superuser %}
 <nav class="navbar navbar-expand-lg navbar-light bg-white fixed-top shadow-sm">
   <div class="container-fluid">
     <a class="navbar-brand" href="{% url 'index' %}">
@@ -114,7 +114,7 @@
 	{% if user.is_authenticated %}
  	<li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownUser" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-            <i class="bi bi-person-circle me-1"></i>{{ user.email }}{% if user.is_staff %} <span class="badge bg-secondary">Staff</span>{% endif %}
+            <i class="bi bi-person-circle me-1"></i>{{ user.email }}{% if user.is_staff %} <span class="badge bg-secondary">Staff</span>{% endif %}{% if user.is_superuser %} <span class="badge bg-danger">Admin</span>{% endif %}
 	  </a>
           <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="navbarDropdownUser">
 	    {% if user.is_staff %}
