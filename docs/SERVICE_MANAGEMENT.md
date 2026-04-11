@@ -102,17 +102,15 @@ This badge appears when:
 
 This helps staff members quickly identify services that users can access but cannot discover through the public catalogue.
 
-### "Not Listed as Online Service" Badge
+### Online Service Indicator
 
-In internal views (staff-only list and detail views), services that are **publicly listed** but **not in the online services directory** are marked with a gray badge:
+Services that have a **URL** set (i.e. they appear in the online services directory / jump page) are marked with a small gray globe icon (🌐) next to the service name. This indicator:
 
-> 🌐 **not listed as online service**
+- Appears in **all views** (list views and detail views), for both staff and regular users
+- Shows **only the icon** (no text) to keep the visual layout clean
+- Has a tooltip: *"This service is available as an online service."*
 
-This badge appears when:
-- The service is currently available and publicly listed
-- But has **no URL** set, so it does not appear in the online services overview (jump page)
-
-This helps staff members understand which services are visible in the online services portal that most users check first. The badge uses a gray color (`bg-secondary`) with a globe icon to distinguish it from the yellow "not publicly listed" warning badge.
+This helps users quickly identify which services they can access directly via the online services portal.
 
 ## Initial Setup
 

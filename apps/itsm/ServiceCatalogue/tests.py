@@ -1209,7 +1209,7 @@ class StaffOnlyModeIntegrationTest(TestCase):
 
 
 class NotListedAsOnlineServiceBadgeTest(TestCase):
-    """Test that the 'not listed as online service' badge appears for services without a URL"""
+    """Test that online services (with URL) show a globe icon indicator"""
     fixtures = ['initial_test_data.json']
 
     def setUp(self):
@@ -1219,6 +1219,11 @@ class NotListedAsOnlineServiceBadgeTest(TestCase):
             password='testpass123',
             is_staff=True
         )
+        self.regular_user = User.objects.create_user(
+            username='regularuser',
+            password='testpass123',
+            is_staff=False
+        )
         # DATA-BACKUP (pk=5) is listed & available but has url=null
         self.backup_service = Service.objects.get(acronym="BACKUP")
         self.backup_revision = ServiceRevision.objects.get(service=self.backup_service)
@@ -1226,52 +1231,34 @@ class NotListedAsOnlineServiceBadgeTest(TestCase):
         self.hpc_service = Service.objects.get(acronym="HPC")
         self.hpc_revision = ServiceRevision.objects.get(service=self.hpc_service)
 
-    def test_badge_shown_for_service_without_url_in_available_view(self):
-        """Services without URL should show 'not listed as online service' badge in staff view"""
+    def test_globe_icon_shown_for_service_with_url_in_available_view(self):
+        """Services with URL should show globe icon in staff available-services view"""
         self.client.login(username='staffuser', password='testpass123')
         from django.utils import translation
         with translation.override('en'):
             response = self.client.get(reverse('services_available'))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "not listed as online service")
+        self.assertContains(response, "This service is available as an online service.")
+        self.assertContains(response, "bi-globe2")
 
-    def test_badge_not_shown_for_service_with_url_in_available_view(self):
-        """Services with URL should NOT show 'not listed as online service' badge"""
+    def test_globe_icon_count_matches_services_with_url(self):
+        """Number of globe icons should match number of available services with a URL"""
         self.client.login(username='staffuser', password='testpass123')
         from django.utils import translation
         with translation.override('en'):
             response = self.client.get(reverse('services_available'))
-        # HPC has a URL so the badge text should not appear near it; but since
-        # the backup service also appears and DOES show the badge, we instead
-        # verify that the badge icon class appears exactly for services without URL.
         content = response.content.decode()
-        # Count occurrences of the badge: should match number of listed services without URL
-        badge_count = content.count("not listed as online service")
-        no_url_count = ServiceRevision.objects.filter(
+        globe_count = content.count("This service is available as an online service.")
+        url_count = ServiceRevision.objects.filter(
             available_from__lte=date.today(),
-            listed_from__lte=date.today(),
-            url__isnull=True,
+            url__isnull=False,
         ).exclude(
             available_until__lt=date.today()
-        ).exclude(
-            listed_until__lt=date.today()
         ).count()
-        self.assertEqual(badge_count, no_url_count)
+        self.assertEqual(globe_count, url_count)
 
-    def test_badge_shown_in_internal_detail_view(self):
-        """Badge should appear in internal detail view for service without URL"""
-        self.client.login(username='staffuser', password='testpass123')
-        from django.utils import translation
-        with translation.override('en'):
-            response = self.client.get(
-                reverse('service_detail', args=[self.backup_revision.id]),
-                {'view': 'internal'}
-            )
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "not listed as online service")
-
-    def test_badge_not_shown_in_internal_detail_view_for_service_with_url(self):
-        """Badge should NOT appear in internal detail view for service with URL"""
+    def test_globe_icon_shown_in_internal_detail_view(self):
+        """Globe icon should appear in internal detail view for service with URL"""
         self.client.login(username='staffuser', password='testpass123')
         from django.utils import translation
         with translation.override('en'):
@@ -1280,7 +1267,19 @@ class NotListedAsOnlineServiceBadgeTest(TestCase):
                 {'view': 'internal'}
             )
         self.assertEqual(response.status_code, 200)
-        self.assertNotContains(response, "not listed as online service")
+        self.assertContains(response, "This service is available as an online service.")
+
+    def test_globe_icon_not_shown_in_detail_view_for_service_without_url(self):
+        """Globe icon should NOT appear in detail view for service without URL"""
+        self.client.login(username='staffuser', password='testpass123')
+        from django.utils import translation
+        with translation.override('en'):
+            response = self.client.get(
+                reverse('service_detail', args=[self.backup_revision.id]),
+                {'view': 'internal'}
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "This service is available as an online service.")
 
 
 # ============================================================================

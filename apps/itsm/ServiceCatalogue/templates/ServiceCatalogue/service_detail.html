@@ -100,6 +100,7 @@
           <h1 class="h3 mb-2">{{ sr.service.name }}</h1>
           <div class="text-muted">
             <span class="badge bg-primary me-2">{{ sr.key }}</span>
+            {% if sr.url %}<span class="text-muted me-2" title="{% translate 'This service is available as an online service.' %}"><i class="bi bi-globe2"></i></span>{% endif %}
             <span><i class="bi bi-folder me-1"></i>{{ sr.service.category.name }}</span>
             <span class="ms-2"><i class="bi bi-tag me-1"></i>{% translate "Version" %} {{ sr.version }}</span>
           </div>
