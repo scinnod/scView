@@ -102,6 +102,18 @@ This badge appears when:
 
 This helps staff members quickly identify services that users can access but cannot discover through the public catalogue.
 
+### "Not Listed as Online Service" Badge
+
+In internal views (staff-only list and detail views), services that are **publicly listed** but **not in the online services directory** are marked with a gray badge:
+
+> 🌐 **not listed as online service**
+
+This badge appears when:
+- The service is currently available and publicly listed
+- But has **no URL** set, so it does not appear in the online services overview (jump page)
+
+This helps staff members understand which services are visible in the online services portal that most users check first. The badge uses a gray color (`bg-secondary`) with a globe icon to distinguish it from the yellow "not publicly listed" warning badge.
+
 ## Initial Setup
 
 1. Run `initialize_groups` to create permission groups

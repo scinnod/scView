@@ -1758,3 +1758,17 @@ msgstr "Veröffentlicht"
 
 msgid "Add new service"
 msgstr "Neuen Service hinzufügen"
+
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail_internal.html
+#: ServiceCatalogue/templates/ServiceCatalogue/services_base.html
+msgid ""
+"This service is listed in the catalogue but not in the online services "
+"directory (no URL)."
+msgstr ""
+"Dieser Service ist im Katalog gelistet, aber nicht im "
+"Online-Service-Verzeichnis (keine URL)."
+
+#: ServiceCatalogue/templates/ServiceCatalogue/service_detail_internal.html
+#: ServiceCatalogue/templates/ServiceCatalogue/services_base.html
+msgid "not listed as online service"
+msgstr "nicht als Online-Service gelistet"

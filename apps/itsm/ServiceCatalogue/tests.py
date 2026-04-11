@@ -1208,6 +1208,81 @@ class StaffOnlyModeIntegrationTest(TestCase):
         self.assertEqual(response.status_code, 200)
 
 
+class NotListedAsOnlineServiceBadgeTest(TestCase):
+    """Test that the 'not listed as online service' badge appears for services without a URL"""
+    fixtures = ['initial_test_data.json']
+
+    def setUp(self):
+        self.client = Client()
+        self.staff_user = User.objects.create_user(
+            username='staffuser',
+            password='testpass123',
+            is_staff=True
+        )
+        # DATA-BACKUP (pk=5) is listed & available but has url=null
+        self.backup_service = Service.objects.get(acronym="BACKUP")
+        self.backup_revision = ServiceRevision.objects.get(service=self.backup_service)
+        # COMPUTE-HPC (pk=6) is listed & available and has a url
+        self.hpc_service = Service.objects.get(acronym="HPC")
+        self.hpc_revision = ServiceRevision.objects.get(service=self.hpc_service)
+
+    def test_badge_shown_for_service_without_url_in_available_view(self):
+        """Services without URL should show 'not listed as online service' badge in staff view"""
+        self.client.login(username='staffuser', password='testpass123')
+        from django.utils import translation
+        with translation.override('en'):
+            response = self.client.get(reverse('services_available'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "not listed as online service")
+
+    def test_badge_not_shown_for_service_with_url_in_available_view(self):
+        """Services with URL should NOT show 'not listed as online service' badge"""
+        self.client.login(username='staffuser', password='testpass123')
+        from django.utils import translation
+        with translation.override('en'):
+            response = self.client.get(reverse('services_available'))
+        # HPC has a URL so the badge text should not appear near it; but since
+        # the backup service also appears and DOES show the badge, we instead
+        # verify that the badge icon class appears exactly for services without URL.
+        content = response.content.decode()
+        # Count occurrences of the badge: should match number of listed services without URL
+        badge_count = content.count("not listed as online service")
+        no_url_count = ServiceRevision.objects.filter(
+            available_from__lte=date.today(),
+            listed_from__lte=date.today(),
+            url__isnull=True,
+        ).exclude(
+            available_until__lt=date.today()
+        ).exclude(
+            listed_until__lt=date.today()
+        ).count()
+        self.assertEqual(badge_count, no_url_count)
+
+    def test_badge_shown_in_internal_detail_view(self):
+        """Badge should appear in internal detail view for service without URL"""
+        self.client.login(username='staffuser', password='testpass123')
+        from django.utils import translation
+        with translation.override('en'):
+            response = self.client.get(
+                reverse('service_detail', args=[self.backup_revision.id]),
+                {'view': 'internal'}
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "not listed as online service")
+
+    def test_badge_not_shown_in_internal_detail_view_for_service_with_url(self):
+        """Badge should NOT appear in internal detail view for service with URL"""
+        self.client.login(username='staffuser', password='testpass123')
+        from django.utils import translation
+        with translation.override('en'):
+            response = self.client.get(
+                reverse('service_detail', args=[self.hpc_revision.id]),
+                {'view': 'internal'}
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "not listed as online service")
+
+
 # ============================================================================
 # REST API Tests
 # ============================================================================

@@ -205,6 +205,8 @@
              <span class="badge bg-warning text-dark ms-2" title="{% translate 'This service is available but not publicly listed in the service catalogue.' %}"><i class="bi bi-eye-slash me-1"></i>{% translate "not publicly listed" %}</span>
              {% elif sr.listed_until and sr.listed_until < today %}
              <span class="badge bg-warning text-dark ms-2" title="{% translate 'This service is available but not publicly listed in the service catalogue.' %}"><i class="bi bi-eye-slash me-1"></i>{% translate "not publicly listed" %}</span>
+             {% elif not sr.url %}
+             <span class="badge bg-secondary ms-2" title="{% translate 'This service is listed in the catalogue but not in the online services directory (no URL).' %}"><i class="bi bi-globe2 me-1"></i>{% translate "not listed as online service" %}</span>
              {% endif %}
            {% endif %}
          {% endif %}
