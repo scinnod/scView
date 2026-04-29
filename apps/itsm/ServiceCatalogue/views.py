@@ -881,7 +881,7 @@ def export_xlsx(request):
                             "x" if a.charged else ""
                         )
                         df.iloc[i, df.columns.get_loc(r.acronym + "_fee")] = (
-                            float(a.fee) if a.charged and a.fee > 0 else ""
+                            str(a.fee) if a.charged and a.fee > 0 else ""
                         )
                         df.iloc[i, df.columns.get_loc(r.acronym + "_fee-unit")] = (
                             a.fee_unit.name if a.charged and a.fee_unit else ""
