@@ -52,26 +52,36 @@ internet access.
 
 ## Enabling the MCP Server
 
-The MCP server is controlled by a Docker Compose **profile**.  It does
-not start unless explicitly requested.
+The `itsm_mcp` container is part of the standard Compose stack and always
+starts alongside the other services.  Whether it actually serves MCP
+requests is controlled exclusively by `MCP_ENABLED` in `env/itsm.env`.
 
-### Step 1 — Create the environment file
+When `MCP_ENABLED=false` (the default) the container runs `sleep infinity`
+instead of the MCP server.  This keeps the Docker-internal hostname
+`itsm_mcp` permanently resolvable so that nginx can start and reload
+without a *"host not found in upstream"* error.  nginx returns `502` for
+`/sc/mcp` in this state, which is the intended graceful-degradation signal.
 
-```bash
-cp env/mcp.env.example env/mcp.env
-# Edit env/mcp.env if you need non-default settings (defaults work out of the box)
+### Step 1 — Enable in the environment file
+
+In `env/itsm.env`:
+
+```
+MCP_ENABLED=true
 ```
 
 ### Step 2 — Build and start
 
+First time (builds the image):
+
 ```bash
-docker-compose --profile mcp up -d --build itsm_mcp
+docker compose up -d --build itsm_mcp
 ```
 
-Or start everything including the MCP server at once:
+Subsequent starts (image already built):
 
 ```bash
-docker-compose --profile mcp up -d
+docker compose restart itsm_mcp
 ```
 
 ### Step 3 — Verify
@@ -94,26 +104,20 @@ curl -I https://your-domain.com/sc/mcp
 
 ## Disabling at Runtime
 
-Set `MCP_ENABLED=false` in `env/mcp.env` and restart the container:
+In `env/itsm.env`:
 
-```bash
-# env/mcp.env
+```
 MCP_ENABLED=false
 ```
 
 ```bash
-docker-compose --profile mcp restart itsm_mcp
+docker compose restart itsm_mcp
 ```
 
-The container exits cleanly (exit code 0).  Because the restart policy is
-`unless-stopped`, Docker will not automatically restart a cleanly-exited
-container.  To re-enable, set `MCP_ENABLED=true` and restart again.
-
-To stop without disabling:
-
-```bash
-docker-compose stop itsm_mcp
-```
+The container keeps running (it switches to `sleep infinity`) so that
+nginx can resolve the `itsm_mcp` hostname without errors.  nginx returns
+`502` for `/sc/mcp` while the server is disabled.  To re-enable, set
+`MCP_ENABLED=true` and restart again.
 
 ---
 
