@@ -54,6 +54,27 @@ services:
         python -m pytest -v --cov=ServiceCatalogue --cov-report=term-missing
       "
 
+  # MCP server tests — no database dependency
+  # Usage: docker-compose -f docker-compose.test.yml run --rm mcp_test
+  mcp_test:
+    build:
+      context: ./apps/mcp
+    container_name: itsm_mcp_test
+    entrypoint: []
+    environment:
+      MCP_ENABLED: "true"
+      MCP_API_BASE_URL: "http://mock-itsm:8000"
+      MCP_API_PATH_PREFIX: "/sc"
+    networks:
+      - test_network
+    command: >
+      sh -c "
+        echo 'Installing MCP test dependencies...' &&
+        pip install --no-cache-dir -r tests/requirements-test.txt &&
+        echo 'Running MCP tests with pytest...' &&
+        python -m pytest tests/ -v --cov=. --cov-report=term-missing
+      "
+
 networks:
   test_network:
     driver: bridge

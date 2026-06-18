@@ -32,7 +32,7 @@ import datetime
 from functools import wraps
 
 from django.conf import settings
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.urls import reverse
 from django.utils import translation
 from django.utils.translation import gettext as _
@@ -498,3 +498,127 @@ def api_metadata(request):
         'categories': categories,
         'endpoints': endpoints,
     }, json_dumps_params={'ensure_ascii': False, 'indent': 2})
+
+
+# ---------------------------------------------------------------------------
+# LLM / Agent discovery  (llmstxt.org convention)
+# ---------------------------------------------------------------------------
+
+@require_http_methods(["GET"])
+def llms_txt_view(request):
+    """Dynamically generated /llms.txt for LLM and agent discovery.
+
+    Content is derived entirely from existing Django settings — no extra
+    configuration required.  The MCP section is included only when
+    ``MCP_ENABLED=true`` is set in the environment.
+
+    This approach means:
+    • The organisation name and domain are always accurate.
+    • The MCP endpoint appears automatically when the container is enabled.
+    • No static file to maintain, gitignore, or keep in sync.
+    """
+    base = _base_url(request)
+    org = getattr(settings, 'ORGANIZATION_NAME', settings.ORGANIZATION_ACRONYM)
+    app_url = getattr(settings, 'APP_URL', '')
+    app_license = getattr(settings, 'APP_LICENSE', 'Apache-2.0')
+
+    # Derive access state from the same settings the API gate decorator reads.
+    online_public    = not getattr(settings, 'ONLINE_SERVICES_REQUIRE_LOGIN', True)
+    catalogue_public = not getattr(settings, 'SERVICE_CATALOGUE_REQUIRE_LOGIN', True)
+
+    def _status(public: bool) -> str:
+        return "public" if public else "restricted (requires authentication)"
+
+    def _ep(label: str, url: str, public: bool, note: str = "") -> str:
+        """Format one endpoint line with its current access status."""
+        status = "[public]" if public else "[restricted]"
+        base_line = f"- {status} {label}: {url}"
+        return base_line + (f"  # {note}" if note else "")
+
+    lines = [
+        f"# {org} Service Catalogue \u2014 LLM & Agent Discovery",
+        "# https://llmstxt.org",
+        "",
+        f"> {org} Service Catalogue",
+        "",
+        "An IT service catalogue exposing structured information about available",
+        "IT services via a public REST API.",
+        "",
+        "## REST API",
+        "",
+        "Access status reflects the live server configuration.",
+        "[public]     endpoints return data to any caller.",
+        "[restricted] endpoints return HTTP 403 because the operator has configured that page to",
+        "             require authentication on this installation. This is not a permanent property",
+        "             of the endpoint — the restriction can be lifted by changing the server settings.",
+        "",
+        _ep("Metadata",
+            f"{base}/sc/api/metadata/",
+            True,
+            "always available"),
+        _ep("Online Services directory",
+            f"{base}/sc/api/online-services/?lang=en",
+            online_public),
+        _ep("Full service catalogue",
+            f"{base}/sc/api/service-catalogue/?lang=en",
+            catalogue_public),
+        _ep("Service detail by ID",
+            f"{base}/sc/api/service/{{id}}/?lang=en",
+            catalogue_public),
+        _ep("Service detail by key",
+            f"{base}/sc/api/service-by-key/{{key}}/?lang=en",
+            catalogue_public),
+        "",
+        "Append &clientele=ACRONYM to filter by audience (see metadata for values).",
+        "Append &lang=de or &lang=en to select the response language.",
+        "",
+    ]
+
+    if getattr(settings, 'MCP_ENABLED', False):
+        mcp_lines = [
+            "## MCP Server (Model Context Protocol)",
+            "",
+            f"- Endpoint:       {base}/sc/mcp",
+            "- Transport:      Streamable HTTP (MCP spec 2025-03-26)",
+            "- Authentication: None required",
+            "",
+            "### Tools and current availability",
+            "",
+            "  [public]     get_api_metadata        \u2014 discover endpoints, languages, clientele filters",
+        ]
+        if online_public:
+            mcp_lines.append(
+                "  [public]     list_online_services    \u2014 services with direct access URLs"
+            )
+        else:
+            mcp_lines.append(
+                "  [restricted] list_online_services    \u2014 returns a login-required message (ONLINE_SERVICES_REQUIRE_LOGIN=true)"
+            )
+        if catalogue_public:
+            mcp_lines += [
+                "  [public]     search_service_catalogue \u2014 full catalogue with descriptions and contacts",
+                "  [public]     get_service             \u2014 single service by numeric ID",
+                "  [public]     get_service_by_key      \u2014 single service by key (e.g. ITD-EMAIL)",
+            ]
+        else:
+            mcp_lines += [
+                "  [restricted] search_service_catalogue \u2014 returns a login-required message (SERVICE_CATALOGUE_REQUIRE_LOGIN=true)",
+                "  [restricted] get_service             \u2014 returns a login-required message",
+                "  [restricted] get_service_by_key      \u2014 returns a login-required message",
+            ]
+        mcp_lines.append("")
+        lines += mcp_lines
+
+    if app_url:
+        lines += [
+            "## Source",
+            "",
+            f"scView is open-source: {app_url}",
+            f"License: {app_license}",
+            "",
+        ]
+
+    return HttpResponse(
+        "\n".join(lines),
+        content_type="text/plain; charset=utf-8",
+    )

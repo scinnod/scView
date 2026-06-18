@@ -109,3 +109,49 @@ jobs:
       working-directory: ./apps/itsm
       run: |
         python manage.py test ServiceCatalogue --settings=itsm_config.settings_test --verbosity=2
+
+  # ---------------------------------------------------------------------------
+  # MCP server tests — no database dependency, runs in parallel with Django tests
+  # ---------------------------------------------------------------------------
+  mcp-test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.10', '3.11', '3.12']
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Cache pip packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-mcp-pip-${{ hashFiles('apps/mcp/requirements.txt', 'apps/mcp/tests/requirements-test.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-mcp-pip-
+
+    - name: Install MCP dependencies
+      working-directory: ./apps/mcp
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt -r tests/requirements-test.txt
+
+    - name: Run MCP tests with pytest
+      working-directory: ./apps/mcp
+      run: |
+        python -m pytest tests/ -v --cov=. --cov-report=xml --cov-report=term-missing
+
+    - name: Upload MCP coverage to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        files: ./apps/mcp/coverage.xml
+        flags: mcp
+        name: codecov-mcp
+        fail_ci_if_error: false

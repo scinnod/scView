@@ -1,0 +1,5 @@
+# scView MCP Server dependencies
+# Pin to compatible minor versions for reproducible builds.
+mcp[cli]~=1.28.0
+httpx~=0.28.0
+uvicorn[standard]~=0.34.0

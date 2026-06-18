@@ -72,6 +72,48 @@ All configuration is managed through `env/itsm.env`. Copy from `env/itsm.env.exa
 | `GUNICORN_WORKERS` | Number of Gunicorn workers | `2` | `4` (formula: 2×CPU+1) |
 | `CACHING_TIME_SECONDS` | Template fragment cache time | `300` | `600` |
 
+## MCP Server
+
+The MCP server lives in a separate container (`itsm_mcp`) and is configured
+through `env/mcp.env` (created from `env/mcp.env.example`).
+
+### Startup Control
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `MCP_ENABLED` | Start the server. Set to `false`/`0`/`no` to disable. | `true` |
+
+### Upstream API Connection
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `MCP_API_BASE_URL` | Internal Docker address of the Django app | `http://itsm:8000` |
+| `MCP_API_PATH_PREFIX` | URL prefix for the Django app (no trailing slash) | `/sc` |
+| `MCP_API_TIMEOUT` | HTTP request timeout in seconds | `10` |
+
+### Server Settings
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `MCP_PORT` | Container port (nginx proxies to this) | `8080` |
+| `MCP_DEFAULT_LANG` | Default language when caller does not specify | `en` |
+| `MCP_ALLOWED_LANGS` | Accepted language codes (comma-separated) | `de,en` |
+
+The MCP server is started via Docker Compose profile `mcp`:
+
+```bash
+# Enable
+docker-compose --profile mcp up -d
+
+# Soft-disable at runtime (no profile change needed)
+# Set MCP_ENABLED=false in env/mcp.env, then:
+docker-compose --profile mcp restart itsm_mcp
+```
+
+See [MCP.md](MCP.md) for the full guide.
+
+---
+
 ## Authentication Configuration
 
 ### Production Mode (Keycloak SSO)

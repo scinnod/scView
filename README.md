@@ -81,12 +81,13 @@ Built by a university IT department, for university IT departments—but works g
 - Works behind any reverse proxy (nginx, Traefik, Caddy)
 - Automatic secret management
 
-### 🔌 REST API for External Integrations
+### 🔌 REST API & MCP Server for External Integrations
 - JSON endpoints for online services and full service catalogue
+- **MCP (Model Context Protocol) server** for AI assistant integration — connect Claude, Copilot, Cursor, and other AI tools directly to your service catalogue
 - Respects all access-control and field-visibility settings
-- Multi-language support via Accept-Language header
-- Ready for SharePoint, intranet portals, or custom dashboards
-- Integration guide with SharePoint examples included
+- Multi-language support via `?lang=` query parameter
+- Ready for SharePoint, intranet portals, custom dashboards, and AI agents
+- LLM discovery file (`llms.txt`) for automated agent discovery
 
 ---
 
@@ -200,6 +201,7 @@ Configure your reverse proxy to route traffic to `itsm_nginx:80`.
 | Document | Description |
 |----------|-------------|
 | [docs/REST_API.md](docs/REST_API.md) | REST API reference, CORS setup, and SharePoint integration guide |
+| [docs/MCP.md](docs/MCP.md) | MCP server setup, tools reference, AI client configuration, and `llms.txt` |
 
 ---
 

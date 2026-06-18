@@ -130,6 +130,29 @@ docker-compose ps
 docker-compose logs -f
 ```
 
+### 3a. (Optional) Enable the MCP Server
+
+The MCP server is opt-in.  It is not started by default.
+
+```bash
+# Create the MCP environment file
+cp env/mcp.env.example env/mcp.env
+# Defaults work out of the box; edit only if you need non-standard settings
+
+# Build and start the MCP container
+docker-compose --profile mcp up -d --build itsm_mcp
+
+# Verify
+docker logs itsm_mcp
+```
+
+The MCP endpoint will be available at `https://your-domain.com/sc/mcp`.
+A machine-readable discovery file for LLM agents is served at
+`https://your-domain.com/llms.txt`.  **Update the placeholder domain in
+`nginx/llms.txt`** before deploying.
+
+See [MCP.md](MCP.md) for the full guide including AI client configuration.
+
 ### 4. Configure Upstream Proxy
 
 #### nginx Proxy Manager

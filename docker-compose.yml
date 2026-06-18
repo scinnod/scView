@@ -14,6 +14,7 @@ services:
       - app_itsm       # Internal network for communication with Django app
     depends_on:
       - itsm
+      - itsm_mcp
     restart: unless-stopped
 
   # Using postgres:15 (Debian-based) instead of postgres:15-alpine
@@ -38,6 +39,31 @@ services:
     shm_size: '512mb'
     networks:
       - net_db
+    restart: unless-stopped
+
+  # MCP Server (Model Context Protocol)
+  # Activate by setting MCP_ENABLED=true in env/itsm.env, then:
+  #   docker compose restart itsm_mcp
+  # When disabled (default), the entrypoint runs 'sleep infinity' so that
+  # the hostname 'itsm_mcp' stays resolvable and nginx can start/reload
+  # cleanly without a 'host not found in upstream' error.
+  # nginx returns 502 for /sc/mcp while the MCP server is not listening.
+  itsm_mcp:
+    build:
+      context: ./apps/mcp
+    container_name: itsm_mcp
+    # Reads MCP_ENABLED and MCP_API_TIMEOUT from the shared itsm.env.
+    # All other variables in itsm.env are present but silently ignored.
+    # The container has no DB access and no internet access (app_itsm only).
+    env_file:
+      - env/itsm.env
+    # Port is internal only — nginx proxies /sc/mcp → http://itsm_mcp:8080/mcp
+    expose:
+      - "8080"
+    depends_on:
+      - itsm
+    networks:
+      - app_itsm   # Shares the same internal network as nginx and itsm
     restart: unless-stopped
 
   itsm:

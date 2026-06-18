@@ -20,6 +20,7 @@ from django.urls import path, include, reverse
 from django.contrib.auth import views as auth_views
 from django.views.i18n import set_language
 from ServiceCatalogue.views import sso_login, logout_view, insufficient_privileges_view
+from ServiceCatalogue.api_views import llms_txt_view
 
 # Custom error handlers
 handler403 = insufficient_privileges_view
@@ -28,6 +29,7 @@ urlpatterns = [
     path('sso-login/', sso_login, name='sso_login'),  # SSO login endpoint for Keycloak
     path('sso-logout/', logout_view, name='sso_logout'),  # Unified logout for production and development
     path('i18n/setlang/', set_language, name='set_language'),  # Language switching
+    path('llms.txt', llms_txt_view, name='llms_txt'),  # LLM/agent discovery (generated from settings)
     path('sc/api/', include('ServiceCatalogue.api_urls')),  # REST API (outside i18n_patterns – language via ?lang=)
     path('', lambda request: redirect(reverse("index"), permanent=False)),
     ]

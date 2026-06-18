@@ -443,3 +443,11 @@ AI_SEARCH_REQUIRE_LOGIN = os.getenv('AI_SEARCH_REQUIRE_LOGIN', 'True').lower() i
 _cors_origins = os.getenv('CORS_ALLOWED_ORIGINS', '')
 CORS_ALLOWED_ORIGINS = [o.strip() for o in _cors_origins.split(',') if o.strip()] if _cors_origins else []
 CORS_URLS_REGEX = r'^/sc/api/.*$'  # Only apply to API paths (/sc/api/)
+
+
+# =============================================================================
+# MCP Server (Model Context Protocol)
+# =============================================================================
+# When True, the /llms.txt discovery endpoint includes the MCP server section.
+# This should match whether the itsm_mcp container is running (profile 'mcp').
+MCP_ENABLED = os.getenv('MCP_ENABLED', 'false').lower() in ('true', '1', 'yes')
