@@ -83,11 +83,11 @@ docker-compose ps itsm_mcp
 # Check startup logs
 docker logs itsm_mcp
 
+# Test LLM discovery file (served at the root, not under /sc/)
+curl https://your-domain.com/llms.txt
+
 # Test MCP endpoint is reachable (expected: 405 Method Not Allowed on GET)
 curl -I https://your-domain.com/sc/mcp
-
-# Test LLM discovery file
-curl https://your-domain.com/llms.txt
 ```
 
 ---
@@ -243,14 +243,105 @@ In Cursor settings → MCP → Add Server:
 - **URL**: `https://your-domain.com/sc/mcp`
 - **Transport**: Streamable HTTP
 
-### Direct HTTP (testing)
+### Direct HTTP (testing / curl)
+
+The MCP [Streamable HTTP transport](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports#streamable-http)
+requires a short handshake before tool calls can be made.  The server
+assigns a **session ID** in the response headers of the `initialize` request;
+this ID must be included as `mcp-session-id` in every subsequent request.
+
+All responses are Server-Sent Events (`text/event-stream`), even for
+non-streaming calls.  Each event line looks like:
+```
+event: message
+data: {"jsonrpc":"2.0","id":1,"result":{...}}
+```
+
+#### Step 1 — Initialize (obtain session ID)
 
 ```bash
-# MCP initialize request
-curl -X POST https://your-domain.com/sc/mcp \
+curl -k -s -X POST https://your-domain.com/sc/mcp \
   -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-03-26","capabilities":{},"clientInfo":{"name":"test","version":"0.1"}}}'
+  -H "Accept: application/json, text/event-stream" \
+  -D /tmp/mcp_headers.txt \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "initialize",
+    "params": {
+      "protocolVersion": "2025-03-26",
+      "capabilities": {},
+      "clientInfo": {"name": "curl-test", "version": "1.0"}
+    }
+  }'
 ```
+
+Extract the session ID from the response headers:
+
+```bash
+SESSION_ID=$(grep -i '^mcp-session-id:' /tmp/mcp_headers.txt \
+  | awk '{print $2}' | tr -d '\r\n')
+echo "Session ID: $SESSION_ID"
+```
+
+#### Step 2 — Complete the handshake
+
+```bash
+curl -k -s -o /dev/null -w "HTTP status: %{http_code}\n" \
+  -X POST https://your-domain.com/sc/mcp \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -H "mcp-session-id: $SESSION_ID" \
+  -d '{"jsonrpc": "2.0", "method": "notifications/initialized"}'
+```
+
+Expected: `HTTP status: 202`
+
+#### Step 3 — List available tools
+
+```bash
+curl -k -s -X POST https://your-domain.com/sc/mcp \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -H "mcp-session-id: $SESSION_ID" \
+  -d '{"jsonrpc": "2.0", "id": 2, "method": "tools/list", "params": {}}'
+```
+
+Expected: SSE event containing all five tools.
+
+#### Step 4 — Call a tool
+
+```bash
+curl -k -s -X POST https://your-domain.com/sc/mcp \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -H "mcp-session-id: $SESSION_ID" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 3,
+    "method": "tools/call",
+    "params": {
+      "name": "get_api_metadata",
+      "arguments": {"lang": "en"}
+    }
+  }'
+```
+
+Expected: SSE event with `result.content[0].text` containing the catalogue
+metadata as a JSON string.
+
+#### Step 5 — Close the session
+
+```bash
+curl -k -s -o /dev/null -w "HTTP status: %{http_code}\n" \
+  -X DELETE https://your-domain.com/sc/mcp \
+  -H "mcp-session-id: $SESSION_ID"
+```
+
+Expected: `HTTP status: 200`
+
+> **Note:** `-k` skips TLS certificate verification and is only appropriate
+> for local testing with self-signed certificates.  Omit it in production.
 
 ---
 

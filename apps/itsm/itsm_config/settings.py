@@ -57,6 +57,10 @@ if not SECRET_KEY:
 
 # Hosts and security
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
+# Always allow the internal Docker service name so the MCP container
+# can reach the Django REST API on the app_itsm bridge network (see docs/MCP.md).
+if 'itsm' not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append('itsm')
 CSRF_TRUSTED_ORIGINS = os.getenv('CSRF_TRUSTED_ORIGINS', '').split(',')
 
 # Production-specific security settings
