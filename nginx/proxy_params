@@ -1,4 +1,10 @@
 proxy_set_header Host $host;
 proxy_set_header X-Real-IP $remote_addr;
 proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-proxy_set_header X-Forwarded-Proto $scheme;
+# Pass through the scheme set by the upstream TLS-terminating proxy (e.g. nginx
+# Proxy Manager, Traefik).  Using $scheme here would always emit "http" because
+# this nginx talks to Django over plain HTTP on the internal Docker network.
+# The upstream proxy sets X-Forwarded-Proto: https; forwarding that header lets
+# Django's SECURE_PROXY_SSL_HEADER setting reconstruct the correct public URL
+# (used in API responses, llms.txt, and redirect targets).
+proxy_set_header X-Forwarded-Proto $http_x_forwarded_proto;

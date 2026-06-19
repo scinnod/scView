@@ -313,26 +313,86 @@ curl -k -s -X POST https://your-domain.com/sc/mcp \
 
 Expected: SSE event containing all five tools.
 
-#### Step 4 — Call a tool
+#### Step 4 — Call each tool
+
+> **Tip:** Call `get_api_metadata` first.  Its response shows which tools are
+> currently enabled (`endpoints[*].enabled`).  If either `*_REQUIRE_LOGIN`
+> setting is `true` on the server, the corresponding tools
+> (`list_online_services`, `search_service_catalogue`, `get_service`,
+> `get_service_by_key`) return a 🔒 message instead of data.  The SSE payload
+> is still well-formed (`result.content[0].text`) — this is intentional
+> graceful degradation, not a tool error.
+
+##### `get_api_metadata` (always available)
 
 ```bash
 curl -k -s -X POST https://your-domain.com/sc/mcp \
   -H "Content-Type: application/json" \
   -H "Accept: application/json, text/event-stream" \
   -H "mcp-session-id: $SESSION_ID" \
-  -d '{
-    "jsonrpc": "2.0",
-    "id": 3,
-    "method": "tools/call",
-    "params": {
-      "name": "get_api_metadata",
-      "arguments": {"lang": "en"}
-    }
-  }'
+  -d '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"get_api_metadata","arguments":{"lang":"en"}}}'
 ```
 
-Expected: SSE event with `result.content[0].text` containing the catalogue
-metadata as a JSON string.
+Expected: `result.content[0].text` is a JSON string with `endpoints`,
+`languages`, `clienteles`, and `categories`.
+
+##### `list_online_services`
+
+```bash
+curl -k -s -X POST https://your-domain.com/sc/mcp \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -H "mcp-session-id: $SESSION_ID" \
+  -d '{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"list_online_services","arguments":{"lang":"en"}}}'
+```
+
+Expected: `result.content[0].text` is a JSON string with services grouped by
+category (only services with a direct URL).  Returns 🔒 message if
+`ONLINE_SERVICES_REQUIRE_LOGIN=true`.
+
+##### `search_service_catalogue`
+
+```bash
+curl -k -s -X POST https://your-domain.com/sc/mcp \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -H "mcp-session-id: $SESSION_ID" \
+  -d '{"jsonrpc":"2.0","id":5,"method":"tools/call","params":{"name":"search_service_catalogue","arguments":{"lang":"en"}}}'
+```
+
+Expected: `result.content[0].text` is a JSON string with the full catalogue
+grouped by category including descriptions and cost information.  Returns 🔒
+message if `SERVICE_CATALOGUE_REQUIRE_LOGIN=true`.
+
+##### `get_service` (by numeric ID)
+
+Obtain an ID from a `search_service_catalogue` or `list_online_services` response first.
+
+```bash
+curl -k -s -X POST https://your-domain.com/sc/mcp \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -H "mcp-session-id: $SESSION_ID" \
+  -d '{"jsonrpc":"2.0","id":6,"method":"tools/call","params":{"name":"get_service","arguments":{"service_id":1,"lang":"en"}}}'
+```
+
+Expected: `result.content[0].text` is a JSON string with full service detail.
+Returns 🔒 message if `SERVICE_CATALOGUE_REQUIRE_LOGIN=true`.
+
+##### `get_service_by_key` (by CATEGORY-ACRONYM key)
+
+```bash
+curl -k -s -X POST https://your-domain.com/sc/mcp \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -H "mcp-session-id: $SESSION_ID" \
+  -d '{"jsonrpc":"2.0","id":7,"method":"tools/call","params":{"name":"get_service_by_key","arguments":{"service_key":"ITD-EMAIL","lang":"en"}}}'
+```
+
+Expected: `result.content[0].text` is a JSON string with full service detail.
+Adjust `service_key` to a key that exists in your catalogue (see
+`get_api_metadata` → `categories` for category acronyms).  Returns 🔒 message
+if `SERVICE_CATALOGUE_REQUIRE_LOGIN=true`.
 
 #### Step 5 — Close the session
 
@@ -351,17 +411,21 @@ Expected: `HTTP status: 200`
 
 ## LLM Discovery (`llms.txt`)
 
-The file `nginx/llms.txt` is served at `https://your-domain.com/llms.txt`
-following the [llmstxt.org](https://llmstxt.org) convention.
+`/llms.txt` is served at `https://your-domain.com/llms.txt` following the
+[llmstxt.org](https://llmstxt.org) convention.
 
-It lists the MCP endpoint and REST API endpoints so that AI crawlers and
-agents can discover the machine-readable interfaces without parsing HTML.
+It is **generated dynamically** by Django — there is no static file to
+maintain or update.  It lists the MCP endpoint and REST API endpoints so that
+AI crawlers and agents can discover the machine-readable interfaces without
+parsing HTML.
 
-**Update the placeholder domain** in `nginx/llms.txt` before deploying:
+The content adapts automatically to the running configuration:
 
-```
-# Replace 'your-domain.com' with your actual domain
-```
+- Endpoint URLs are built from the incoming request host, so the correct
+  domain always appears without any placeholder to replace.
+- The MCP section is only included when `MCP_ENABLED=true`.
+- Each endpoint is marked `[public]` or `[restricted]` based on the live
+  `*_REQUIRE_LOGIN` settings.
 
 ---
 

@@ -147,9 +147,8 @@ docker logs itsm_mcp
 ```
 
 The MCP endpoint will be available at `https://your-domain.com/sc/mcp`.
-A machine-readable discovery file for LLM agents is served at
-`https://your-domain.com/llms.txt`.  **Update the placeholder domain in
-`nginx/llms.txt`** before deploying.
+A machine-readable discovery file for LLM agents is served dynamically at
+`https://your-domain.com/llms.txt` — no configuration required.
 
 See [MCP.md](MCP.md) for the full guide including AI client configuration.
 
