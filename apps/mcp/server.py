@@ -33,12 +33,12 @@ import json
 import logging
 import re
 from contextlib import asynccontextmanager
-from typing import AsyncIterator
+from typing import Any, AsyncIterator
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server.fastmcp import Context, FastMCP
 
 from api_client import ScViewApiClient
-from config import ALLOWED_LANGS, MCP_DEFAULT_LANG, MCP_PORT
+from config import ALLOWED_LANGS, MCP_API_BASE_URL, MCP_DEFAULT_LANG, MCP_PORT
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(name)s  %(message)s")
@@ -167,6 +167,50 @@ def _to_json(data: dict) -> str:  # type: ignore[type-arg]
     return json.dumps(data, ensure_ascii=False, indent=2)
 
 
+def _public_base_url(ctx: Context) -> str | None:  # type: ignore[type-arg]
+    """Extract the external public base URL from the incoming MCP HTTP request.
+
+    The MCP server is behind nginx, which forwards the original client headers:
+      Host: your-domain.com
+      X-Forwarded-Proto: https
+
+    Together these give the public origin the end-user sees.  We use it to
+    rewrite internal ``detail_url`` values (``http://itsm:8000/…``) that
+    Django embeds in API responses when called directly over the Docker bridge
+    network, where the request Host is the internal service name.
+
+    Returns ``None`` when request context is unavailable (e.g. in unit tests)
+    so callers can skip rewriting gracefully.
+    """
+    try:
+        request = ctx.request_context.request  # Starlette Request
+    except Exception:
+        return None
+    if request is None:
+        return None
+    proto = request.headers.get("x-forwarded-proto") or request.url.scheme
+    host = request.headers.get("host", "")
+    if not host:
+        return None
+    return f"{proto}://{host}"
+
+
+def _rewrite_urls(data: Any, internal: str, public: str) -> Any:
+    """Recursively replace *internal* URL prefix with *public* in all strings.
+
+    Walks the entire response dict/list tree so that every ``detail_url`` field
+    (and any other absolute URL Django built against the internal host) is
+    rewritten to the correct public address before being returned to the client.
+    """
+    if isinstance(data, str):
+        return data.replace(internal, public) if internal in data else data
+    if isinstance(data, dict):
+        return {k: _rewrite_urls(v, internal, public) for k, v in data.items()}
+    if isinstance(data, list):
+        return [_rewrite_urls(item, internal, public) for item in data]
+    return data
+
+
 # ---------------------------------------------------------------------------
 # MCP Tools
 # ---------------------------------------------------------------------------
@@ -188,6 +232,9 @@ async def get_api_metadata(lang: str = MCP_DEFAULT_LANG) -> str:
     result = await client.get_metadata(lang=validated_lang, force=True)
     if result.get("success") is False:
         return _describe_error(result)
+    public = _public_base_url(mcp.get_context())
+    if public:
+        result = _rewrite_urls(result, MCP_API_BASE_URL, public)
     return _to_json(result)
 
 
@@ -219,6 +266,9 @@ async def list_online_services(
     )
     if result.get("success") is False:
         return _describe_error(result)
+    public = _public_base_url(mcp.get_context())
+    if public:
+        result = _rewrite_urls(result, MCP_API_BASE_URL, public)
     return _to_json(result)
 
 
@@ -250,6 +300,9 @@ async def search_service_catalogue(
     )
     if result.get("success") is False:
         return _describe_error(result)
+    public = _public_base_url(mcp.get_context())
+    if public:
+        result = _rewrite_urls(result, MCP_API_BASE_URL, public)
     return _to_json(result)
 
 
@@ -276,6 +329,9 @@ async def get_service(service_id: int, lang: str = MCP_DEFAULT_LANG) -> str:
     result = await client.get_service(service_id, lang=validated_lang)
     if result.get("success") is False:
         return _describe_error(result)
+    public = _public_base_url(mcp.get_context())
+    if public:
+        result = _rewrite_urls(result, MCP_API_BASE_URL, public)
     return _to_json(result)
 
 
@@ -306,6 +362,9 @@ async def get_service_by_key(service_key: str, lang: str = MCP_DEFAULT_LANG) -> 
     result = await client.get_service_by_key(normalised_key, lang=validated_lang)
     if result.get("success") is False:
         return _describe_error(result)
+    public = _public_base_url(mcp.get_context())
+    if public:
+        result = _rewrite_urls(result, MCP_API_BASE_URL, public)
     return _to_json(result)
 
 

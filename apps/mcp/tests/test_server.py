@@ -16,7 +16,7 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 import server
 from api_client import ScViewApiClient
@@ -369,3 +369,264 @@ class TestNoClient:
                 await server.get_api_metadata()
         finally:
             server._api_client = original
+
+
+# ---------------------------------------------------------------------------
+# Helpers for URL-rewriting tests
+# ---------------------------------------------------------------------------
+
+INTERNAL = "http://itsm:8000"
+PUBLIC   = "https://sc.example.com"
+
+
+def _make_ctx(host: str = "sc.example.com", proto: str = "https"):
+    """Build a minimal Context mock whose request_context.request carries
+    the given Host / X-Forwarded-Proto headers."""
+    request = MagicMock()
+    request.headers = {"host": host, "x-forwarded-proto": proto}
+    request.url.scheme = "http"  # raw (internal) scheme — should be ignored
+    rc = MagicMock()
+    rc.request = request
+    ctx = MagicMock()
+    ctx.request_context = rc
+    return ctx
+
+
+def _make_ctx_no_request():
+    """Context mock whose request_context.request is None (unit-test baseline)."""
+    rc = MagicMock()
+    rc.request = None
+    ctx = MagicMock()
+    ctx.request_context = rc
+    return ctx
+
+
+# ---------------------------------------------------------------------------
+# _public_base_url
+# ---------------------------------------------------------------------------
+
+class TestPublicBaseUrl:
+    def test_extracts_https_from_headers(self):
+        ctx = _make_ctx()
+        assert server._public_base_url(ctx) == PUBLIC
+
+    def test_extracts_http_when_proto_is_http(self):
+        ctx = _make_ctx(proto="http")
+        assert server._public_base_url(ctx) == f"http://sc.example.com"
+
+    def test_returns_none_when_request_is_none(self):
+        assert server._public_base_url(_make_ctx_no_request()) is None
+
+    def test_returns_none_when_context_raises(self):
+        # Accessing ctx.request_context itself must raise so that the try/except
+        # in _public_base_url catches it and returns None.
+        ctx = MagicMock()
+        type(ctx).request_context = PropertyMock(side_effect=Exception("no context"))
+        # Should not raise
+        result = server._public_base_url(ctx)
+        assert result is None
+
+    def test_returns_none_when_host_is_empty(self):
+        request = MagicMock()
+        request.headers = {"x-forwarded-proto": "https", "host": ""}
+        request.url.scheme = "http"
+        rc = MagicMock()
+        rc.request = request
+        ctx = MagicMock()
+        ctx.request_context = rc
+        assert server._public_base_url(ctx) is None
+
+    def test_falls_back_to_url_scheme_when_proto_header_absent(self):
+        request = MagicMock()
+        # A plain dict without x-forwarded-proto — get() returns None for that key,
+        # so _public_base_url falls back to request.url.scheme.
+        request.headers = {"host": "sc.example.com"}
+        request.url.scheme = "http"
+        rc = MagicMock()
+        rc.request = request
+        ctx = MagicMock()
+        ctx.request_context = rc
+        assert server._public_base_url(ctx) == "http://sc.example.com"
+
+
+# ---------------------------------------------------------------------------
+# _rewrite_urls
+# ---------------------------------------------------------------------------
+
+class TestRewriteUrls:
+    def test_rewrites_string(self):
+        assert (
+            server._rewrite_urls(f"{INTERNAL}/sc/service/42", INTERNAL, PUBLIC)
+            == f"{PUBLIC}/sc/service/42"
+        )
+
+    def test_no_op_when_internal_absent(self):
+        url = "https://external.example.com/path"
+        assert server._rewrite_urls(url, INTERNAL, PUBLIC) == url
+
+    def test_rewrites_nested_dict(self):
+        data = {"detail_url": f"{INTERNAL}/sc/service/1", "name": "Email"}
+        result = server._rewrite_urls(data, INTERNAL, PUBLIC)
+        assert result["detail_url"] == f"{PUBLIC}/sc/service/1"
+        assert result["name"] == "Email"
+
+    def test_rewrites_list_of_dicts(self):
+        data = [
+            {"detail_url": f"{INTERNAL}/sc/service/1"},
+            {"detail_url": f"{INTERNAL}/sc/service/2"},
+        ]
+        result = server._rewrite_urls(data, INTERNAL, PUBLIC)
+        assert result[0]["detail_url"] == f"{PUBLIC}/sc/service/1"
+        assert result[1]["detail_url"] == f"{PUBLIC}/sc/service/2"
+
+    def test_rewrites_deeply_nested(self):
+        data = {
+            "categories": [
+                {
+                    "services": [
+                        {"detail_url": f"{INTERNAL}/sc/service/42"}
+                    ]
+                }
+            ]
+        }
+        result = server._rewrite_urls(data, INTERNAL, PUBLIC)
+        assert (
+            result["categories"][0]["services"][0]["detail_url"]
+            == f"{PUBLIC}/sc/service/42"
+        )
+
+    def test_leaves_non_string_values_unchanged(self):
+        data = {"id": 1, "flag": True, "count": None, "score": 3.14}
+        assert server._rewrite_urls(data, INTERNAL, PUBLIC) == data
+
+
+# ---------------------------------------------------------------------------
+# URL rewriting in tool responses
+# ---------------------------------------------------------------------------
+
+ONLINE_SERVICES_WITH_INTERNAL_URL = {
+    "success": True,
+    "total_count": 1,
+    "categories": [
+        {
+            "services": [
+                {
+                    "id": 1,
+                    "detail_url": f"{INTERNAL}/de/sc/service/1",
+                    "url": "https://mail.example.com",
+                }
+            ]
+        }
+    ],
+}
+
+CATALOGUE_WITH_INTERNAL_URL = {
+    "success": True,
+    "total_count": 1,
+    "categories": [
+        {
+            "services": [
+                {
+                    "id": 1,
+                    "detail_url": f"{INTERNAL}/de/sc/service/1",
+                }
+            ]
+        }
+    ],
+}
+
+SERVICE_WITH_INTERNAL_URL = {
+    "success": True,
+    "service": {
+        "id": 42,
+        "detail_url": f"{INTERNAL}/de/sc/service/42",
+    },
+}
+
+
+class TestUrlRewritingInTools:
+    """Verify that internal ``detail_url`` values are rewritten to the public
+    origin derived from the incoming MCP request headers."""
+
+    def _patch_ctx(self, ctx):
+        """Return a patcher that makes mcp.get_context() return *ctx*."""
+        return patch.object(server.mcp, "get_context", return_value=ctx)
+
+    # --- list_online_services ------------------------------------------------
+
+    @pytest.mark.asyncio
+    async def test_list_online_services_rewrites_internal_urls(self, mock_client):
+        mock_client.get_online_services.return_value = ONLINE_SERVICES_WITH_INTERNAL_URL
+        ctx = _make_ctx()
+        with self._patch_ctx(ctx):
+            result = await server.list_online_services()
+        data = json.loads(result)
+        detail = data["categories"][0]["services"][0]["detail_url"]
+        assert detail.startswith(PUBLIC)
+        assert INTERNAL not in detail
+
+    @pytest.mark.asyncio
+    async def test_list_online_services_no_rewrite_when_no_context(self, mock_client):
+        mock_client.get_online_services.return_value = ONLINE_SERVICES_WITH_INTERNAL_URL
+        with self._patch_ctx(_make_ctx_no_request()):
+            result = await server.list_online_services()
+        data = json.loads(result)
+        detail = data["categories"][0]["services"][0]["detail_url"]
+        assert INTERNAL in detail  # untouched
+
+    # --- search_service_catalogue --------------------------------------------
+
+    @pytest.mark.asyncio
+    async def test_search_service_catalogue_rewrites_internal_urls(self, mock_client):
+        mock_client.get_service_catalogue.return_value = CATALOGUE_WITH_INTERNAL_URL
+        ctx = _make_ctx()
+        with self._patch_ctx(ctx):
+            result = await server.search_service_catalogue()
+        data = json.loads(result)
+        detail = data["categories"][0]["services"][0]["detail_url"]
+        assert detail.startswith(PUBLIC)
+        assert INTERNAL not in detail
+
+    # --- get_service ---------------------------------------------------------
+
+    @pytest.mark.asyncio
+    async def test_get_service_rewrites_internal_urls(self, mock_client):
+        mock_client.get_service.return_value = SERVICE_WITH_INTERNAL_URL
+        ctx = _make_ctx()
+        with self._patch_ctx(ctx):
+            result = await server.get_service(42)
+        data = json.loads(result)
+        detail = data["service"]["detail_url"]
+        assert detail.startswith(PUBLIC)
+        assert INTERNAL not in detail
+
+    # --- get_service_by_key --------------------------------------------------
+
+    @pytest.mark.asyncio
+    async def test_get_service_by_key_rewrites_internal_urls(self, mock_client):
+        mock_client.get_service_by_key.return_value = SERVICE_WITH_INTERNAL_URL
+        ctx = _make_ctx()
+        with self._patch_ctx(ctx):
+            result = await server.get_service_by_key("COMPUTE-HPC")
+        data = json.loads(result)
+        detail = data["service"]["detail_url"]
+        assert detail.startswith(PUBLIC)
+        assert INTERNAL not in detail
+
+    # --- get_api_metadata ----------------------------------------------------
+
+    @pytest.mark.asyncio
+    async def test_get_api_metadata_rewrites_if_internal_urls_present(self, mock_client):
+        """Metadata normally has no detail_url, but any accidental internal URL
+        should still be rewritten."""
+        metadata_with_internal = {
+            **METADATA_ENABLED,
+            "base_url": f"{INTERNAL}/sc",
+        }
+        mock_client.get_metadata.return_value = metadata_with_internal
+        ctx = _make_ctx()
+        with self._patch_ctx(ctx):
+            result = await server.get_api_metadata()
+        data = json.loads(result)
+        assert INTERNAL not in data["base_url"]
+        assert data["base_url"] == f"{PUBLIC}/sc"
